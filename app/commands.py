@@ -147,24 +147,28 @@ def errores_integraciones_produccion(configuracion):
     base_url = str(configuracion.get("BASE_URL") or "")
     if not base_url.startswith("https://"):
         errores.append("BASE_URL debe ser una URL HTTPS")
-    if configuracion.get("WEBPAY_ENV") != "production":
-        errores.append("WEBPAY_ENV debe ser production")
-    if not configuracion.get("WEBPAY_COMMERCE_CODE"):
-        errores.append("falta WEBPAY_COMMERCE_CODE")
-    if not configuracion.get("WEBPAY_API_KEY"):
-        errores.append("falta WEBPAY_API_KEY")
-    if not configuracion.get("WEBPAY_ONECLICK_PARENT_COMMERCE_CODE"):
-        errores.append("falta WEBPAY_ONECLICK_PARENT_COMMERCE_CODE")
-    if not configuracion.get("WEBPAY_ONECLICK_CHILD_COMMERCE_CODE"):
-        errores.append("falta WEBPAY_ONECLICK_CHILD_COMMERCE_CODE")
-    if not configuracion.get("WEBPAY_ONECLICK_API_KEY"):
-        errores.append("falta WEBPAY_ONECLICK_API_KEY")
-    if configuracion.get("MERCADOPAGO_ENV") != "production":
-        errores.append("MERCADOPAGO_ENV debe ser production")
-    if not configuracion.get("MERCADOPAGO_ACCESS_TOKEN"):
-        errores.append("falta MERCADOPAGO_ACCESS_TOKEN")
-    if not configuracion.get("MERCADOPAGO_WEBHOOK_SECRET"):
-        errores.append("falta MERCADOPAGO_WEBHOOK_SECRET")
+    mercado_pago_completo = all(
+        (
+            configuracion.get("MERCADOPAGO_ENV") == "production",
+            configuracion.get("MERCADOPAGO_ACCESS_TOKEN"),
+            configuracion.get("MERCADOPAGO_WEBHOOK_SECRET"),
+        )
+    )
+
+    webpay_oneclick_completo = all(
+        (
+            configuracion.get("WEBPAY_ENV") == "production",
+            configuracion.get("WEBPAY_ONECLICK_PARENT_COMMERCE_CODE"),
+            configuracion.get("WEBPAY_ONECLICK_CHILD_COMMERCE_CODE"),
+            configuracion.get("WEBPAY_ONECLICK_API_KEY"),
+        )
+    )
+
+    if not mercado_pago_completo and not webpay_oneclick_completo:
+        errores.append(
+            "debe configurarse Mercado Pago Suscripciones "
+            "o Webpay Oneclick productivo"
+        )
     if not str(configuracion.get("DTE_PROVIDER_URL") or "").startswith("https://"):
         errores.append("DTE_PROVIDER_URL debe ser HTTPS")
     if not configuracion.get("DTE_API_KEY"):
