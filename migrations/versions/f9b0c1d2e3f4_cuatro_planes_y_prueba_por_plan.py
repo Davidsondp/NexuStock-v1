@@ -18,11 +18,11 @@ def upgrade():
         "WHERE codigo IN ('avanzado','ultra','profesional','empresa')"
     )
     op.execute(
-        "UPDATE plan_saas SET activo=0, nombre='Prueba heredada', "
+        "UPDATE plan_saas SET activo=FALSE, nombre='Prueba heredada', "
         "descripcion='Compatibilidad histórica; la prueba pertenece al plan elegido' "
         "WHERE codigo='prueba'"
     )
-    op.execute("UPDATE plan_saas SET activo=0 WHERE codigo IN ('basico','corporativo')")
+    op.execute("UPDATE plan_saas SET activo=FALSE WHERE codigo IN ('basico','corporativo')")
 
 
 def downgrade():
@@ -31,8 +31,8 @@ def downgrade():
         "WHERE codigo IN ('avanzado','ultra','profesional','empresa')"
     )
     op.execute(
-        "UPDATE plan_saas SET activo=1, nombre='Prueba gratuita', "
+        "UPDATE plan_saas SET activo=TRUE, nombre='Prueba gratuita', "
         "descripcion='Prueba gratuita con funciones profesionales' "
         "WHERE codigo='prueba'"
     )
-    op.execute("UPDATE plan_saas SET activo=1 WHERE codigo IN ('basico','corporativo')")
+    op.execute("UPDATE plan_saas SET activo=TRUE WHERE codigo IN ('basico','corporativo')")
