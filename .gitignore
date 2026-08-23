@@ -19,3 +19,6 @@ pip-install-*/
 pip-metadata-*/
 pip-unpack-*/
 pip-ephem-wheel-cache-*/
+
+*.backup
+*.backup-*
