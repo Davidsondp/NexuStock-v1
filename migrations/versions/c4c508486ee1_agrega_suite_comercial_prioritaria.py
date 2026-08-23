@@ -134,7 +134,8 @@ def upgrade():
     sa.ForeignKeyConstraint(['caja_id', 'empresa_id'], ['caja.id', 'caja.empresa_id'], ),
     sa.ForeignKeyConstraint(['usuario_apertura_id'], ['usuario.id'], ),
     sa.ForeignKeyConstraint(['usuario_cierre_id'], ['usuario.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('id', 'empresa_id', name='uq_turno_caja_id_empresa')
     )
     with op.batch_alter_table('turno_caja', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_turno_caja_empresa_id'), ['empresa_id'], unique=False)

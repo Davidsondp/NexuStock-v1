@@ -1702,6 +1702,7 @@ class TurnoCaja(TimestampMixin, db.Model):
     __tablename__ = "turno_caja"
     __table_args__ = (
         ForeignKeyConstraint(["caja_id", "empresa_id"], ["caja.id", "caja.empresa_id"]),
+        UniqueConstraint("id", "empresa_id", name="uq_turno_caja_id_empresa"),
         CheckConstraint("estado IN ('abierto','cerrado')", name="ck_turno_caja_estado"),
         CheckConstraint("monto_apertura >= 0", name="ck_turno_apertura"),
         Index(
