@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Centro de Ayuda | NexuStock</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ayuda.css') }}">
+</head>
+<body data-contacto="{{ url_for('ayuda.contacto') }}" data-soporte="{{ soporte_email }}">
+<main class="ayuda">
+    <header class="hero-ayuda">
+        <nav><a class="ayuda-marca" href="{{ url_for('panel.inicio') }}"><img src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="48" height="48"><span>← Volver al panel</span></a><a href="mailto:{{ soporte_email }}">{{ soporte_email }}</a></nav>
+        <div class="hero-ayuda__contenido"><span>Estamos para ayudarte</span><h1>¿Cómo podemos ayudarte hoy?</h1><p>Encuentra respuestas rápidas, aprende a usar cada módulo o conversa con nuestro equipo.</p><label class="buscador"><span aria-hidden="true">⌕</span><input id="buscar-ayuda" type="search" placeholder="Busca: importar Excel, registrar venta, escanear producto…" autocomplete="off"></label></div>
+    </header>
+
+    <section class="atajos-ayuda" aria-label="Guías principales">
+        <a href="{{ url_for('panel.inventario') }}"><span class="icono icono--azul">▤</span><strong>Inventario</strong><small>Entradas, salidas y escáner</small><b>→</b></a>
+        <a href="{{ url_for('panel.ventas') }}"><span class="icono icono--verde">$</span><strong>Ventas</strong><small>Reservar y confirmar</small><b>→</b></a>
+        <a href="{{ url_for('panel.compras') }}"><span class="icono icono--naranja">⇩</span><strong>Compras</strong><small>Órdenes y recepciones</small><b>→</b></a>
+        {% if puede_importar %}<a href="{{ url_for('panel.importaciones') }}"><span class="icono icono--violeta">⇧</span><strong>Importaciones</strong><small>Excel, CSV y PDF</small><b>→</b></a>{% else %}<a href="{{ url_for('panel.productos') }}"><span class="icono icono--violeta">□</span><strong>Productos</strong><small>Catálogo y códigos</small><b>→</b></a>{% endif %}
+    </section>
+
+    <div class="contenido-ayuda">
+        <section class="base-conocimiento">
+            <div class="titulo-seccion"><span>Base de conocimiento</span><h2>Respuestas frecuentes</h2><p id="resultado-busqueda">Selecciona una pregunta para ver la respuesta.</p></div>
+            <div id="preguntas" class="preguntas">
+                <details data-busqueda="inventario entrada producto stock movimiento"><summary>¿Cómo registro la entrada de un producto?</summary><p>Abre Inventario, selecciona “Nuevo movimiento”, elige Entrada, producto, cantidad, costo y motivo. También puedes escanear el código con la cámara. El stock sólo cambia cuando confirmas.</p></details>
+                <details data-busqueda="salida venta reserva stock disponible"><summary>¿Por qué una venta primero reserva el stock?</summary><p>La reserva evita que otra venta utilice esas unidades. El stock físico se descuenta únicamente al confirmar la venta; si la cancelas antes, la disponibilidad se recupera.</p></details>
+                <details data-busqueda="escanear qr codigo barras camara celular"><summary>¿Cómo uso el escáner desde el celular?</summary><p>Desde Inventario pulsa “Escanear QR o código de barras”, concede permiso a la cámara y apunta al código. NexuStock selecciona el producto, pero tú confirmas cantidad y movimiento.</p></details>
+                <details data-busqueda="excel csv pdf importar documentos plantilla"><summary>¿Cómo importo productos desde Excel o PDF?</summary><p>En Productos abre “Importar documentos”. Descarga la plantilla o carga CSV, XLSX o una tabla PDF textual. Revisa errores en la vista previa y confirma sólo cuando todas las filas sean válidas.</p></details>
+                <details data-busqueda="compras orden recepción proveedor stock"><summary>¿Cuándo una compra aumenta el inventario?</summary><p>Crear o enviar la orden no cambia stock. El inventario aumenta cuando confirmas una recepción, quedando vinculados costo, proveedor, movimiento y auditoría.</p></details>
+                <details data-busqueda="transferencia bodega origen destino"><summary>¿Cómo funciona una transferencia entre bodegas?</summary><p>La transferencia pasa por solicitud, despacho y recepción. El despacho registra la salida en origen y la recepción registra la entrada en destino, conservando trazabilidad.</p></details>
+                <details data-busqueda="nexu ia inteligencia recomendaciones acciones"><summary>¿Nexu IA puede modificar mi inventario?</summary><p>No. Nexu analiza los datos autorizados y recomienda acciones, pero compras, ajustes o transferencias siempre requieren confirmación humana.</p></details>
+                <details data-busqueda="plan permiso acceso modulo bloqueado"><summary>¿Por qué no puedo acceder a un módulo?</summary><p>El acceso depende del rol, permisos especiales, plan contratado y estado de la suscripción. La jefatura de la empresa puede revisar usuarios y planes.</p></details>
+                <details data-busqueda="contraseña seguridad dos factores correo"><summary>¿Cómo mejoro la seguridad de mi cuenta?</summary><p>Verifica tu correo, usa una contraseña exclusiva y activa el segundo factor desde Seguridad de cuenta. NexuStock nunca solicitará tu contraseña por correo.</p></details>
+                <details data-busqueda="alertas stock bajo sobrestock agotamiento"><summary>¿Cómo se generan las alertas?</summary><p>El motor analiza stock disponible, punto de reorden, consumo, plazos del proveedor y falta de movimiento. Puedes resolver o ignorar una alerta sin eliminar su historial.</p></details>
+            </div>
+            <div id="sin-resultados" class="sin-resultados" hidden><span>⌕</span><h3>No encontramos esa respuesta</h3><p>Prueba otras palabras o envía tu consulta al equipo.</p></div>
+        </section>
+
+        <aside class="contacto-ayuda">
+            <span class="contacto-ayuda__icono">✦</span><p class="etiqueta">Ayuda personalizada</p><h2>Habla con nuestro equipo</h2><p>Cuéntanos qué estás intentando hacer y dónde encontraste el problema.</p>
+            <form id="formulario-ayuda">
+                <label>Categoría<select name="categoria" required><option value="">Selecciona</option><option value="inventario">Inventario y productos</option><option value="ventas">Ventas y clientes</option><option value="compras">Compras y proveedores</option><option value="importaciones">Importación de documentos</option><option value="ia">Nexu IA</option><option value="cuenta">Cuenta y seguridad</option><option value="facturacion">Planes y facturación</option><option value="otro">Otro tema</option></select></label>
+                <label>Asunto<input name="asunto" minlength="5" maxlength="120" required placeholder="Resume lo que necesitas"></label>
+                <label>Descripción<textarea name="mensaje" minlength="20" maxlength="3000" required placeholder="Indica qué intentaste, qué esperabas y qué ocurrió."></textarea><small><span id="contador">0</span>/3000</small></label>
+                <button id="enviar-ayuda" type="submit">Enviar solicitud</button>
+            </form>
+            <div class="contacto-directo"><span>También puedes escribir a</span><a href="mailto:{{ soporte_email }}">{{ soporte_email }}</a><small>Nunca envíes contraseñas, códigos 2FA ni claves API.</small></div>
+        </aside>
+    </div>
+</main>
+<div id="notificacion" role="status" aria-live="polite" hidden></div>
+<script src="{{ url_for('static', filename='js/ayuda.js') }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Panel empresarial de NexuStock"
+    >
+
+    <title>Panel empresarial | NexuStock</title>
+    <meta name="theme-color" content="#10213c">
+    <link rel="manifest" href="{{ url_for('manifiesto_web') }}">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/panel_empresarial.css') }}"
+    >
+</head>
+
+<body
+    data-bodega-id="{{ contexto.bodega.id }}"
+    data-sucursal-id="{{ contexto.sucursal.id }}"
+    data-api-ubicacion="{{ url_for('usuarios.compartir_mi_ubicacion') }}"
+    data-ubicacion-consentida="{{ current_user.ubicacion_consentida | tojson }}"
+>
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegación empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">NexuStock</p>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav class="navegacion" aria-label="Módulos empresariales">
+                <p class="navegacion__titulo">Operación</p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                    aria-current="page"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">⌂</span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">□</span>
+                    <span>Productos</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'panel.inventario'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ▤
+                    </span>
+                    <span>Inventario</span>
+                </a>
+
+                {% if puede_ver_transferencias %}
+                <a class="navegacion__enlace" href="{{ url_for('panel.transferencias') }}">
+                    <span class="navegacion__icono" aria-hidden="true">⇄</span>
+                    <span>Transferencias</span>
+                </a>
+                {% endif %}
+
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">$</span>
+                    <span>Ventas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ♙
+                    </span>
+                    <span>Clientes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.compras') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">⇩</span>
+                    <span>Compras</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.proveedores') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">◇</span>
+                    <span>Proveedores</span>
+                </a>
+
+                <p class="navegacion__titulo">Control</p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.alertas') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">!</span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">▦</span>
+                    <span>Reportes</span>
+                </a>
+
+                {% if current_user.empresa.suscripcion_actual.plan.tiene_funcion('ia') %}
+                <a class="navegacion__enlace" href="{{ url_for('panel.asistente') }}"><span class="navegacion__icono" aria-hidden="true">✦</span><span>Nexu IA</span></a>
+                {% endif %}
+
+                {% if current_user.rol == "jefe" %}
+                    <p class="navegacion__titulo">
+                        Administración
+                    </p>
+
+                    <a
+                        class="navegacion__enlace"
+                        href="{{ url_for(
+                            'panel.administracion_usuarios'
+                        ) }}"
+                    >
+                        <span
+                            class="navegacion__icono"
+                            aria-hidden="true"
+                        >U</span>
+                        <span>Administración</span>
+                    </a>
+                    <a
+                        class="navegacion__enlace"
+                        href="{{ url_for(
+                            'panel.administracion_ubicaciones'
+                        ) }}"
+                    >
+                        <span
+                            class="navegacion__icono"
+                            aria-hidden="true"
+                        >⌖</span>
+                        <span>Sucursales y bodegas</span>
+                    </a>
+
+                    <a
+                        class="navegacion__enlace"
+                        href="{{ url_for(
+                            'panel.administracion_planes'
+                        ) }}"
+                    >
+                        <span
+                            class="navegacion__icono"
+                            aria-hidden="true"
+                        >◇</span>
+                        <span>
+                            Planes y suscripción
+                        </span>
+                    </a>
+
+                    <a class="navegacion__enlace" href="{{ url_for('panel.administracion_configuracion') }}">
+                        <span class="navegacion__icono" aria-hidden="true">⚙</span>
+                        <span>Configuración</span>
+                    </a>
+
+                    {% if current_user.empresa.suscripcion_actual.plan.tiene_funcion('auditoria') %}
+                    <a class="navegacion__enlace" href="{{ url_for('panel.administracion_auditoria') }}"><span class="navegacion__icono" aria-hidden="true">◎</span><span>Auditoría</span></a>
+                    {% endif %}
+
+                {% endif %}
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('contexto.seleccionar') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">⌖</span>
+                    <span>Cambiar ubicación</span>
+                </a>
+                <a class="navegacion__enlace" href="{{ url_for('panel.ayuda') }}">
+                    <span class="navegacion__icono" aria-hidden="true">?</span>
+                    <span>Centro de Ayuda</span>
+                </a>
+            </nav>
+
+            <div class="lateral__usuario">
+                <div class="usuario">
+                    <div class="usuario__avatar" aria-hidden="true">
+                        {{ current_user.nombre[:1] | upper }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{ current_user.apellido or "" }}
+                        </div>
+
+                        <div class="usuario__rol">
+                            {{ current_user.rol | replace("_", " ") | title }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">
+                            Panel empresarial
+                        </h1>
+
+                        <p class="cabecera__contexto">
+                            {{ contexto.sucursal.nombre }}
+                            ·
+                            {{ contexto.bodega.nombre }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <a
+                        class="boton boton--secundario"
+                        href="{{ url_for('contexto.seleccionar') }}"
+                    >
+                        Cambiar ubicación
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('autenticacion.salir') }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            class="boton boton--secundario"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="contenido">
+                {% for categoria, mensaje in
+                    get_flashed_messages(with_categories=true) %}
+                    <div class="mensaje mensaje--{{ categoria }}">
+                        {{ mensaje }}
+                    </div>
+                {% endfor %}
+
+                <section class="dashboard">
+                    <article class="bienvenida">
+                        <div class="bienvenida__contenido">
+                            <span class="bienvenida__estado">
+                                <i aria-hidden="true"></i> Operación en línea
+                            </span>
+                            <p id="saludo-panel" class="bienvenida__saludo">Hola</p>
+                            <h2>
+                                {{ current_user.nombre }}, mantengamos tu negocio
+                                <span>un paso adelante.</span>
+                            </h2>
+                            <p class="bienvenida__texto">
+                                Tu inventario de <strong>{{ contexto.bodega.nombre }}</strong>
+                                está listo para revisar. Prioriza lo importante y actúa rápido.
+                            </p>
+                            <div class="bienvenida__acciones">
+                                {% if permisos_dashboard.movimiento %}
+                                <a class="boton boton--luminoso" href="{{ url_for('panel.inventario') }}?accion=movimiento">
+                                    <span aria-hidden="true">＋</span> Registrar movimiento
+                                </a>
+                                <a class="boton boton--cristal" href="{{ url_for('panel.inventario') }}?escanear=1">
+                                    <span aria-hidden="true">⌗</span> Escanear producto
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="bienvenida__pulso" aria-label="Estado del inventario">
+                            <div class="pulso">
+                                <span id="salud-inventario">—</span>
+                                <small>salud operativa</small>
+                            </div>
+                            <p id="resumen-salud">Analizando inventario…</p>
+                        </div>
+                    </article>
+
+                    <div class="barra-dashboard">
+                        <div>
+                            <p class="encabezado__etiqueta">Hoy en tu negocio</p>
+                            <h2>Resumen inteligente</h2>
+                            <p id="fecha-panel">Información actualizada de tu ubicación activa</p>
+                        </div>
+                        <button id="actualizar-panel" class="boton boton--secundario boton--actualizar" type="button">
+                            <span aria-hidden="true">↻</span> Actualizar
+                        </button>
+                    </div>
+
+                    <div class="tarjetas">
+                        <a class="tarjeta tarjeta--metrica tarjeta--azul" href="{{ url_for('panel.productos') }}">
+                            <div class="metrica__superior"><span class="metrica__icono" aria-hidden="true">□</span><span class="metrica__enlace">Ver productos →</span></div>
+                            <p class="metrica__nombre">Productos activos</p>
+                            <p id="metrica-productos" class="metrica__valor">—</p>
+                            <p class="metrica__detalle">Catálogo disponible para operar</p>
+                        </a>
+                        <a class="tarjeta tarjeta--metrica tarjeta--verde" href="{{ url_for('panel.inventario') }}">
+                            <div class="metrica__superior"><span class="metrica__icono" aria-hidden="true">▤</span><span class="metrica__enlace">Abrir inventario →</span></div>
+                            <p class="metrica__nombre">Unidades disponibles</p>
+                            <p id="metrica-stock" class="metrica__valor">—</p>
+                            <p class="metrica__detalle">Stock utilizable en esta bodega</p>
+                        </a>
+                        <a class="tarjeta tarjeta--metrica tarjeta--violeta" href="{{ url_for('panel.reportes') }}">
+                            <div class="metrica__superior"><span class="metrica__icono" aria-hidden="true">◈</span><span class="metrica__enlace">Analizar valor →</span></div>
+                            <p class="metrica__nombre">Valor del inventario</p>
+                            <p id="metrica-valor" class="metrica__valor">—</p>
+                            <p class="metrica__detalle">Valorizado al costo promedio</p>
+                        </a>
+                        <a class="tarjeta tarjeta--metrica tarjeta--coral" href="{{ url_for('panel.alertas') }}">
+                            <div class="metrica__superior"><span class="metrica__icono" aria-hidden="true">!</span><span class="metrica__enlace">Resolver alertas →</span></div>
+                            <p class="metrica__nombre">Alertas activas</p>
+                            <p id="metrica-alertas" class="metrica__valor">—</p>
+                            <p class="metrica__detalle">Situaciones que requieren atención</p>
+                        </a>
+                        {% if permisos_dashboard.reportes %}<a class="tarjeta tarjeta--metrica tarjeta--dormido" href="{{ url_for('panel.reportes') }}#productos-sobrestock">
+                            <div class="metrica__superior"><span class="metrica__icono" aria-hidden="true">◒</span><span class="metrica__enlace">Liberar capital →</span></div>
+                            <p class="metrica__nombre">Dinero dormido</p>
+                            <p id="metrica-dinero-dormido" class="metrica__valor">—</p>
+                            <p id="detalle-dinero-dormido" class="metrica__detalle">Calculando capital inmovilizado…</p>
+                        </a>{% endif %}
+                    </div>
+
+                    <div class="acciones-rapidas" aria-label="Accesos rápidos">
+                        {% if permisos_dashboard.ventas %}
+                        <a href="{{ url_for('panel.ventas') }}"><span class="accion-rapida__icono accion-rapida__icono--verde" aria-hidden="true">$</span><span><strong>Nueva venta</strong><small>Registra una operación</small></span><b aria-hidden="true">›</b></a>
+                        {% endif %}
+                        {% if permisos_dashboard.compras %}
+                        <a href="{{ url_for('panel.compras') }}"><span class="accion-rapida__icono accion-rapida__icono--azul" aria-hidden="true">⇩</span><span><strong>Recibir compra</strong><small>Ingresa mercadería</small></span><b aria-hidden="true">›</b></a>
+                        {% endif %}
+                        <a href="{{ url_for('panel.reportes') }}"><span class="accion-rapida__icono accion-rapida__icono--violeta" aria-hidden="true">▦</span><span><strong>Ver reportes</strong><small>Descubre tendencias</small></span><b aria-hidden="true">›</b></a>
+                        {% if permisos_dashboard.ia %}
+                        <a class="accion-rapida--nexu" href="{{ url_for('panel.asistente') }}"><span class="accion-rapida__icono" aria-hidden="true">✦</span><span><strong>Preguntar a Nexu</strong><small>Tu asesor inteligente</small></span><b aria-hidden="true">›</b></a>
+                        {% endif %}
+                        <button id="alternar-ubicacion" class="accion-ubicacion" type="button"><span class="accion-rapida__icono accion-rapida__icono--azul" aria-hidden="true">⌖</span><span><strong id="ubicacion-titulo">{{ 'Dejar de compartir ubicación' if current_user.ubicacion_consentida else 'Compartir mi ubicación' }}</strong><small id="ubicacion-estado">{{ 'Activa con tu consentimiento' if current_user.ubicacion_consentida else 'Opcional, visible y revocable' }}</small></span><b aria-hidden="true">›</b></button>
+                    </div>
+
+                    <div class="rejilla">
+                        <article class="tarjeta">
+                            <div class="tarjeta__cabecera">
+                                <div>
+                                    <h3 class="tarjeta__titulo">Productos con stock</h3>
+                                    <p class="tarjeta__descripcion">
+                                        Productos de la ubicación seleccionada
+                                    </p>
+                                </div>
+
+                                <span class="insignia">
+                                    {{ contexto.bodega.nombre }}
+                                </span>
+                            </div>
+
+                            <div class="tabla-contenedor">
+                                <table class="tabla">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Cantidad</th>
+                                            <th>Reservada</th>
+                                            <th>Disponible</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="tabla-stock">
+                                        <tr>
+                                            <td
+                                                colspan="5"
+                                                class="estado-carga"
+                                            >
+                                                Cargando inventario…
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+
+                        <article class="tarjeta">
+                            <div class="tarjeta__cabecera">
+                                <div>
+                                    <h3 class="tarjeta__titulo">Requiere tu atención</h3>
+                                    <p class="tarjeta__descripcion">
+                                        Prioridades de inventario
+                                    </p>
+                                </div>
+                            </div>
+
+                            <ul id="lista-alertas" class="lista">
+                                <li class="estado-carga">
+                                    Cargando alertas…
+                                </li>
+                            </ul>
+                        </article>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for('static', filename='js/panel_empresarial.js') }}"
+        defer
+    ></script>
+    <script src="{{ url_for('static', filename='js/ubicacion_usuario.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+</body>
+</html>

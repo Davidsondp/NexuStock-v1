@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Selección de contexto operacional"
+    >
+    <meta
+        name="csrf-token"
+        content="{{ csrf_token() }}"
+    >
+
+    <title>
+        Seleccionar ubicación | NexuStock
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/contexto.css'
+        ) }}"
+    >
+</head>
+
+<body
+    data-api-bodegas-base="/contexto/bodegas"
+>
+    <main class="contexto-pagina">
+        <section class="contexto-marca">
+            <a
+                class="marca"
+                href="{{ url_for('panel.inicio') }}"
+                aria-label="Volver al panel"
+            >
+                <span class="marca__icono">
+                    <img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56">
+                </span>
+
+                <span>
+                    <strong>NexuStock</strong>
+                    <small>
+                        {{ current_user.empresa.nombre }}
+                    </small>
+                </span>
+            </a>
+
+            <div class="contexto-marca__mensaje">
+                <p>Contexto operacional</p>
+
+                <h1>
+                    Trabaja siempre en la ubicación
+                    correcta
+                </h1>
+
+                <span>
+                    El inventario, las ventas y los reportes
+                    se aplicarán a la bodega que selecciones.
+                </span>
+            </div>
+
+            <div class="contexto-marca__seguridad">
+                <span aria-hidden="true">✓</span>
+                <div>
+                    <strong>
+                        Acceso protegido
+                    </strong>
+                    <small>
+                        Solo puedes seleccionar sucursales
+                        autorizadas para tu cuenta.
+                    </small>
+                </div>
+            </div>
+        </section>
+
+        <section class="contexto-selector">
+            <div class="contexto-selector__contenedor">
+                <header class="contexto-selector__encabezado">
+                    <p>Preparar espacio de trabajo</p>
+                    <h2>Seleccionar ubicación</h2>
+                    <span>
+                        Define dónde registrarás la operación
+                        actual.
+                    </span>
+                </header>
+
+                {% with mensajes = get_flashed_messages(
+                    with_categories=true
+                ) %}
+                    {% if mensajes %}
+                        <div class="mensajes">
+                            {% for categoria, mensaje in mensajes %}
+                                <div
+                                    class="
+                                        mensaje
+                                        mensaje--{{ categoria }}
+                                    "
+                                    role="status"
+                                >
+                                    {{ mensaje }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form
+                    id="selector-contexto"
+                    class="contexto-formulario"
+                    method="post"
+                >
+                    {{ form.hidden_tag() }}
+
+                    <div class="campo">
+                        <label for="sucursal_id">
+                            Sucursal autorizada
+                        </label>
+
+                        {{ form.sucursal_id(
+                            class_="campo__control"
+                        ) }}
+
+                        {% for error in form.sucursal_id.errors %}
+                            <small class="campo__error">
+                                {{ error }}
+                            </small>
+                        {% endfor %}
+                    </div>
+
+                    <div class="campo">
+                        <label for="bodega_id">
+                            Bodega de trabajo
+                        </label>
+
+                        {{ form.bodega_id(
+                            class_="campo__control"
+                        ) }}
+
+                        {% for error in form.bodega_id.errors %}
+                            <small class="campo__error">
+                                {{ error }}
+                            </small>
+                        {% endfor %}
+                    </div>
+
+                    <div class="contexto-resumen">
+                        <article>
+                            <span>Sucursal</span>
+                            <strong id="resumen-sucursal">
+                                Sin seleccionar
+                            </strong>
+                        </article>
+
+                        <article>
+                            <span>Bodega</span>
+                            <strong id="resumen-bodega">
+                                Sin seleccionar
+                            </strong>
+                        </article>
+                    </div>
+
+                    <div
+                        id="estado-contexto"
+                        class="contexto-estado"
+                        aria-live="polite"
+                    >
+                        Selecciona una sucursal y una bodega.
+                    </div>
+
+                    <div class="contexto-formulario__acciones">
+                        <a
+                            id="volver-panel"
+                            class="boton boton--secundario"
+                            href="{{ url_for('panel.inicio') }}"
+                        >
+                            Volver al panel
+                        </a>
+
+                        {{ form.submit(
+                            class_="boton boton--primario"
+                        ) }}
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/contexto.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

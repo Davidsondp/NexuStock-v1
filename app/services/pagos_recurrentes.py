@@ -1,0 +1,533 @@
+"""Mandatos de tarjeta, cobro recurrente, reintentos y período de gracia."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import timedelta, timezone
+from decimal import Decimal
+import os
+from uuid import uuid4
+
+from flask import current_app
+from flask_mail import Message
+import requests
+
+from ..extensions import correo
+from ..models import Pago, PlanSaaS, SolicitudCambioPlan, Suscripcion, Usuario, db, utcnow
+from .auditoria import registrar_auditoria
+from .notificaciones import notificar_empresa
+from .suscripciones import ProcesadorWebhooksPago
+
+
+class ErrorPagoRecurrente(ValueError):
+    codigo = "pago_recurrente_invalido"
+
+
+class RechazoPagoRecurrente(ErrorPagoRecurrente):
+    codigo = "pago_recurrente_rechazado"
+
+
+@dataclass(frozen=True)
+class MandatoIniciado:
+    proveedor: str
+    referencia: str
+    url: str
+    token: str | None = None
+
+
+class ClienteMercadoPagoSuscripciones:
+    API_URL = "https://api.mercadopago.com"
+
+    def __init__(self, access_token, timeout=(5, 20)):
+        self.timeout = timeout
+        self.headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+    def _solicitar(self, metodo, ruta, **kwargs):
+        try:
+            respuesta = requests.request(
+                metodo,
+                self.API_URL + ruta,
+                headers=self.headers,
+                timeout=self.timeout,
+                **kwargs,
+            )
+            respuesta.raise_for_status()
+            datos = respuesta.json()
+        except (requests.RequestException, ValueError) as exc:
+            raise ErrorPagoRecurrente("Mercado Pago Suscripciones no está disponible") from exc
+        if not isinstance(datos, dict):
+            raise ErrorPagoRecurrente("Mercado Pago devolvió una respuesta inválida")
+        return datos
+
+    def crear_mandato(self, datos):
+        return self._solicitar("POST", "/preapproval", json=datos)
+
+    def obtener_mandato(self, referencia):
+        return self._solicitar("GET", f"/preapproval/{referencia}")
+
+    def buscar_cobros(self, referencia):
+        datos = self._solicitar(
+            "GET", "/v1/payments/search", params={"subscription_id": referencia}
+        )
+        return [item for item in datos.get("results", []) if isinstance(item, dict)]
+
+
+class ClienteOneclick:
+    RUTA_INSCRIPCIONES = "/rswebpaytransaction/api/oneclick/v1.2/inscriptions"
+    RUTA_TRANSACCIONES = "/rswebpaytransaction/api/oneclick/v1.2/transactions"
+
+    def __init__(self, *, base_url, codigo_padre, codigo_hijo, api_key, timeout=(5, 20)):
+        self.base_url = base_url.rstrip("/")
+        self.codigo_hijo = codigo_hijo
+        self.timeout = timeout
+        self.headers = {
+            "Tbk-Api-Key-Id": codigo_padre,
+            "Tbk-Api-Key-Secret": api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+    def _solicitar(self, metodo, ruta, **kwargs):
+        try:
+            respuesta = requests.request(
+                metodo,
+                self.base_url + ruta,
+                headers=self.headers,
+                timeout=self.timeout,
+                **kwargs,
+            )
+            respuesta.raise_for_status()
+            datos = respuesta.json()
+        except (requests.RequestException, ValueError) as exc:
+            raise ErrorPagoRecurrente("Webpay Oneclick no está disponible") from exc
+        if not isinstance(datos, dict):
+            raise ErrorPagoRecurrente("Oneclick devolvió una respuesta inválida")
+        return datos
+
+    def iniciar_inscripcion(self, *, username, email, response_url):
+        return self._solicitar(
+            "POST",
+            self.RUTA_INSCRIPCIONES,
+            json={"username": username, "email": email, "response_url": response_url},
+        )
+
+    def finalizar_inscripcion(self, token):
+        return self._solicitar("PUT", f"{self.RUTA_INSCRIPCIONES}/{token}")
+
+    def cobrar(self, *, username, tbk_user, buy_order, amount):
+        return self._solicitar(
+            "POST",
+            self.RUTA_TRANSACCIONES,
+            json={
+                "username": username,
+                "tbk_user": tbk_user,
+                "buy_order": buy_order,
+                "details": [
+                    {
+                        "commerce_code": self.codigo_hijo,
+                        "buy_order": buy_order,
+                        "amount": float(amount),
+                        "installments_number": 1,
+                    }
+                ],
+            },
+        )
+
+
+def cliente_mercadopago(configuracion):
+    fabrica = configuracion.get("MERCADOPAGO_SUSCRIPCIONES_FACTORY")
+    if callable(fabrica):
+        return fabrica()
+    token = str(configuracion.get("MERCADOPAGO_ACCESS_TOKEN") or "").strip()
+    if not token:
+        raise ErrorPagoRecurrente("Falta MERCADOPAGO_ACCESS_TOKEN")
+    return ClienteMercadoPagoSuscripciones(token)
+
+
+def cliente_oneclick(configuracion):
+    fabrica = configuracion.get("WEBPAY_ONECLICK_FACTORY")
+    if callable(fabrica):
+        return fabrica()
+    padre = str(configuracion.get("WEBPAY_ONECLICK_PARENT_COMMERCE_CODE") or "").strip()
+    hijo = str(configuracion.get("WEBPAY_ONECLICK_CHILD_COMMERCE_CODE") or "").strip()
+    api_key = str(configuracion.get("WEBPAY_ONECLICK_API_KEY") or "").strip()
+    if not padre or not hijo or not api_key:
+        raise ErrorPagoRecurrente("Faltan las credenciales de Webpay Oneclick Mall")
+    ambiente = str(configuracion.get("WEBPAY_ENV") or "integration").lower()
+    base_url = (
+        "https://webpay3gint.transbank.cl"
+        if ambiente == "integration"
+        else "https://webpay3g.transbank.cl"
+    )
+    return ClienteOneclick(
+        base_url=base_url,
+        codigo_padre=padre,
+        codigo_hijo=hijo,
+        api_key=api_key,
+    )
+
+
+def _solicitud_abierta(suscripcion):
+    return db.session.scalar(
+        db.select(SolicitudCambioPlan)
+        .where(
+            SolicitudCambioPlan.empresa_id == suscripcion.empresa_id,
+            SolicitudCambioPlan.estado.in_(("pendiente", "pago_en_proceso")),
+        )
+        .order_by(SolicitudCambioPlan.id.desc())
+        .limit(1)
+    )
+
+
+def iniciar_mandato(*, usuario, proveedor, base_url, configuracion):
+    # La prueba aún no es vigente mientras la tarjeta está pendiente, por eso
+    # se recupera explícitamente la última suscripción de la empresa.
+    suscripcion = db.session.scalar(
+        db.select(Suscripcion)
+        .where(Suscripcion.empresa_id == usuario.empresa_id)
+        .order_by(Suscripcion.id.desc())
+        .limit(1)
+    )
+    solicitud = _solicitud_abierta(suscripcion) if suscripcion else None
+    if not suscripcion or not solicitud or suscripcion.estado != "prueba":
+        raise ErrorPagoRecurrente("No existe una prueba con plan seleccionado")
+    proveedor = str(proveedor or solicitud.proveedor_preferido or "").lower()
+    referencia_externa = f"NS-SUB-{suscripcion.empresa_id}-{suscripcion.id}"
+    if proveedor == "mercadopago":
+        plan = db.session.get(PlanSaaS, solicitud.plan_solicitado_id)
+        monto = Decimal(solicitud.monto_esperado)
+        frecuencia, tipo = (1, "months") if solicitud.ciclo == "mensual" else (12, "months")
+        inicio = (suscripcion.fecha_fin or (utcnow() + timedelta(days=30))).replace(
+            tzinfo=timezone.utc
+        )
+        respuesta = cliente_mercadopago(configuracion).crear_mandato(
+            {
+                "reason": f"NexuStock - Plan {plan.nombre}",
+                "external_reference": referencia_externa,
+                "payer_email": ((str(os.getenv("MERCADOPAGO_TEST_PAYER_EMAIL") or "").strip().lower() or usuario.email) if current_app.debug else usuario.email),
+                "back_url": base_url.rstrip("/") + "/webhooks/pagos/mandato/mercadopago/retorno",
+                "auto_recurring": {
+                    "frequency": frecuencia,
+                    "frequency_type": tipo,
+                    "start_date": inicio.isoformat(),
+                    "transaction_amount": float(monto),
+                    "currency_id": solicitud.moneda,
+                },
+                "status": "pending",
+            }
+        )
+        referencia = str(respuesta.get("id") or "")
+        url = str(respuesta.get("init_point") or "")
+        if not referencia or not url.startswith("https://"):
+            raise ErrorPagoRecurrente("Mercado Pago no entregó un mandato válido")
+        suscripcion.proveedor_cobro = proveedor
+        suscripcion.referencia_metodo_pago = referencia
+        suscripcion.metodo_pago_recurrente_estado = "pendiente"
+        db.session.commit()
+        return MandatoIniciado(proveedor, referencia, url)
+    if proveedor == "webpay":
+        username = f"nexustock-{suscripcion.empresa_id}-{usuario.id}"
+        respuesta = cliente_oneclick(configuracion).iniciar_inscripcion(
+            username=username,
+            email=usuario.email,
+            response_url=base_url.rstrip("/") + "/webhooks/pagos/mandato/webpay/retorno",
+        )
+        token = str(respuesta.get("token") or "")
+        url = str(respuesta.get("url_webpay") or respuesta.get("url") or "")
+        if not token or not url.startswith("https://"):
+            raise ErrorPagoRecurrente("Oneclick no entregó una inscripción válida")
+        suscripcion.proveedor_cobro = proveedor
+        suscripcion.referencia_metodo_pago = "pendiente:" + token
+        suscripcion.metodo_pago_recurrente_estado = "pendiente"
+        db.session.commit()
+        return MandatoIniciado(proveedor, referencia_externa, url, token)
+    raise ErrorPagoRecurrente("Proveedor recurrente no admitido")
+
+
+def _activar_mandato(suscripcion, proveedor, referencia):
+    ahora = utcnow()
+    dias_prueba = int(suscripcion.plan.dias_prueba or 30)
+    suscripcion.proveedor_cobro = proveedor
+    suscripcion.referencia_metodo_pago = referencia
+    suscripcion.metodo_pago_recurrente_estado = "activo"
+    suscripcion.renovacion_automatica = True
+    suscripcion.cancelar_al_fin_periodo = False
+    suscripcion.estado = "prueba"
+    suscripcion.ciclo = "prueba"
+    suscripcion.fecha_inicio = ahora
+    suscripcion.fecha_fin = ahora + timedelta(days=dias_prueba)
+    suscripcion.periodo_actual_inicio = ahora
+    suscripcion.periodo_actual_fin = suscripcion.fecha_fin
+    suscripcion.fecha_proximo_cobro = suscripcion.fecha_fin
+    suscripcion.intentos_cobro = 0
+    registrar_auditoria(
+        accion="suscripcion.mandato_recurrente_activado",
+        modulo="suscripciones",
+        empresa_id=suscripcion.empresa_id,
+        entidad_tipo="Suscripcion",
+        entidad_id=suscripcion.id,
+        datos_nuevos={
+            "proveedor": proveedor,
+            "prueba_inicia": ahora.isoformat(),
+            "prueba_finaliza": suscripcion.fecha_fin.isoformat(),
+        },
+    )
+    db.session.commit()
+    return suscripcion
+
+
+def confirmar_mandato_mercadopago(*, suscripcion, configuracion):
+    referencia = str(suscripcion.referencia_metodo_pago or "")
+    datos = cliente_mercadopago(configuracion).obtener_mandato(referencia)
+    esperada = f"NS-SUB-{suscripcion.empresa_id}-{suscripcion.id}"
+    if datos.get("status") != "authorized" or datos.get("external_reference") != esperada:
+        raise ErrorPagoRecurrente("Mercado Pago todavía no autorizó la suscripción")
+    return _activar_mandato(suscripcion, "mercadopago", referencia)
+
+
+def confirmar_mandato_oneclick(*, suscripcion, token, configuracion):
+    datos = cliente_oneclick(configuracion).finalizar_inscripcion(token)
+    referencia = str(datos.get("tbk_user") or "")
+    codigo = int(datos.get("response_code", 0))
+    if not referencia or codigo != 0:
+        raise ErrorPagoRecurrente("Oneclick rechazó la inscripción de la tarjeta")
+    return _activar_mandato(suscripcion, "webpay", referencia)
+
+
+def _enviar_aviso(suscripcion, titulo, mensaje, tipo):
+    notificar_empresa(
+        empresa_id=suscripcion.empresa_id,
+        tipo=tipo,
+        titulo=titulo,
+        mensaje=mensaje,
+    )
+    destinatarios = list(
+        db.session.scalars(
+            db.select(Usuario.email).where(
+                Usuario.empresa_id == suscripcion.empresa_id,
+                Usuario.activo.is_(True),
+                Usuario.rol == "jefe",
+            )
+        )
+    )
+    if destinatarios:
+        try:
+            correo.send(Message(subject=titulo, recipients=destinatarios, body=mensaje))
+        except Exception:
+            current_app.logger.exception("No fue posible enviar el aviso de renovación")
+
+
+def _registrar_fallo(suscripcion, pago, mensaje, ahora, configuracion):
+    pago.estado = "rechazado"
+    pago.datos_proveedor = {"motivo": mensaje}
+    suscripcion.intentos_cobro += 1
+    suscripcion.ultimo_intento_cobro_en = ahora
+    suscripcion.ultimo_error_cobro = mensaje[:500]
+    demoras = (1, 3, 7)
+    indice = min(suscripcion.intentos_cobro - 1, len(demoras) - 1)
+    suscripcion.proximo_reintento_en = ahora + timedelta(days=demoras[indice])
+    gracia_dias = int(configuracion.get("RENOVACION_GRACIA_DIAS", 7))
+    suscripcion.gracia_hasta = (suscripcion.fecha_fin or ahora) + timedelta(days=gracia_dias)
+    maximos = int(configuracion.get("RENOVACION_MAX_REINTENTOS", 3))
+    if suscripcion.intentos_cobro >= maximos and ahora >= suscripcion.gracia_hasta:
+        suscripcion.estado = "suspendida"
+        suscripcion.renovacion_automatica = False
+    _enviar_aviso(
+        suscripcion,
+        "No pudimos renovar tu plan NexuStock",
+        (
+            f"El cobro fue rechazado. Reintentaremos el {suscripcion.proximo_reintento_en:%d-%m-%Y}. "
+            f"Tu período de gracia termina el {suscripcion.gracia_hasta:%d-%m-%Y}."
+        ),
+        "renovacion_rechazada",
+    )
+
+
+def _crear_intento(suscripcion, solicitud, ahora):
+    referencia = f"NS-REN-{suscripcion.id}-{ahora:%Y%m%d}-{uuid4().hex[:8]}"
+    pago = Pago(
+        empresa_id=suscripcion.empresa_id,
+        suscripcion_id=suscripcion.id,
+        solicitud_id=solicitud.id,
+        plan_solicitado_id=solicitud.plan_solicitado_id,
+        ciclo=solicitud.ciclo,
+        proveedor=suscripcion.proveedor_cobro,
+        referencia_externa=referencia,
+        estado="procesando",
+        monto=solicitud.monto_esperado,
+        moneda=solicitud.moneda,
+        metodo="oneclick" if suscripcion.proveedor_cobro == "webpay" else "preapproval",
+        datos_proveedor={},
+    )
+    db.session.add(pago)
+    db.session.flush()
+    solicitud.estado = "pago_en_proceso"
+    return pago
+
+
+def _cobrar_oneclick(suscripcion, pago, configuracion):
+    usuario = db.session.scalar(
+        db.select(Usuario).where(
+            Usuario.empresa_id == suscripcion.empresa_id,
+            Usuario.rol == "jefe",
+            Usuario.activo.is_(True),
+        )
+    )
+    if not usuario:
+        raise ErrorPagoRecurrente("La empresa no tiene un responsable activo para el cobro")
+    datos = cliente_oneclick(configuracion).cobrar(
+        username=f"nexustock-{suscripcion.empresa_id}-{usuario.id}",
+        tbk_user=suscripcion.referencia_metodo_pago,
+        buy_order=pago.referencia_externa[:26],
+        amount=pago.monto,
+    )
+    detalles = datos.get("details") or []
+    detalle = detalles[0] if detalles and isinstance(detalles[0], dict) else datos
+    if int(detalle.get("response_code", -1)) != 0:
+        raise RechazoPagoRecurrente("Oneclick rechazó el cobro recurrente")
+    return str(datos.get("buy_order") or detalle.get("buy_order") or pago.referencia_externa), datos
+
+
+def _cobrar_mercadopago(suscripcion, pago, configuracion):
+    cobros = cliente_mercadopago(configuracion).buscar_cobros(suscripcion.referencia_metodo_pago)
+    aprobados = [c for c in cobros if c.get("status") == "approved"]
+    usados = set(
+        db.session.scalars(
+            db.select(Pago.transaccion_proveedor_id).where(
+                Pago.proveedor == "mercadopago",
+                Pago.transaccion_proveedor_id.is_not(None),
+            )
+        )
+    )
+    candidato = next((c for c in aprobados if str(c.get("id")) not in usados), None)
+    if not candidato:
+        raise RechazoPagoRecurrente("Mercado Pago todavía no confirmó el cobro recurrente")
+    if Decimal(str(candidato.get("transaction_amount"))) != Decimal(pago.monto):
+        raise RechazoPagoRecurrente("Mercado Pago confirmó un monto diferente")
+    if str(candidato.get("currency_id") or "").upper() != str(pago.moneda).upper():
+        raise RechazoPagoRecurrente("Mercado Pago confirmó una moneda diferente")
+    return str(candidato["id"]), candidato
+
+
+def procesar_renovaciones(*, configuracion, ahora=None, limite=200):
+    ahora = ahora or utcnow()
+    maximos = int(configuracion.get("RENOVACION_MAX_REINTENTOS", 3))
+    vencidas_en_gracia = db.session.scalars(
+        db.select(Suscripcion).where(
+            Suscripcion.estado.in_(("prueba", "activa")),
+            Suscripcion.renovacion_automatica.is_(True),
+            Suscripcion.intentos_cobro >= maximos,
+            Suscripcion.gracia_hasta.is_not(None),
+            Suscripcion.gracia_hasta <= ahora,
+        )
+    )
+    suspendidas = 0
+    for suscripcion in vencidas_en_gracia:
+        suscripcion.estado = "suspendida"
+        suscripcion.renovacion_automatica = False
+        suscripcion.metodo_pago_recurrente_estado = "fallido"
+        _enviar_aviso(
+            suscripcion,
+            "Tu suscripción NexuStock fue suspendida",
+            "Finalizó el período de gracia sin poder confirmar el pago. Actualiza tu medio de pago para reactivar el servicio.",
+            "suscripcion_suspendida",
+        )
+        suspendidas += 1
+    if suspendidas:
+        db.session.commit()
+    proximas = db.session.scalars(
+        db.select(Suscripcion).where(
+            Suscripcion.estado.in_(("prueba", "activa")),
+            Suscripcion.renovacion_automatica.is_(True),
+            Suscripcion.metodo_pago_recurrente_estado == "activo",
+            Suscripcion.fecha_proximo_cobro > ahora,
+            Suscripcion.fecha_proximo_cobro <= ahora + timedelta(days=3),
+            db.or_(
+                Suscripcion.ultimo_cobro_notificado_en.is_(None),
+                Suscripcion.ultimo_cobro_notificado_en
+                < Suscripcion.fecha_proximo_cobro - timedelta(days=3),
+            ),
+        )
+    )
+    avisos = 0
+    for suscripcion in proximas:
+        _enviar_aviso(
+            suscripcion,
+            "Próxima renovación de NexuStock",
+            f"Cobraremos tu plan el {suscripcion.fecha_proximo_cobro:%d-%m-%Y}. Puedes cancelar la renovación antes de esa fecha.",
+            "renovacion_proxima",
+        )
+        suscripcion.ultimo_cobro_notificado_en = ahora
+        avisos += 1
+    if avisos:
+        db.session.commit()
+    consulta = (
+        db.select(Suscripcion)
+        .where(
+            Suscripcion.estado.in_(("prueba", "activa")),
+            Suscripcion.renovacion_automatica.is_(True),
+            Suscripcion.metodo_pago_recurrente_estado == "activo",
+            Suscripcion.cancelar_al_fin_periodo.is_(False),
+            Suscripcion.intentos_cobro < maximos,
+            db.or_(
+                db.and_(
+                    Suscripcion.intentos_cobro == 0,
+                    Suscripcion.fecha_proximo_cobro <= ahora,
+                ),
+                db.and_(
+                    Suscripcion.intentos_cobro > 0,
+                    Suscripcion.proximo_reintento_en.is_not(None),
+                    Suscripcion.proximo_reintento_en <= ahora,
+                ),
+            ),
+        )
+        .order_by(Suscripcion.fecha_proximo_cobro, Suscripcion.id)
+        .limit(limite)
+        .with_for_update(skip_locked=True)
+    )
+    resultado = {
+        "procesadas": 0,
+        "pagadas": 0,
+        "rechazadas": 0,
+        "omitidas": 0,
+        "avisos": avisos,
+        "suspendidas": suspendidas,
+    }
+    for suscripcion in db.session.scalars(consulta):
+        solicitud = _solicitud_abierta(suscripcion)
+        if not solicitud:
+            resultado["omitidas"] += 1
+            continue
+        pago = _crear_intento(suscripcion, solicitud, ahora)
+        try:
+            if suscripcion.proveedor_cobro == "webpay":
+                transaccion, datos = _cobrar_oneclick(suscripcion, pago, configuracion)
+            elif suscripcion.proveedor_cobro == "mercadopago":
+                transaccion, datos = _cobrar_mercadopago(suscripcion, pago, configuracion)
+            else:
+                raise ErrorPagoRecurrente("Proveedor recurrente no admitido")
+            pago.transaccion_proveedor_id = transaccion
+            pago.datos_proveedor = datos
+            ProcesadorWebhooksPago._confirmar(pago)
+            suscripcion.fecha_proximo_cobro = suscripcion.fecha_fin
+            suscripcion.proximo_reintento_en = None
+            suscripcion.intentos_cobro = 0
+            suscripcion.ultimo_error_cobro = None
+            suscripcion.ultimo_intento_cobro_en = ahora
+            _enviar_aviso(
+                suscripcion,
+                "Tu plan NexuStock fue renovado",
+                f"Confirmamos la renovación de tu plan hasta el {suscripcion.fecha_fin:%d-%m-%Y}.",
+                "renovacion_confirmada",
+            )
+            resultado["pagadas"] += 1
+        except (ErrorPagoRecurrente, RechazoPagoRecurrente) as exc:
+            _registrar_fallo(suscripcion, pago, str(exc), ahora, configuracion)
+            resultado["rechazadas"] += 1
+        resultado["procesadas"] += 1
+        db.session.commit()
+    return resultado

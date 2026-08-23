@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Ingresar | NexuStock{% endblock %}
+
+{% block content %}
+<section class="tarjeta-autenticacion">
+    <header class="tarjeta-autenticacion__cabecera">
+        <p class="etiqueta">Bienvenido de nuevo</p>
+        <h1>Ingresar a NexuStock</h1>
+        <p>
+            Accede a la operación de tu empresa.
+        </p>
+    </header>
+
+    <form
+        id="formulario-ingreso"
+        class="formulario-autenticacion"
+        method="post"
+        novalidate
+    >
+        {{ form.hidden_tag() }}
+
+        <div class="campo">
+            {{ form.email.label(class="campo__etiqueta") }}
+            {{
+                form.email(
+                    class="campo__control",
+                    autocomplete="email",
+                    placeholder="nombre@empresa.cl"
+                )
+            }}
+
+            {% for error in form.email.errors %}
+                <span class="campo__error" role="alert">
+                    {{ error }}
+                </span>
+            {% endfor %}
+        </div>
+
+        <div class="campo">
+            <div class="campo__cabecera">
+                {{
+                    form.password.label(
+                        class="campo__etiqueta"
+                    )
+                }}
+
+                <a
+                    id="enlace-recuperacion"
+                    class="enlace"
+                    href="{{ url_for(
+                        'autenticacion.olvide_password'
+                    ) }}"
+                >
+                    Olvidé mi contraseña
+                </a>
+            </div>
+
+            <div class="campo-password">
+                {{
+                    form.password(
+                        id="password",
+                        class="campo__control",
+                        autocomplete="current-password",
+                        placeholder="Tu contraseña"
+                    )
+                }}
+
+                <button
+                    id="alternar-password"
+                    class="campo-password__alternar"
+                    type="button"
+                    data-alternar-password="password"
+                    aria-label="Mostrar contraseña"
+                    aria-pressed="false"
+                >
+                    Mostrar
+                </button>
+            </div>
+
+            {% for error in form.password.errors %}
+                <span class="campo__error" role="alert">
+                    {{ error }}
+                </span>
+            {% endfor %}
+        </div>
+
+        <label class="recordarme">
+            {{ form.recordar() }}
+            <span>{{ form.recordar.label.text }}</span>
+        </label>
+
+        {{
+            form.submit(
+                class="boton boton--primario"
+            )
+        }}
+    </form>
+
+    <footer class="tarjeta-autenticacion__pie">
+        <span>¿Aún no tienes una cuenta?</span>
+        <a
+            id="enlace-registro"
+            class="enlace enlace--destacado"
+            href="{{ url_for(
+                'autenticacion.registro'
+            ) }}"
+        >
+            Crear empresa
+        </a>
+    </footer>
+</section>
+
+<section class="tarjeta-autenticacion tarjeta-autenticacion--compacta">
+    <header class="tarjeta-autenticacion__cabecera">
+        <h2>¿No recibiste la verificación?</h2>
+        <p>Solicita un enlace nuevo. Revisa también la carpeta de spam.</p>
+    </header>
+    <form method="post" action="{{ url_for('autenticacion.reenviar_verificacion') }}" class="formulario-autenticacion">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="campo">
+            <span class="campo__etiqueta">Correo</span>
+            <input class="campo__control" type="email" name="email" autocomplete="email" required>
+        </label>
+        <button class="boton boton--secundario" type="submit">Reenviar verificación</button>
+    </form>
+</section>
+{% endblock %}

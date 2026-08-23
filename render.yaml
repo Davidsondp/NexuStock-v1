@@ -1,0 +1,227 @@
+databases:
+  - name: nexustock-db
+    databaseName: nexustock
+    user: nexustock
+    plan: basic-256mb
+    ipAllowList: []
+
+services:
+  - type: web
+    name: nexustock
+    runtime: python
+    plan: starter
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    preDeployCommand: flask --app run.py db upgrade && flask --app run.py seed-planes && flask --app run.py verificar-produccion
+    startCommand: gunicorn --config gunicorn.conf.py run:app
+    healthCheckPath: /estado/preparacion
+    envVars:
+      - key: FLASK_ENV
+        value: produccion
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexustock-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: LIMITE_SOLICITUDES_SECRET
+        generateValue: true
+      - key: TWO_FACTOR_ENCRYPTION_KEYS
+        generateValue: true
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
+      - key: IMAGE_ALLOWED_HOSTS
+        sync: false
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "true"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+      - key: SOPORTE_EMAIL
+        value: equipos@nexustock.cl
+      - key: BASE_URL
+        sync: false
+      - key: WEBPAY_COMMERCE_CODE
+        sync: false
+      - key: WEBPAY_API_KEY
+        sync: false
+      - key: WEBPAY_ONECLICK_PARENT_COMMERCE_CODE
+        sync: false
+      - key: WEBPAY_ONECLICK_CHILD_COMMERCE_CODE
+        sync: false
+      - key: WEBPAY_ONECLICK_API_KEY
+        sync: false
+      - key: WEBPAY_ENV
+        value: production
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_WEBHOOK_SECRET
+        sync: false
+      - key: MERCADOPAGO_ENV
+        value: production
+      - key: DTE_PROVIDER_URL
+        sync: false
+      - key: DTE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.6-luna
+      - key: IA_LIMITE_DIARIO_EMPRESA
+        value: "100"
+      - key: IA_TIMEOUT_SEGUNDOS
+        value: "30"
+      - key: IMPORTACION_MAX_BYTES
+        value: "10485760"
+      - key: IMPORTACION_MAX_FILAS
+        value: "2000"
+
+  - type: cron
+    name: nexustock-conciliacion-pagos
+    runtime: python
+    plan: starter
+    schedule: "*/5 * * * *"
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: flask --app run.py conciliar-pagos
+    envVars:
+      - key: FLASK_ENV
+        value: produccion
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexustock-db
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: LIMITE_SOLICITUDES_SECRET
+        sync: false
+      - key: TWO_FACTOR_ENCRYPTION_KEYS
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "true"
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+      - key: WEBPAY_COMMERCE_CODE
+        sync: false
+      - key: WEBPAY_API_KEY
+        sync: false
+      - key: WEBPAY_ENV
+        value: production
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_WEBHOOK_SECRET
+        sync: false
+      - key: MERCADOPAGO_ENV
+        value: production
+
+  - type: cron
+    name: nexustock-renovaciones
+    runtime: python
+    plan: starter
+    schedule: "0 */6 * * *"
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: flask --app run.py renovar-suscripciones
+    envVars:
+      - key: FLASK_ENV
+        value: produccion
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexustock-db
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: LIMITE_SOLICITUDES_SECRET
+        sync: false
+      - key: TWO_FACTOR_ENCRYPTION_KEYS
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "true"
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: WEBPAY_ENV
+        value: production
+      - key: WEBPAY_ONECLICK_PARENT_COMMERCE_CODE
+        sync: false
+      - key: WEBPAY_ONECLICK_CHILD_COMMERCE_CODE
+        sync: false
+      - key: WEBPAY_ONECLICK_API_KEY
+        sync: false
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+
+  - type: cron
+    name: nexustock-alertas
+    runtime: python
+    plan: starter
+    schedule: "0 * * * *"
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: flask --app run.py generar-alertas
+    envVars:
+      - key: FLASK_ENV
+        value: produccion
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexustock-db
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: LIMITE_SOLICITUDES_SECRET
+        sync: false
+      - key: TWO_FACTOR_ENCRYPTION_KEYS
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+
+  - type: cron
+    name: nexustock-snapshots
+    runtime: python
+    plan: starter
+    schedule: "15 3 * * *"
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: flask --app run.py capturar-inventario
+    envVars:
+      - key: FLASK_ENV
+        value: produccion
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexustock-db
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: LIMITE_SOLICITUDES_SECRET
+        sync: false
+      - key: TWO_FACTOR_ENCRYPTION_KEYS
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false

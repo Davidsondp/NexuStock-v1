@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Plan Empresarial | NexuStock{% endblock %}
+{% block content %}
+<section class="tarjeta-autenticacion tarjeta-autenticacion--amplia contrato-empresarial">
+    {% if enviado %}
+        <div class="contrato-confirmacion">
+            <span aria-hidden="true">✓</span>
+            <p class="etiqueta">Solicitud recibida</p>
+            <h1>Diseñaremos tu contrato Empresarial</h1>
+            <p>El equipo comercial revisará la capacidad requerida, la forma de pago y la activación de los 30 días de evaluación.</p>
+            <a class="boton boton--primario" href="{{ url_for('planes_publicos') }}">Volver a los planes</a>
+        </div>
+    {% else %}
+        <header class="tarjeta-autenticacion__cabecera">
+            <p class="etiqueta">Empresarial · Contrato personalizado</p>
+            <h1>Cuéntanos qué necesita tu organización</h1>
+            <p>Empresarial no utiliza checkout automático. Definimos capacidad, implementación, soporte, prueba y facturación mediante contrato.</p>
+        </header>
+        {% if error %}<div class="mensaje mensaje--peligro" role="alert">{{ error }}</div>{% endif %}
+        <form class="formulario-autenticacion formulario-autenticacion--rejilla" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input class="campo-trampa" type="text" name="sitio_web" tabindex="-1" autocomplete="off">
+            {% for nombre, etiqueta, tipo in [
+                ('empresa_nombre','Empresa','text'), ('contacto_nombre','Persona de contacto','text'),
+                ('email','Correo corporativo','email'), ('telefono','Teléfono','tel'),
+                ('productos_estimados','Productos estimados','number'), ('usuarios_estimados','Usuarios estimados','number')
+            ] %}
+                <label class="campo"><span class="campo__etiqueta">{{ etiqueta }}</span><input class="campo__control" type="{{ tipo }}" name="{{ nombre }}" value="{{ datos.get(nombre, '') }}" {% if nombre in ['empresa_nombre','contacto_nombre','email'] %}required{% endif %}></label>
+            {% endfor %}
+            <label class="campo campo--ancho"><span class="campo__etiqueta">Necesidades de implementación</span><textarea class="campo__control contrato-mensaje" name="mensaje" maxlength="3000" placeholder="Sucursales, bodegas, integraciones, migración, soporte…">{{ datos.get('mensaje', '') }}</textarea></label>
+            <div class="registro-seguridad campo--ancho"><span>✓</span><p><strong>Sin cobros automáticos.</strong> La prueba de 30 días, el calendario de pago y la renovación se formalizan en el contrato.</p></div>
+            <div class="formulario-autenticacion__acciones"><button class="boton boton--primario" type="submit">Solicitar propuesta</button></div>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}

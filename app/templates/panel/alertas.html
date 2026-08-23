@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Centro de alertas inteligentes de NexuStock"
+    >
+
+    <title>Alertas | NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/panel_empresarial.css'
+        ) }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/alertas.css'
+        ) }}"
+    >
+</head>
+
+<body
+    data-api-alertas="{{ url_for('alertas.listar') }}"
+    data-permiso-gestionar="{{ permisos.gestionar | tojson }}"
+>
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegación empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">
+                        NexuStock
+                    </p>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav
+                class="navegacion"
+                aria-label="Módulos empresariales"
+            >
+                <p class="navegacion__titulo">
+                    Operación
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌂</span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >□</span>
+                    <span>Productos</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inventario') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >≡</span>
+                    <span>Inventario</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.proveedores') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >P</span>
+                    <span>Proveedores</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >C</span>
+                    <span>Clientes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >$</span>
+                    <span>Ventas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.compras') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⇩</span>
+                    <span>Compras</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Control
+                </p>
+
+                <a
+                    class="
+                        navegacion__enlace
+                        navegacion__enlace--activo
+                    "
+                    href="{{ url_for('panel.alertas') }}"
+                    aria-current="page"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >!</span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >▦</span>
+                    <span>Reportes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'contexto.seleccionar'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌖</span>
+                    <span>Cambiar ubicación</span>
+                </a>
+            </nav>
+
+            <div class="lateral__usuario">
+                <div class="usuario">
+                    <div
+                        class="usuario__avatar"
+                        aria-hidden="true"
+                    >
+                        {{
+                            current_user.nombre[:1]
+                            | upper
+                        }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{
+                                current_user.apellido
+                                or ""
+                            }}
+                        </div>
+                        <span class="usuario__rol">
+                            {{
+                                current_user.rol
+                                | replace("_", " ")
+                                | title
+                            }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">
+                            Centro de alertas
+                        </h1>
+                        <p class="cabecera__contexto">
+                            {{ contexto.sucursal.nombre }}
+                            ·
+                            {{ contexto.bodega.nombre }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <button
+                        id="actualizar-alertas"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Actualizar
+                    </button>
+
+                    <form
+                        method="post"
+                        action="{{ url_for(
+                            'autenticacion.salir'
+                        ) }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            class="boton boton--secundario"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="alertas-contenido">
+                <section class="alertas-portada">
+                    <div>
+                        <p class="alertas-portada__etiqueta">
+                            Control automático
+                        </p>
+                        <h2>
+                            Lo importante, antes de que
+                            se convierta en un problema
+                        </h2>
+                        <p>
+                            NexuStock analiza el inventario
+                            automáticamente y organiza aquí
+                            las situaciones que requieren
+                            atención.
+                        </p>
+                    </div>
+
+                    <div class="alertas-portada__automatizacion">
+                        <span
+                            class="alertas-portada__pulso"
+                            aria-hidden="true"
+                        ></span>
+                        <div>
+                            <strong>
+                                Monitoreo automático activo
+                            </strong>
+                            <span>
+                                No necesitas generar alertas
+                                manualmente.
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <section
+                    class="alertas-resumen"
+                    aria-label="Resumen de alertas"
+                >
+                    <article class="alertas-resumen__tarjeta">
+                        <span>Alertas activas</span>
+                        <strong
+                            id="resumen-alertas-activas"
+                        >0</strong>
+                    </article>
+
+                    <article
+                        class="
+                            alertas-resumen__tarjeta
+                            alertas-resumen__tarjeta--critica
+                        "
+                    >
+                        <span>Prioridad crítica</span>
+                        <strong
+                            id="resumen-alertas-criticas"
+                        >0</strong>
+                    </article>
+
+                    <article
+                        class="
+                            alertas-resumen__tarjeta
+                            alertas-resumen__tarjeta--alta
+                        "
+                    >
+                        <span>Prioridad alta</span>
+                        <strong
+                            id="resumen-alertas-altas"
+                        >0</strong>
+                    </article>
+                </section>
+
+                <section class="alertas-panel">
+                    <div class="alertas-filtros">
+                        <div>
+                            <label
+                                for="filtro-estado-alertas"
+                            >
+                                Estado
+                            </label>
+                            <select
+                                id="filtro-estado-alertas"
+                                class="campo"
+                            >
+                                <option value="activa">
+                                    Activas
+                                </option>
+                                <option value="resuelta">
+                                    Resueltas
+                                </option>
+                                <option value="ignorada">
+                                    Ignoradas
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label
+                                for="filtro-tipo-alertas"
+                            >
+                                Tipo
+                            </label>
+                            <select
+                                id="filtro-tipo-alertas"
+                                class="campo"
+                            >
+                                <option value="">
+                                    Todos los tipos
+                                </option>
+                                <option value="stock_bajo">
+                                    Stock bajo
+                                </option>
+                                <option value="sobrestock">
+                                    Sobrestock
+                                </option>
+                                <option
+                                    value="riesgo_agotamiento"
+                                >
+                                    Riesgo de agotamiento
+                                </option>
+                                <option
+                                    value="sin_movimiento"
+                                >
+                                    Sin movimiento
+                                </option>
+                                <option
+                                    value="recomendacion_compra"
+                                >
+                                    Recomendación de compra
+                                </option>
+                                <option
+                                    value="lote_proximo_vencer"
+                                >
+                                    Lote próximo a vencer
+                                </option>
+                                <option
+                                    value="lote_vence_hoy"
+                                >
+                                    Lote vence hoy
+                                </option>
+                                <option value="lote_vencido">
+                                    Lote vencido
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div
+                        id="estado-alertas"
+                        class="alertas-estado"
+                    >
+                        Cargando alertas...
+                    </div>
+
+                    <div
+                        id="lista-alertas"
+                        class="alertas-lista"
+                        aria-live="polite"
+                    ></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/alertas.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

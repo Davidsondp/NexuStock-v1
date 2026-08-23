@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Administración de sucursales y bodegas"
+    >
+    <meta
+        name="csrf-token"
+        content="{{ csrf_token() }}"
+    >
+
+    <title>Sucursales y bodegas | NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/panel_empresarial.css'
+        ) }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/ubicaciones.css'
+        ) }}"
+    >
+</head>
+
+<body
+    data-api-sucursales="{{
+        url_for('ubicaciones.listar_sucursales')
+    }}"
+    data-api-bodegas="{{
+        url_for('ubicaciones.listar_bodegas')
+    }}"
+    data-api-usuarios="{{
+        url_for('usuarios.listar')
+    }}"
+    data-limite-sucursales="{{
+        limite_sucursales
+        if limite_sucursales is not none
+        else ''
+    }}"
+    data-limite-bodegas="{{
+        limite_bodegas
+        if limite_bodegas is not none
+        else ''
+    }}"
+    data-puede-crear-sucursal="{{
+        permisos.crear_sucursal | tojson
+    }}"
+    data-puede-editar-sucursal="{{
+        permisos.editar_sucursal | tojson
+    }}"
+    data-puede-desactivar-sucursal="{{
+        permisos.desactivar_sucursal | tojson
+    }}"
+    data-puede-crear-bodega="{{
+        permisos.crear_bodega | tojson
+    }}"
+    data-puede-editar-bodega="{{
+        permisos.editar_bodega | tojson
+    }}"
+    data-puede-desactivar-bodega="{{
+        permisos.desactivar_bodega | tojson
+    }}"
+    data-puede-asignar-usuarios="{{
+        permisos.asignar_usuarios | tojson
+    }}"
+>
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegación empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">
+                        NexuStock
+                    </p>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav
+                class="navegacion"
+                aria-label="Módulos empresariales"
+            >
+                <p class="navegacion__titulo">
+                    Operación
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌂</span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >□</span>
+                    <span>Productos</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inventario') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >≡</span>
+                    <span>Inventario</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.proveedores') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >P</span>
+                    <span>Proveedores</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >C</span>
+                    <span>Clientes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >$</span>
+                    <span>Ventas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.compras') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⇩</span>
+                    <span>Compras</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Control
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.alertas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >!</span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌁</span>
+                    <span>Reportes</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Administración
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'panel.administracion_usuarios'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >U</span>
+                    <span>Usuarios y accesos</span>
+                </a>
+
+                <a
+                    class="
+                        navegacion__enlace
+                        navegacion__enlace--activo
+                    "
+                    href="{{ url_for(
+                        'panel.administracion_ubicaciones'
+                    ) }}"
+                    aria-current="page"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌖</span>
+                    <span>Sucursales y bodegas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'contexto.seleccionar'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >◎</span>
+                    <span>Cambiar ubicación</span>
+                </a>
+            </nav>
+
+            <div class="lateral__usuario">
+                <div class="usuario">
+                    <div
+                        class="usuario__avatar"
+                        aria-hidden="true"
+                    >
+                        {{
+                            current_user.nombre[:1]
+                            | upper
+                        }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{
+                                current_user.apellido
+                                or ""
+                            }}
+                        </div>
+                        <div class="usuario__rol">
+                            {{
+                                current_user.rol
+                                | replace("_", " ")
+                                | title
+                            }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >☰</button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">
+                            Sucursales y bodegas
+                        </h1>
+                        <p class="cabecera__contexto">
+                            {{ contexto.sucursal.nombre }}
+                            ·
+                            {{ contexto.bodega.nombre }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <button
+                        id="actualizar-ubicaciones"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Actualizar
+                    </button>
+
+                    {% if permisos.crear_sucursal %}
+                        <button
+                            id="nueva-sucursal"
+                            class="boton boton--primario"
+                            type="button"
+                        >
+                            Nueva sucursal
+                        </button>
+                    {% endif %}
+                </div>
+            </header>
+
+            <main class="contenido ubicaciones-contenido">
+                <section class="ubicaciones-portada">
+                    <div>
+                        <p class="ubicaciones-portada__etiqueta">
+                            Estructura operacional
+                        </p>
+
+                        <h2>
+                            Organiza dónde funciona y almacena
+                            tu empresa
+                        </h2>
+
+                        <p>
+                            Administra cada sucursal, sus bodegas
+                            y los usuarios autorizados para operar
+                            en ellas.
+                        </p>
+                    </div>
+
+                    <div class="ubicaciones-portada__seguridad">
+                        <strong>
+                            Desactivación protegida
+                        </strong>
+                        <span>
+                            La desactivación se bloquea cuando existen stock o transferencias pendientes.
+                        </span>
+                    </div>
+                </section>
+
+                <section class="ubicaciones-resumen">
+                    <article>
+                        <span>Sucursales activas</span>
+                        <strong id="resumen-sucursales">
+                            —
+                        </strong>
+                    </article>
+
+                    <article>
+                        <span>Bodegas activas</span>
+                        <strong id="resumen-bodegas">
+                            —
+                        </strong>
+                    </article>
+
+                    <article>
+                        <span>Límite del plan</span>
+                        <strong>
+                            <span id="limite-sucursales">
+                                {{
+                                    limite_sucursales
+                                    if limite_sucursales
+                                    is not none
+                                    else "∞"
+                                }}
+                            </span>
+                            /
+                            <span id="limite-bodegas">
+                                {{
+                                    limite_bodegas
+                                    if limite_bodegas
+                                    is not none
+                                    else "∞"
+                                }}
+                            </span>
+                        </strong>
+                        <small>
+                            Sucursales / bodegas
+                        </small>
+                    </article>
+                </section>
+
+                <section class="ubicaciones-panel">
+                    <div class="ubicaciones-panel__encabezado">
+                        <div>
+                            <h2>Mapa de ubicaciones</h2>
+                            <p>
+                                Revisa sucursales, bodegas y
+                                accesos asociados.
+                            </p>
+                        </div>
+
+                        <div class="campo campo--compacto">
+                            <label for="filtro-estado-ubicaciones">
+                                Estado
+                            </label>
+                            <select
+                                id="filtro-estado-ubicaciones"
+                            >
+                                <option value="activas">
+                                    Activas
+                                </option>
+                                <option value="todas">
+                                    Activas e inactivas
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div
+                        id="estado-ubicaciones"
+                        class="ubicaciones-estado"
+                    >
+                        Cargando ubicaciones...
+                    </div>
+
+                    <div
+                        id="lista-sucursales"
+                        class="ubicaciones-lista"
+                        aria-live="polite"
+                    ></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="modal-sucursal"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-modal-sucursal"
+        hidden
+    >
+        <button
+            class="modal__fondo"
+            type="button"
+            data-cerrar-sucursal
+            aria-label="Cerrar formulario"
+        ></button>
+
+        <div class="modal__panel">
+            <header class="modal__encabezado">
+                <div>
+                    <h2 id="titulo-modal-sucursal">
+                        Nueva sucursal
+                    </h2>
+                    <p>
+                        Define la ubicación comercial de la
+                        empresa.
+                    </p>
+                </div>
+
+                <button
+                    class="modal__cerrar"
+                    type="button"
+                    data-cerrar-sucursal
+                    aria-label="Cerrar"
+                >×</button>
+            </header>
+
+            <form
+                id="formulario-sucursal"
+                class="ubicacion-editor"
+            >
+                <input
+                    id="sucursal-id"
+                    type="hidden"
+                >
+
+                <div class="ubicacion-editor__campos">
+                    <div class="campo">
+                        <label for="sucursal-codigo">
+                            Código
+                        </label>
+                        <input
+                            id="sucursal-codigo"
+                            maxlength="30"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="sucursal-nombre">
+                            Nombre
+                        </label>
+                        <input
+                            id="sucursal-nombre"
+                            maxlength="120"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="sucursal-direccion">
+                            Dirección
+                        </label>
+                        <input
+                            id="sucursal-direccion"
+                            maxlength="255"
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="sucursal-ciudad">
+                            Ciudad
+                        </label>
+                        <input
+                            id="sucursal-ciudad"
+                            maxlength="100"
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="sucursal-telefono">
+                            Teléfono
+                        </label>
+                        <input
+                            id="sucursal-telefono"
+                            maxlength="30"
+                        >
+                    </div>
+
+                    <label class="ubicacion-opcion">
+                        <input
+                            id="sucursal-crear-bodega"
+                            type="checkbox"
+                            checked
+                        >
+                        <span>
+                            <strong>
+                                Crear bodega principal
+                            </strong>
+                            <small>
+                                Recomendado para comenzar a
+                                operar inmediatamente.
+                            </small>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="ubicacion-editor__acciones">
+                    <button
+                        id="cancelar-sucursal"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        id="guardar-sucursal"
+                        class="boton boton--primario"
+                        type="submit"
+                    >
+                        Guardar sucursal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div
+        id="modal-bodega"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-modal-bodega"
+        hidden
+    >
+        <button
+            class="modal__fondo"
+            type="button"
+            data-cerrar-bodega
+            aria-label="Cerrar formulario"
+        ></button>
+
+        <div class="modal__panel">
+            <header class="modal__encabezado">
+                <div>
+                    <h2 id="titulo-modal-bodega">
+                        Nueva bodega
+                    </h2>
+                    <p>
+                        Define un espacio de almacenamiento
+                        dentro de la sucursal.
+                    </p>
+                </div>
+
+                <button
+                    class="modal__cerrar"
+                    type="button"
+                    data-cerrar-bodega
+                    aria-label="Cerrar"
+                >×</button>
+            </header>
+
+            <form
+                id="formulario-bodega"
+                class="ubicacion-editor"
+            >
+                <input
+                    id="bodega-id"
+                    type="hidden"
+                >
+                <input
+                    id="bodega-sucursal-id"
+                    type="hidden"
+                >
+
+                <div class="ubicacion-editor__campos">
+                    <div class="campo">
+                        <label for="bodega-codigo">
+                            Código
+                        </label>
+                        <input
+                            id="bodega-codigo"
+                            maxlength="30"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="bodega-nombre">
+                            Nombre
+                        </label>
+                        <input
+                            id="bodega-nombre"
+                            maxlength="120"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo campo--completo">
+                        <label for="bodega-descripcion">
+                            Descripción
+                        </label>
+                        <textarea
+                            id="bodega-descripcion"
+                            rows="4"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="ubicacion-editor__acciones">
+                    <button
+                        id="cancelar-bodega"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        id="guardar-bodega"
+                        class="boton boton--primario"
+                        type="submit"
+                    >
+                        Guardar bodega
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div
+        id="modal-usuarios-sucursal"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-usuarios-sucursal"
+        hidden
+    >
+        <button
+            class="modal__fondo"
+            type="button"
+            data-cerrar-usuarios
+            aria-label="Cerrar asignaciones"
+        ></button>
+
+        <div class="modal__panel">
+            <header class="modal__encabezado">
+                <div>
+                    <h2 id="titulo-usuarios-sucursal">
+                        Usuarios de la sucursal
+                    </h2>
+                    <p id="contexto-usuarios-sucursal">
+                        Gestiona quién puede operar aquí.
+                    </p>
+                </div>
+
+                <button
+                    id="cerrar-usuarios-sucursal"
+                    class="modal__cerrar"
+                    type="button"
+                    data-cerrar-usuarios
+                    aria-label="Cerrar"
+                >×</button>
+            </header>
+
+            <div class="usuarios-sucursal">
+                <input
+                    id="usuarios-sucursal-id"
+                    type="hidden"
+                >
+
+                <div
+                    id="lista-usuarios-sucursal"
+                    class="usuarios-sucursal__lista"
+                ></div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/ubicaciones.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

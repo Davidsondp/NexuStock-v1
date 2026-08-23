@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Ventas · NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/panel_empresarial.css') }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/ventas.css') }}"
+    >
+</head>
+
+<body
+    data-api-ventas="{{ url_for('ventas.listar') }}"
+    data-api-productos="{{ url_for('productos.listar') }}"
+    data-api-clientes="{{ url_for('clientes.listar') }}"
+    data-api-stock="{{ url_for('reportes.stock') }}"
+    data-bodega-id="{{ contexto.bodega.id }}"
+    data-permiso-crear="{{ permisos.crear | tojson }}"
+    data-permiso-reservar="{{ permisos.reservar | tojson }}"
+    data-permiso-confirmar="{{ permisos.confirmar | tojson }}"
+    data-permiso-cancelar="{{ permisos.cancelar | tojson }}"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="panel-empresa">
+    <aside
+        id="barra-lateral"
+        class="lateral"
+        aria-label="Navegación empresarial"
+    >
+        <div class="marca">
+            <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+            <div>
+                <p class="marca__nombre">NexuStock</p>
+                <span class="marca__empresa">
+                    {{ empresa.nombre }}
+                </span>
+            </div>
+        </div>
+
+        <nav class="navegacion">
+            <p class="navegacion__titulo">Operación</p>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.inicio') }}"
+            >
+                <span class="navegacion__icono" aria-hidden="true">
+                    ⌂
+                </span>
+                <span>Resumen</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.productos') }}"
+            >
+                <span class="navegacion__icono" aria-hidden="true">
+                    ▦
+                </span>
+                <span>Productos</span>
+            </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'panel.inventario'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Inventario</span>
+                </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.proveedores') }}"
+            >
+                <span class="navegacion__icono" aria-hidden="true">
+                    ◇
+                </span>
+                <span>Proveedores</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.compras') }}"
+            >
+                <span class="navegacion__icono" aria-hidden="true">
+                    ⇩
+                </span>
+                <span>Compras</span>
+            </a>
+
+            <a
+                class="navegacion__enlace navegacion__enlace--activo"
+                href="{{ url_for('panel.ventas') }}"
+                aria-current="page"
+            >
+                <span class="navegacion__icono" aria-hidden="true">
+                    $
+                </span>
+                <span>Ventas</span>
+            </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Clientes</span>
+                </a>
+
+            <p class="navegacion__titulo">Control</p>
+
+            <a class="navegacion__enlace" href="{{ url_for('panel.alertas') }}">
+                <span class="navegacion__icono" aria-hidden="true">
+                    !
+                </span>
+                <span>Alertas</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.reportes') }}"
+            >
+                <span class="navegacion__icono" aria-hidden="true">
+                    ▦
+                </span>
+                <span>Reportes</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('contexto.seleccionar') }}"
+            >
+                <span class="navegacion__icono" aria-hidden="true">
+                    ⌖
+                </span>
+                <span>Cambiar ubicación</span>
+            </a>
+        </nav>
+
+        <div class="lateral__usuario">
+            <div class="usuario">
+                <div class="usuario__avatar" aria-hidden="true">
+                    {{ current_user.nombre[:1] | upper }}
+                </div>
+
+                <div>
+                    <div class="usuario__nombre">
+                        {{ current_user.nombre }}
+                        {{ current_user.apellido or "" }}
+                    </div>
+
+                    <div class="usuario__rol">
+                        {{ current_user.rol
+                            | replace("_", " ")
+                            | title }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <button
+        id="cerrar-menu"
+        class="superposicion"
+        type="button"
+        aria-label="Cerrar menú"
+    ></button>
+
+    <div class="principal">
+        <header class="cabecera">
+            <div class="cabecera__grupo">
+                <button
+                    id="abrir-menu"
+                    class="boton-menu"
+                    type="button"
+                    aria-label="Abrir menú"
+                    aria-controls="barra-lateral"
+                    aria-expanded="false"
+                >
+                    ☰
+                </button>
+
+                <div>
+                    <h1 class="cabecera__titulo">Ventas</h1>
+
+                    <p class="cabecera__contexto">
+                        {{ contexto.sucursal.nombre }}
+                        ·
+                        {{ contexto.bodega.nombre }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="cabecera__acciones">
+                <a
+                    class="boton boton--secundario"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    Volver al panel
+                </a>
+
+                <form
+                    method="post"
+                    action="{{ url_for('autenticacion.salir') }}"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <button
+                        class="boton boton--secundario"
+                        type="submit"
+                    >
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <main class="ventas-contenido">
+            <section>
+                <div class="ventas-encabezado">
+                    <div>
+                        <p class="ventas-encabezado__etiqueta">
+                            Operación comercial
+                        </p>
+
+                        <h2>Gestión de ventas</h2>
+
+                        <p>
+                            Registra ventas, reserva existencias y
+                            confirma la salida segura del inventario.
+                        </p>
+                    </div>
+
+                    <div class="ventas-acciones">
+                        <button
+                            id="actualizar-ventas"
+                            class="boton boton--secundario"
+                            type="button"
+                        >
+                            Actualizar
+                        </button>
+
+                        {% if permisos.crear %}
+                            <button
+                                id="crear-venta"
+                                class="boton boton--primario"
+                                type="button"
+                            >
+                                Nueva venta
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="ventas-filtros">
+                    <div class="ventas-filtros__busqueda">
+                        <label
+                            class="etiqueta-oculta"
+                            for="buscar-ventas"
+                        >
+                            Buscar ventas
+                        </label>
+
+                        <input
+                            id="buscar-ventas"
+                            class="campo"
+                            type="search"
+                            placeholder="Buscar por número o cliente"
+                            autocomplete="off"
+                        >
+
+                        <button
+                            id="ejecutar-busqueda"
+                            class="boton boton--primario"
+                            type="button"
+                        >
+                            Buscar
+                        </button>
+                    </div>
+
+                    <div>
+                        <label for="filtrar-estado">
+                            Estado
+                        </label>
+
+                        <select
+                            id="filtrar-estado"
+                            class="campo"
+                        >
+                            <option value="">Todos</option>
+                            <option value="borrador">Borrador</option>
+                            <option value="reservada">Reservada</option>
+                            <option value="confirmada">Confirmada</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ventas-listado">
+                    <div class="ventas-listado__cabecera">
+                        <div>
+                            <h3>Ventas registradas</h3>
+                            <p id="cantidad-ventas">
+                                Cargando ventas…
+                            </p>
+                        </div>
+
+                        <span class="insignia">
+                            {{ contexto.bodega.nombre }}
+                        </span>
+                    </div>
+
+                    <div class="tabla-contenedor">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-ventas">
+                                <tr>
+                                    <td
+                                        class="tabla__vacio"
+                                        colspan="7"
+                                    >
+                                        Cargando ventas…
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<section
+    id="modal-venta"
+    class="modal-venta"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-modal-venta"
+    hidden
+>
+    <div class="modal-venta__panel">
+        <form id="formulario-venta">
+            <div class="modal-venta__cabecera">
+                <div>
+                    <h2 id="titulo-modal-venta">
+                        Nueva venta
+                    </h2>
+                    <p>
+                        La venta se guardará inicialmente como borrador.
+                    </p>
+                </div>
+
+                <button
+                    id="cerrar-modal-venta"
+                    class="boton boton--secundario"
+                    type="button"
+                >
+                    Cerrar
+                </button>
+            </div>
+
+            <div class="modal-venta__cuerpo">
+                <div class="formulario-venta__rejilla">
+                    <div class="grupo-campo">
+                        <label for="venta-numero">
+                            Número de venta
+                        </label>
+
+                        <input
+                            id="venta-numero"
+                            class="campo"
+                            type="text"
+                            maxlength="50"
+                            required
+                        >
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="venta-cliente">
+                            Cliente
+                        </label>
+
+                        <select
+                            id="venta-cliente"
+                            class="campo"
+                        >
+                            <option value="">
+                                Consumidor final
+                            </option>
+                        </select>
+
+                        <small>
+                            Los clientes registrados se integrarán
+                            en su módulo correspondiente.
+                        </small>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="venta-moneda">
+                            Moneda
+                        </label>
+
+                        <select
+                            id="venta-moneda"
+                            class="campo"
+                        >
+                            <option value="CLP">CLP</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+
+                    <div
+                        class="
+                            grupo-campo
+                            formulario-venta__ancho-completo
+                        "
+                    >
+                        <label for="venta-observaciones">
+                            Observaciones
+                        </label>
+
+                        <textarea
+                            id="venta-observaciones"
+                            class="campo"
+                            rows="3"
+                            maxlength="1000"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="lineas-venta">
+                    <div class="lineas-venta__cabecera">
+                        <div>
+                            <h3>
+                                Venta por unidad base o presentación
+                            </h3>
+                            <span class="tabla__detalle">
+                                El stock se validará automáticamente en la unidad base.
+                            </span>
+                        </div>
+
+                        <button
+                            id="agregar-linea-venta"
+                            class="boton boton--secundario"
+                            type="button"
+                        >
+                            Agregar producto
+                        </button>
+                    </div>
+
+                    <div id="lineas-venta"></div>
+                </div>
+
+                <p
+                    id="error-venta"
+                    class="error-formulario"
+                    role="alert"
+                    hidden
+                ></p>
+            </div>
+
+            <div class="modal-venta__pie">
+                <button
+                    id="cancelar-formulario-venta"
+                    class="boton boton--secundario"
+                    type="button"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    id="guardar-venta"
+                    class="boton boton--primario"
+                    type="submit"
+                >
+                    Crear borrador
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<div
+    id="notificacion"
+    class="notificacion"
+    role="status"
+    aria-live="polite"
+    hidden
+></div>
+
+    <script
+        src="{{ url_for('static', filename='js/ventas.js') }}"
+        defer
+    ></script>
+</body>
+</html>

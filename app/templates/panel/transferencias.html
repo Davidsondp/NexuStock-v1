@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Transferencias | NexuStock</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_empresarial.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/transferencias.css') }}">
+</head>
+<body
+    data-api-transferencias="{{ url_for('transferencias.listar') }}"
+    data-api-bodegas="{{ url_for('ubicaciones.listar_bodegas') }}"
+    data-api-productos="{{ url_for('productos.listar') }}"
+    data-puede-crear="{{ permisos.crear | tojson }}"
+    data-puede-despachar="{{ permisos.despachar | tojson }}"
+    data-puede-recibir="{{ permisos.recibir | tojson }}"
+>
+<main class="transferencias-pagina">
+    <header class="transferencias-cabecera">
+        <div>
+            <a href="{{ url_for('panel.inicio') }}" class="volver">← Volver al panel</a>
+            <h1>Transferencias entre bodegas</h1>
+            <p>Solicita, despacha y recibe inventario con trazabilidad completa.</p>
+        </div>
+        {% if permisos.crear %}<button id="abrir-formulario" class="boton boton--primario" type="button">Nueva transferencia</button>{% endif %}
+    </header>
+
+    <section class="filtros">
+        <label>Estado
+            <select id="filtro-estado">
+                <option value="">Todos</option>
+                <option value="borrador">Borrador</option>
+                <option value="solicitada">Solicitada</option>
+                <option value="en_transito">En tránsito</option>
+                <option value="recibida">Recibida</option>
+                <option value="cancelada">Cancelada</option>
+            </select>
+        </label>
+        <button id="actualizar" class="boton" type="button">Actualizar</button>
+    </section>
+
+    <section id="formulario-panel" class="editor" hidden>
+        <h2>Nueva transferencia</h2>
+        <form id="formulario-transferencia">
+            <div class="campos">
+                <label>Número<input id="numero" required maxlength="50" placeholder="TR-0001"></label>
+                <label>Bodega de origen<select id="origen" required></select></label>
+                <label>Bodega de destino<select id="destino" required></select></label>
+                <label>Producto<select id="producto" required></select></label>
+                <label>Cantidad<input id="cantidad" type="number" min="0.001" step="0.001" required></label>
+                <label class="campo-completo">Números de serie<textarea id="seriales" rows="3" placeholder="Uno por línea, sólo para productos serializados"></textarea></label>
+                <label class="campo-completo">Observaciones<textarea id="observaciones" rows="2"></textarea></label>
+            </div>
+            <div class="acciones"><button class="boton boton--primario" type="submit">Crear borrador</button><button id="cerrar-formulario" class="boton" type="button">Cancelar</button></div>
+        </form>
+    </section>
+
+    <section class="tabla-panel">
+        <div id="estado-lista" class="estado-lista">Cargando transferencias…</div>
+        <div class="tabla-contenedor">
+            <table>
+                <thead><tr><th>Número</th><th>Ruta</th><th>Estado</th><th>Detalle</th><th>Fechas</th><th>Acciones</th></tr></thead>
+                <tbody id="lista-transferencias"></tbody>
+            </table>
+        </div>
+    </section>
+    <div id="notificacion" class="notificacion" role="status" aria-live="polite" hidden></div>
+</main>
+<script src="{{ url_for('static', filename='js/transferencias.js') }}" defer></script>
+</body>
+</html>

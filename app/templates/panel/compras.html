@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Compras · NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/panel_empresarial.css') }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/compras.css') }}"
+    >
+</head>
+
+<body
+    data-api-compras="{{ url_for('compras.listar') }}"
+    data-api-proveedores="{{ url_for('proveedores.listar') }}"
+    data-api-productos="{{ url_for('productos.listar') }}"
+    data-bodega-id="{{ contexto.bodega.id }}"
+    data-permiso-crear="{{ permisos.crear | tojson }}"
+    data-permiso-editar="{{ permisos.editar | tojson }}"
+    data-permiso-enviar="{{ permisos.enviar | tojson }}"
+    data-permiso-recibir="{{ permisos.recibir | tojson }}"
+    data-permiso-cancelar="{{ permisos.cancelar | tojson }}"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="panel-empresa">
+    <aside
+        id="barra-lateral"
+        class="lateral"
+        aria-label="Navegación empresarial"
+    >
+        <div class="marca">
+            <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+            <div>
+                <p class="marca__nombre">NexuStock</p>
+                <span class="marca__empresa">
+                    {{ empresa.nombre }}
+                </span>
+            </div>
+        </div>
+
+        <nav class="navegacion">
+            <p class="navegacion__titulo">Operación</p>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.inicio') }}"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    ⌂
+                </span>
+                <span>Resumen</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.productos') }}"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    ▦
+                </span>
+                <span>Productos</span>
+            </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'panel.inventario'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Inventario</span>
+                </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.proveedores') }}"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    ◇
+                </span>
+                <span>Proveedores</span>
+            </a>
+
+            <a
+                class="navegacion__enlace navegacion__enlace--activo"
+                href="{{ url_for('panel.compras') }}"
+                aria-current="page"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    ⇩
+                </span>
+                <span>Compras</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.ventas') }}"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    $
+                </span>
+                <span>Ventas</span>
+            </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Clientes</span>
+                </a>
+
+            <p class="navegacion__titulo">Control</p>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.alertas') }}"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    !
+                </span>
+                <span>Alertas</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('panel.reportes') }}"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    ▦
+                </span>
+                <span>Reportes</span>
+            </a>
+
+            <a
+                class="navegacion__enlace"
+                href="{{ url_for('contexto.seleccionar') }}"
+            >
+                <span
+                    class="navegacion__icono"
+                    aria-hidden="true"
+                >
+                    ⌖
+                </span>
+                <span>Cambiar ubicación</span>
+            </a>
+        </nav>
+
+        <div class="lateral__usuario">
+            <div class="usuario">
+                <div
+                    class="usuario__avatar"
+                    aria-hidden="true"
+                >
+                    {{ current_user.nombre[:1] | upper }}
+                </div>
+
+                <div>
+                    <div class="usuario__nombre">
+                        {{ current_user.nombre }}
+                        {{ current_user.apellido or "" }}
+                    </div>
+
+                    <div class="usuario__rol">
+                        {{ current_user.rol
+                            | replace("_", " ")
+                            | title }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <button
+        id="cerrar-menu"
+        class="superposicion"
+        type="button"
+        aria-label="Cerrar menú"
+    ></button>
+
+    <div class="principal">
+        <header class="cabecera">
+            <div class="cabecera__grupo">
+                <button
+                    id="abrir-menu"
+                    class="boton-menu"
+                    type="button"
+                    aria-label="Abrir menú"
+                    aria-controls="barra-lateral"
+                    aria-expanded="false"
+                >
+                    ☰
+                </button>
+
+                <div>
+                    <h1 class="cabecera__titulo">Compras</h1>
+
+                    <p class="cabecera__contexto">
+                        {{ contexto.sucursal.nombre }}
+                        ·
+                        {{ contexto.bodega.nombre }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="cabecera__acciones">
+                <a
+                    class="boton boton--secundario"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    Volver al panel
+                </a>
+
+                <form
+                    method="post"
+                    action="{{ url_for('autenticacion.salir') }}"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <button
+                        class="boton boton--secundario"
+                        type="submit"
+                    >
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <main class="compras-contenido">
+            {% for categoria, mensaje in
+                get_flashed_messages(with_categories=true) %}
+                <div class="mensaje mensaje--{{ categoria }}">
+                    {{ mensaje }}
+                </div>
+            {% endfor %}
+
+            <section>
+                <div class="compras-encabezado">
+                    <div>
+                        <p class="compras-encabezado__etiqueta">
+                            Abastecimiento empresarial
+                        </p>
+
+                        <h2>Órdenes de compra</h2>
+
+                        <p>
+                            Crea, envía y recibe mercadería
+                            manteniendo actualizado el inventario.
+                        </p>
+                    </div>
+
+                    <div class="compras-acciones">
+                        <button
+                            id="actualizar-compras"
+                            class="boton boton--secundario"
+                            type="button"
+                        >
+                            Actualizar
+                        </button>
+
+                        {% if permisos.crear %}
+                            <button
+                                id="crear-compra"
+                                class="boton boton--primario"
+                                type="button"
+                            >
+                                Nueva orden
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="compras-filtros">
+                    <div class="compras-filtros__busqueda">
+                        <label
+                            class="etiqueta-oculta"
+                            for="buscar-compras"
+                        >
+                            Buscar órdenes
+                        </label>
+
+                        <input
+                            id="buscar-compras"
+                            class="campo"
+                            type="search"
+                            placeholder="Buscar por número o proveedor"
+                            autocomplete="off"
+                        >
+
+                        <button
+                            id="ejecutar-busqueda"
+                            class="boton boton--primario"
+                            type="button"
+                        >
+                            Buscar
+                        </button>
+                    </div>
+
+                    <div>
+                        <label for="filtrar-estado">
+                            Estado
+                        </label>
+
+                        <select
+                            id="filtrar-estado"
+                            class="campo"
+                        >
+                            <option value="">Todos</option>
+                            <option value="borrador">
+                                Borrador
+                            </option>
+                            <option value="creada">
+                                Creada
+                            </option>
+                            <option value="enviada">
+                                Enviada
+                            </option>
+                            <option value="parcialmente_recibida">
+                                Parcialmente recibida
+                            </option>
+                            <option value="recibida">
+                                Recibida
+                            </option>
+                            <option value="cancelada">
+                                Cancelada
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="compras-listado">
+                    <div class="compras-listado__cabecera">
+                        <div>
+                            <h3 id="titulo-listado-compras">
+                                Órdenes de compra
+                            </h3>
+
+                            <p id="cantidad-compras">
+                                Cargando órdenes…
+                            </p>
+                        </div>
+
+                        <span class="insignia">
+                            {{ empresa.nombre }}
+                        </span>
+                    </div>
+
+                    <div class="tabla-contenedor">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Proveedor</th>
+                                    <th>Fecha</th>
+                                    <th>Entrega</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-compras">
+                                <tr>
+                                    <td
+                                        class="tabla__vacio"
+                                        colspan="7"
+                                    >
+                                        Cargando órdenes de compra…
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<section
+    id="modal-compra"
+    class="modal-compra"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-modal-compra"
+    hidden
+>
+    <div class="modal-compra__panel">
+        <form id="formulario-compra">
+            <div class="modal-compra__cabecera">
+                <div>
+                    <h2 id="titulo-modal-compra">
+                        Nueva orden de compra
+                    </h2>
+                    <p>
+                        Registra el proveedor, la entrega y los productos.
+                    </p>
+                </div>
+
+                <button
+                    id="cerrar-modal-compra"
+                    class="boton boton--secundario"
+                    type="button"
+                    aria-label="Cerrar formulario"
+                >
+                    Cerrar
+                </button>
+            </div>
+
+            <div class="modal-compra__cuerpo">
+                <div class="formulario-compra__rejilla">
+                    <div class="grupo-campo">
+                        <label for="compra-numero">
+                            Número de orden
+                        </label>
+
+                        <input
+                            id="compra-numero"
+                            class="campo"
+                            name="numero"
+                            type="text"
+                            maxlength="50"
+                            required
+                        >
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="compra-proveedor">
+                            Proveedor
+                        </label>
+
+                        <select
+                            id="compra-proveedor"
+                            class="campo"
+                            name="proveedor_id"
+                            required
+                        >
+                            <option value="">
+                                Selecciona un proveedor
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="compra-fecha-entrega">
+                            Entrega esperada
+                        </label>
+
+                        <input
+                            id="compra-fecha-entrega"
+                            class="campo"
+                            name="fecha_entrega_esperada"
+                            type="date"
+                        >
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="compra-moneda">
+                            Moneda
+                        </label>
+
+                        <select
+                            id="compra-moneda"
+                            class="campo"
+                            name="moneda"
+                        >
+                            <option value="CLP">CLP</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+
+                    <div
+                        class="
+                            grupo-campo
+                            formulario-compra__ancho-completo
+                        "
+                    >
+                        <label for="compra-observaciones">
+                            Observaciones
+                        </label>
+
+                        <textarea
+                            id="compra-observaciones"
+                            class="campo"
+                            name="observaciones"
+                            rows="3"
+                            maxlength="1000"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="lineas-compra">
+                    <div class="lineas-compra__cabecera">
+                        <div>
+                            <h3>Productos de la orden</h3>
+                            <span class="tabla__detalle">
+                                Compra por unidad base o presentación.
+                                El inventario se actualizará automáticamente en la unidad base.
+                            </span>
+                        </div>
+
+                        <button
+                            id="agregar-linea-compra"
+                            class="boton boton--secundario"
+                            type="button"
+                        >
+                            Agregar producto
+                        </button>
+                    </div>
+
+                    <div id="lineas-compra"></div>
+                </div>
+
+                <p
+                    id="error-compra"
+                    class="error-formulario"
+                    role="alert"
+                    hidden
+                ></p>
+            </div>
+
+            <div class="modal-compra__pie">
+                <button
+                    id="cancelar-compra"
+                    class="boton boton--secundario"
+                    type="button"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    id="guardar-compra"
+                    class="boton boton--primario"
+                    type="submit"
+                >
+                    Crear borrador
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section
+    id="modal-recepcion"
+    class="modal-compra"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-modal-recepcion"
+    hidden
+>
+    <div class="modal-compra__panel">
+        <form id="formulario-recepcion">
+            <div class="modal-compra__cabecera">
+                <div>
+                    <h2 id="titulo-modal-recepcion">
+                        Recibir mercadería
+                    </h2>
+
+                    <p id="detalle-orden-recepcion">
+                        Registra las cantidades recibidas.
+                    </p>
+                </div>
+
+                <button
+                    id="cerrar-modal-recepcion"
+                    class="boton boton--secundario"
+                    type="button"
+                    aria-label="Cerrar recepción"
+                >
+                    Cerrar
+                </button>
+            </div>
+
+            <div class="modal-compra__cuerpo">
+                <div class="formulario-compra__rejilla">
+                    <div class="grupo-campo">
+                        <label for="recepcion-numero">
+                            Número de recepción
+                        </label>
+
+                        <input
+                            id="recepcion-numero"
+                            class="campo"
+                            name="numero"
+                            type="text"
+                            maxlength="50"
+                            required
+                        >
+                    </div>
+
+                    <div class="grupo-campo">
+                        <label for="recepcion-documento">
+                            Documento de referencia
+                        </label>
+
+                        <input
+                            id="recepcion-documento"
+                            class="campo"
+                            name="documento_referencia"
+                            type="text"
+                            maxlength="100"
+                            placeholder="Factura, guía o documento"
+                        >
+                    </div>
+
+                    <div
+                        class="
+                            grupo-campo
+                            formulario-compra__ancho-completo
+                        "
+                    >
+                        <label for="recepcion-observaciones">
+                            Observaciones
+                        </label>
+
+                        <textarea
+                            id="recepcion-observaciones"
+                            class="campo"
+                            name="observaciones"
+                            rows="3"
+                            maxlength="1000"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="lineas-compra">
+                    <div class="lineas-compra__cabecera">
+                        <div>
+                            <h3>Productos pendientes</h3>
+
+                            <span class="tabla__detalle">
+                                Puedes realizar una recepción parcial.
+                            </span>
+                        </div>
+                    </div>
+
+                    <div id="lineas-recepcion"></div>
+                </div>
+
+                <p
+                    id="error-recepcion"
+                    class="error-formulario"
+                    role="alert"
+                    hidden
+                ></p>
+            </div>
+
+            <div class="modal-compra__pie">
+                <button
+                    id="cancelar-recepcion"
+                    class="boton boton--secundario"
+                    type="button"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    id="guardar-recepcion"
+                    class="boton boton--primario"
+                    type="submit"
+                >
+                    Confirmar recepción
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<div
+    id="notificacion"
+    class="notificacion"
+    role="status"
+    aria-live="polite"
+    hidden
+></div>
+
+    <script
+        src="{{ url_for('static', filename='js/compras.js') }}"
+        defer
+    ></script>
+</body>
+</html>

@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <title>Inventario · NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/panel_empresarial.css'
+        ) }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/inventario.css'
+        ) }}"
+    >
+</head>
+<body
+    data-api-inventario="{{
+        url_for('inventario.registrar_movimiento')
+    }}"
+    data-api-stock="{{
+        url_for('inventario.listar_stock')
+    }}"
+{% if capacidades.control_lotes %}
+    data-api-lotes="{{
+        url_for('inventario.listar_lotes')
+    }}"
+{% endif %}
+    data-api-movimientos="{{
+        url_for('inventario.listar_movimientos')
+    }}"
+    data-api-productos="{{
+        url_for('productos.listar')
+    }}"
+    data-bodega-id="{{ contexto.bodega.id }}"
+    data-permiso-entrada="{{
+        permisos.entrada | tojson
+    }}"
+    data-permiso-salida="{{
+        permisos.salida | tojson
+    }}"
+    data-permiso-ajuste="{{
+        permisos.ajuste | tojson
+    }}"
+    data-permiso-devolucion="{{
+        permisos.devolucion | tojson
+    }}"
+>
+    <input
+        id="csrf-token"
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="panel-empresa">
+        <aside class="barra-lateral">
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <strong>NexuStock</strong>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav class="navegacion">
+                <p class="navegacion__titulo">
+                    Operación
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ⌂
+                    </span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ▦
+                    </span>
+                    <span>Productos</span>
+                </a>
+
+                <a
+                    class="
+                        navegacion__enlace
+                        navegacion__enlace--activo
+                    "
+                    href="{{ url_for('panel.inventario') }}"
+                    aria-current="page"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ▤
+                    </span>
+                    <span>Inventario</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.proveedores') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ◇
+                    </span>
+                    <span>Proveedores</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.compras') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ⇩
+                    </span>
+                    <span>Compras</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        $
+                    </span>
+                    <span>Ventas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ♙
+                    </span>
+                    <span>Clientes</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Control
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.alertas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        !
+                    </span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Reportes</span>
+                </a>
+            </nav>
+        </aside>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div>
+                    <h1 class="cabecera__titulo">
+                        Inventario
+                    </h1>
+                    <p class="cabecera__contexto">
+                        {{ contexto.sucursal.nombre }}
+                        ·
+                        {{ contexto.bodega.nombre }}
+                    </p>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <a
+                        class="boton boton--secundario"
+                        href="{{ url_for('panel.inicio') }}"
+                    >
+                        Volver al panel
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{
+                            url_for(
+                                'autenticacion.salir'
+                            )
+                        }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            class="boton boton--secundario"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="inventario-contenido">
+                <section class="inventario-encabezado">
+                    <div>
+                        <p
+                            class="
+                                inventario-encabezado__etiqueta
+                            "
+                        >
+                            CONTROL OPERATIVO
+                        </p>
+
+                        <h2>Existencias por bodega</h2>
+
+                        <p>
+                            Controla entradas, salidas,
+                            devoluciones, ajustes y costos
+                            del inventario.
+                        </p>
+                    </div>
+
+                    <div class="inventario-acciones">
+                        <button
+                            id="actualizar-inventario"
+                            class="boton boton--secundario"
+                            type="button"
+                        >
+                            Actualizar
+                        </button>
+
+                        <button
+                            id="nuevo-movimiento"
+                            class="boton boton--primario"
+                            type="button"
+                        >
+                            Nuevo movimiento
+                        </button>
+                    </div>
+                </section>
+
+                <section
+                    id="resumen-inventario"
+                    class="inventario-resumen"
+                    aria-label="Resumen del inventario"
+                >
+                    <article class="resumen-tarjeta">
+                        <span>Productos con existencia</span>
+                        <strong id="resumen-productos">0</strong>
+                    </article>
+
+                    <article class="resumen-tarjeta">
+                        <span>Unidades almacenadas</span>
+                        <strong id="resumen-unidades">0</strong>
+                    </article>
+
+                    <article class="resumen-tarjeta">
+                        <span>Unidades reservadas</span>
+                        <strong id="resumen-reservadas">0</strong>
+                    </article>
+
+                    <article class="resumen-tarjeta">
+                        <span>Valor del inventario</span>
+                        <strong id="resumen-valor">$0</strong>
+                    </article>
+                </section>
+
+                <section class="inventario-filtros">
+                    <label
+                        class="inventario-buscador"
+                        for="buscar-inventario"
+                    >
+                        <span class="sr-only">
+                            Buscar inventario
+                        </span>
+
+                        <input
+                            id="buscar-inventario"
+                            class="campo"
+                            type="search"
+                            placeholder="
+                                Buscar por producto o código
+                            "
+                            autocomplete="off"
+                        >
+                    </label>
+
+                    <label for="filtrar-existencia">
+                        <span>Existencia</span>
+
+                        <select
+                            id="filtrar-existencia"
+                            class="campo"
+                        >
+                            <option value="todos">
+                                Todos
+                            </option>
+                            <option value="disponible">
+                                Con disponibilidad
+                            </option>
+                            <option value="agotado">
+                                Agotados
+                            </option>
+                            <option value="reservado">
+                                Con reservas
+                            </option>
+                        </select>
+                    </label>
+                </section>
+
+                <section class="inventario-listado">
+                    <div class="inventario-listado__cabecera">
+                        <div>
+                            <h3>Stock actual</h3>
+                            <p id="cantidad-stock">
+                                0 productos
+                            </p>
+                        </div>
+
+                        <span class="etiqueta-contexto">
+                            {{ contexto.bodega.nombre }}
+                        </span>
+                    </div>
+
+                    <div class="tabla-contenedor">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Reservada</th>
+                                    <th>Disponible</th>
+                                    <th>Costo promedio</th>
+                                    <th>Valor</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-stock">
+                                <tr>
+                                    <td
+                                        colspan="7"
+                                        class="tabla__vacio"
+                                    >
+                                        Cargando inventario…
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+
+{% if capacidades.control_lotes %}
+                <section class="inventario-listado">
+                    <div
+                        class="inventario-listado__cabecera"
+                    >
+                        <div>
+                            <h3>
+                                Lotes y vencimientos
+                            </h3>
+                            <p>
+                                Control FEFO de existencias
+                                con trazabilidad.
+                            </p>
+                        </div>
+
+                        <label
+                            for="filtrar-vencimiento"
+                            class="filtro-vencimiento"
+                        >
+                            <span>Estado</span>
+
+                            <select
+                                id="filtrar-vencimiento"
+                                class="campo"
+                            >
+                                <option value="">
+                                    Todos los lotes
+                                </option>
+                                <option value="vencido">
+                                    Vencidos
+                                </option>
+                                <option value="vence_hoy">
+                                    Vencen hoy
+                                </option>
+                                <option
+                                    value="proximo_vencer"
+                                >
+                                    Próximos a vencer
+                                </option>
+                                <option value="vigente">
+                                    Vigentes
+                                </option>
+                                <option
+                                    value="sin_vencimiento"
+                                >
+                                    Sin vencimiento
+                                </option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div
+                        id="resumen-lotes"
+                        class="resumen-lotes"
+                        aria-live="polite"
+                    >
+                        Cargando resumen de lotes?
+                    </div>
+
+                    <div class="tabla-contenedor">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Lote</th>
+                                    <th>Vencimiento</th>
+                                    <th>Estado</th>
+                                    <th>Cantidad</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-lotes">
+                                <tr>
+                                    <td
+                                        colspan="6"
+                                        class="tabla__vacio"
+                                    >
+                                        Cargando lotes?
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+{% endif %}
+
+                <section class="inventario-listado">
+                    <div class="inventario-listado__cabecera">
+                        <div>
+                            <h3>Movimientos recientes</h3>
+                            <p id="cantidad-movimientos">
+                                Últimos movimientos registrados
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="tabla-contenedor">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Producto</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Stock anterior</th>
+                                    <th>Stock resultante</th>
+                                    <th>Motivo</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabla-movimientos">
+                                <tr>
+                                    <td
+                                        colspan="7"
+                                        class="tabla__vacio"
+                                    >
+                                        Cargando movimientos…
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="modal-movimiento"
+        class="modal-movimiento"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-modal-movimiento"
+        hidden
+    >
+        <div class="modal-movimiento__panel">
+            <form
+                id="formulario-movimiento"
+                novalidate
+            >
+                <div class="modal-movimiento__cabecera">
+                    <div>
+                        <h2 id="titulo-modal-movimiento">
+                            Nuevo movimiento
+                        </h2>
+                        <p>
+                            Registra una operación sobre la
+                            bodega activa.
+                        </p>
+                    </div>
+
+                    <button
+                        id="cerrar-modal-movimiento"
+                        class="modal-movimiento__cerrar"
+                        type="button"
+                        aria-label="Cerrar"
+                    >
+                        ×
+                    </button>
+                </div>
+
+                <div class="modal-movimiento__cuerpo">
+                    <div class="formulario-inventario">
+                        <label for="movimiento-tipo">
+                            <span>Tipo de movimiento</span>
+
+                            <select
+                                id="movimiento-tipo"
+                                class="campo"
+                                required
+                            ></select>
+                        </label>
+
+                        <label for="movimiento-producto">
+                            <span>Producto</span>
+
+                            <select
+                                id="movimiento-producto"
+                                class="campo"
+                                required
+                            >
+                                <option value="">
+                                    Selecciona un producto
+                                </option>
+                            </select>
+                        </label>
+
+                        <div class="escaneo-producto formulario-inventario__ancho-completo">
+                            <button
+                                id="abrir-escaner"
+                                class="boton boton--secundario"
+                                type="button"
+                            >
+                                Escanear QR o código de barras
+                            </button>
+                            <p id="producto-escaneado" aria-live="polite">
+                                La cámara seleccionará el producto; después confirma cantidad y motivo.
+                            </p>
+                        </div>
+
+                        <section
+                            id="panel-escaner"
+                            class="panel-escaner formulario-inventario__ancho-completo"
+                            aria-label="Escáner de productos"
+                            hidden
+                        >
+                            <div class="panel-escaner__visor">
+                                <video
+                                    id="video-escaner"
+                                    autoplay
+                                    muted
+                                    playsinline
+                                ></video>
+                                <div class="panel-escaner__marco" aria-hidden="true"></div>
+                            </div>
+                            <p id="estado-escaner" role="status" aria-live="polite">
+                                Apunta al código del producto.
+                            </p>
+                            <div class="panel-escaner__manual">
+                                <label for="codigo-escaneado-manual">
+                                    <span>Código leído o ingresado</span>
+                                    <input
+                                        id="codigo-escaneado-manual"
+                                        class="campo"
+                                        type="text"
+                                        inputmode="text"
+                                        autocomplete="off"
+                                        maxlength="300"
+                                        placeholder="EAN, UPC, Code 128 o contenido QR"
+                                    >
+                                </label>
+                                <button
+                                    id="buscar-codigo-manual"
+                                    class="boton boton--primario"
+                                    type="button"
+                                >
+                                    Buscar producto
+                                </button>
+                                <button
+                                    id="cerrar-escaner"
+                                    class="boton boton--secundario"
+                                    type="button"
+                                >
+                                    Cerrar cámara
+                                </button>
+                            </div>
+                        </section>
+
+                        <label
+                            id="grupo-cantidad"
+                            for="movimiento-cantidad"
+                        >
+                            <span>Cantidad</span>
+
+                            <input
+                                id="movimiento-cantidad"
+                                class="campo"
+                                type="number"
+                                min="0.001"
+                                step="0.001"
+                            >
+                        </label>
+
+                        <label
+                            id="grupo-stock-final"
+                            for="movimiento-stock-final"
+                            hidden
+                        >
+                            <span>Stock final contado</span>
+
+                            <input
+                                id="movimiento-stock-final"
+                                class="campo"
+                                type="number"
+                                min="0"
+                                step="0.001"
+                            >
+                        </label>
+
+                        <label
+                            id="grupo-costo-unitario"
+                            for="movimiento-costo-unitario"
+                        >
+                            <span>Costo unitario</span>
+
+                            <input
+                                id="movimiento-costo-unitario"
+                                class="campo"
+                                type="number"
+                                min="0"
+                                step="0.0001"
+                            >
+                        </label>
+
+                        <label
+                            id="grupo-precio-unitario"
+                            for="movimiento-precio-unitario"
+                            hidden
+                        >
+                            <span>Precio unitario</span>
+
+                            <input
+                                id="movimiento-precio-unitario"
+                                class="campo"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                            >
+                        </label>
+
+
+                        <label
+                            id="grupo-numero-lote"
+                            for="movimiento-numero-lote"
+                            hidden
+                        >
+                            <span>Número de lote</span>
+
+                            <input
+                                id="movimiento-numero-lote"
+                                class="campo"
+                                type="text"
+                                maxlength="100"
+                                autocomplete="off"
+                                placeholder="Ej.: LOTE-2026-001"
+                            >
+                        </label>
+
+                        <label
+                            id="grupo-fecha-vencimiento"
+                            for="movimiento-fecha-vencimiento"
+                            hidden
+                        >
+                            <span>Fecha de vencimiento</span>
+
+                            <input
+                                id="movimiento-fecha-vencimiento"
+                                class="campo"
+                                type="date"
+                            >
+                        </label>
+
+                        <p
+                            id="ayuda-trazabilidad"
+                            class="
+                                formulario-inventario__ancho-completo
+                                ayuda-trazabilidad
+                            "
+                            hidden
+                        >
+                            Este producto requiere trazabilidad
+                            farmacéutica por lote.
+                        </p>
+
+                        <label
+                            class="
+                                formulario-inventario__ancho-completo
+                            "
+                            for="movimiento-motivo"
+                        >
+                            <span>Motivo</span>
+
+                            <textarea
+                                id="movimiento-motivo"
+                                class="campo"
+                                rows="3"
+                                maxlength="255"
+                                placeholder="
+                                    Describe la razón del movimiento
+                                "
+                                required
+                            ></textarea>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-movimiento__pie">
+                    <button
+                        id="cancelar-movimiento"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        id="guardar-movimiento"
+                        class="boton boton--primario"
+                        type="submit"
+                    >
+                        Registrar movimiento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div
+        id="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/inventario.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

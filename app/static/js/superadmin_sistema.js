@@ -1,0 +1,2 @@
+"use strict";
+fetch(document.body.dataset.api).then((respuesta) => respuesta.json()).then((datos) => { const estado = document.getElementById("estado"); estado.replaceChildren(); for (const [clave, valor] of Object.entries(datos)) { const tarjeta = document.createElement("article"); tarjeta.className = "tarjeta"; const etiqueta = document.createElement("small"); etiqueta.textContent = clave.replaceAll("_", " "); const contenido = document.createElement("h2"); contenido.textContent = valor ?? "No disponible"; tarjeta.append(etiqueta, contenido); estado.append(tarjeta); } });

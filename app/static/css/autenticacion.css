@@ -1,0 +1,787 @@
+@import url("sistema_visual.css");
+
+:root {
+    color-scheme: light;
+    --azul-950: #0c1830;
+    --azul-900: #102140;
+    --azul-700: #1d4ed8;
+    --azul-600: #2563eb;
+    --azul-100: #dbeafe;
+    --azul-50: #eff6ff;
+    --texto: #162238;
+    --texto-suave: #60708a;
+    --borde: #dbe3ef;
+    --fondo: #f4f7fb;
+    --superficie: #ffffff;
+    --peligro: #b42318;
+    --exito: #067647;
+    --sombra:
+        0 24px 60px rgba(15, 35, 70, 0.12);
+    font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+}
+
+body {
+    color: var(--texto);
+    background: var(--fondo);
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+a {
+    color: inherit;
+}
+
+.autenticacion-pagina {
+    display: grid;
+    grid-template-columns:
+        minmax(340px, 42%) minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+.autenticacion-marca {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: clamp(28px, 5vw, 64px);
+    color: #fff;
+    background:
+        radial-gradient(
+            circle at 85% 15%,
+            rgba(96, 165, 250, 0.38),
+            transparent 32%
+        ),
+        linear-gradient(
+            145deg,
+            var(--azul-950),
+            #17376e
+        );
+}
+
+.autenticacion-marca::after {
+    position: absolute;
+    right: -120px;
+    bottom: -160px;
+    width: 420px;
+    height: 420px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+    content: "";
+}
+
+.marca {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    width: fit-content;
+    color: #fff;
+    text-decoration: none;
+}
+
+.marca__simbolo {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border-radius: 14px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(
+        145deg,
+        #60a5fa,
+        #2563eb
+    );
+    box-shadow:
+        0 14px 28px rgba(37, 99, 235, 0.35);
+}
+
+.marca__nombre {
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.autenticacion-marca__contenido {
+    position: relative;
+    z-index: 1;
+    max-width: 590px;
+    margin: auto 0;
+    padding: 70px 0;
+}
+
+.etiqueta {
+    margin: 0 0 12px;
+    color: var(--azul-600);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.autenticacion-marca .etiqueta {
+    color: #93c5fd;
+}
+
+.autenticacion-marca h2 {
+    max-width: 620px;
+    margin: 0;
+    font-size: clamp(2.35rem, 5vw, 4.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.055em;
+}
+
+.autenticacion-marca__contenido > p:not(.etiqueta) {
+    max-width: 540px;
+    margin: 24px 0 0;
+    color: #c9d7ec;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.beneficios {
+    display: grid;
+    gap: 13px;
+    margin: 34px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.beneficios li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #e7eef9;
+}
+
+.beneficios li::before {
+    display: grid;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border-radius: 50%;
+    color: #bfdbfe;
+    background: rgba(96, 165, 250, 0.18);
+    content: "✓";
+}
+
+.autenticacion-marca__pie {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    color: #9fb1cc;
+    font-size: 0.88rem;
+}
+
+.autenticacion-contenido {
+    display: grid;
+    min-width: 0;
+    place-items: center;
+    padding: clamp(24px, 5vw, 72px);
+}
+
+.autenticacion-contenido__interior {
+    width: min(100%, 760px);
+}
+
+.tarjeta-autenticacion {
+    width: min(100%, 500px);
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 46px);
+    border: 1px solid var(--borde);
+    border-radius: 24px;
+    background: var(--superficie);
+    box-shadow: var(--sombra);
+}
+
+.tarjeta-autenticacion--amplia {
+    width: min(100%, 760px);
+}
+
+.tarjeta-autenticacion__cabecera {
+    margin-bottom: 30px;
+}
+
+.tarjeta-autenticacion__cabecera h1 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+}
+
+.tarjeta-autenticacion__cabecera p:not(.etiqueta) {
+    margin: 13px 0 0;
+    color: var(--texto-suave);
+    line-height: 1.65;
+}
+
+.formulario-autenticacion {
+    display: grid;
+    gap: 20px;
+}
+
+.formulario-autenticacion--rejilla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.formulario-autenticacion__acciones {
+    grid-column: 1 / -1;
+}
+
+.campo {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+}
+
+.campo__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.campo__etiqueta {
+    color: #26344d;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.campo__control {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid #c8d3e1;
+    border-radius: 11px;
+    outline: none;
+    color: var(--texto);
+    background: #fff;
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+select.campo__control {
+    cursor: pointer;
+}
+
+.campo__control:focus {
+    border-color: var(--azul-600);
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.campo__control::placeholder {
+    color: #94a0b4;
+}
+
+.campo-password {
+    position: relative;
+}
+
+.campo-password .campo__control {
+    padding-right: 84px;
+}
+
+.campo-password__alternar {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: 7px;
+    color: var(--azul-700);
+    background: transparent;
+    font-size: 0.8rem;
+    font-weight: 750;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.campo-password__alternar:hover {
+    background: var(--azul-50);
+}
+
+.campo__error {
+    color: var(--peligro);
+    font-size: 0.82rem;
+}
+
+.recordarme {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    color: var(--texto-suave);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.recordarme input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--azul-600);
+}
+
+.boton {
+    display: inline-flex;
+    width: 100%;
+    min-height: 50px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+        transform 150ms ease,
+        box-shadow 150ms ease,
+        opacity 150ms ease;
+}
+
+.boton--primario {
+    color: #fff;
+    background: linear-gradient(
+        135deg,
+        var(--azul-700),
+        var(--azul-600)
+    );
+    box-shadow:
+        0 12px 24px rgba(37, 99, 235, 0.22);
+}
+
+.boton--primario:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 16px 30px rgba(37, 99, 235, 0.28);
+}
+
+.boton:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.enlace {
+    color: var(--azul-700);
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.enlace:hover {
+    text-decoration: underline;
+}
+
+.enlace--destacado {
+    font-size: 0.92rem;
+}
+
+.tarjeta-autenticacion__pie {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--borde);
+    color: var(--texto-suave);
+    font-size: 0.92rem;
+}
+
+.mensajes {
+    display: grid;
+    gap: 10px;
+    margin: 0 auto 18px;
+    width: min(100%, 760px);
+}
+
+.mensaje {
+    padding: 13px 15px;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+    background: #fff;
+    font-size: 0.9rem;
+}
+
+.mensaje--exito {
+    border-color: #a6f4c5;
+    color: var(--exito);
+    background: #ecfdf3;
+}
+
+.mensaje--peligro,
+.mensaje--error {
+    border-color: #fecdca;
+    color: var(--peligro);
+    background: #fef3f2;
+}
+
+@media (max-width: 900px) {
+    .autenticacion-pagina {
+        grid-template-columns: 1fr;
+    }
+
+    .autenticacion-marca {
+        min-height: auto;
+        padding: 24px;
+    }
+
+    .autenticacion-marca__contenido {
+        padding: 54px 0 28px;
+    }
+
+    .autenticacion-marca h2 {
+        font-size: clamp(2rem, 9vw, 3.2rem);
+    }
+
+    .beneficios,
+    .autenticacion-marca__pie {
+        display: none;
+    }
+
+    .autenticacion-contenido {
+        padding: 28px 18px 46px;
+    }
+}
+
+@media (max-width: 620px) {
+    .formulario-autenticacion--rejilla {
+        grid-template-columns: 1fr;
+    }
+
+    .tarjeta-autenticacion {
+        padding: 26px 20px;
+        border-radius: 18px;
+    }
+
+    .campo__cabecera,
+    .tarjeta-autenticacion__pie {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+.seleccion-comercial {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 0 1.25rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 1rem;
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #f5f3ff
+        );
+}
+
+.seleccion-comercial__garantia small,
+.seleccion-comercial__garantia span {
+    color: #64748b;
+    font-size: 0.74rem;
+}
+
+.registro-cabecera {
+    margin-bottom: 22px;
+}
+
+.registro-progreso {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin: 0 0 24px;
+}
+
+.registro-progreso::before {
+    position: absolute;
+    top: 18px;
+    right: 11%;
+    left: 11%;
+    height: 2px;
+    background: #dbe3ef;
+    content: "";
+}
+
+.registro-progreso__paso {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    border: 0;
+    color: #7b879a;
+    background: transparent;
+    cursor: pointer;
+}
+
+.registro-progreso__paso span {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 2px solid #dbe3ef;
+    border-radius: 50%;
+    background: #fff;
+    font-weight: 800;
+}
+
+.registro-progreso__paso strong {
+    font-size: 0.76rem;
+}
+
+.registro-progreso__paso--activo,
+.registro-progreso__paso--completo {
+    color: var(--azul-700);
+}
+
+.registro-progreso__paso--activo span,
+.registro-progreso__paso--completo span {
+    border-color: var(--azul-600);
+    color: #fff;
+    background: var(--azul-600);
+    box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.1);
+}
+
+.registro-progreso__paso--completo span {
+    color: transparent;
+}
+
+.registro-progreso__paso--completo span::after {
+    color: #fff;
+    content: "✓";
+}
+
+.registro-paso {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    animation: aparecer-registro 180ms ease-out;
+}
+
+.registro-paso[hidden] {
+    display: none;
+}
+
+.registro-paso__titulo {
+    display: flex;
+    grid-column: 1 / -1;
+    gap: 14px;
+    margin-bottom: 4px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.registro-paso__titulo h2,
+.registro-paso__titulo p {
+    margin: 0;
+}
+
+.registro-paso__titulo h2 {
+    margin: 3px 0 5px;
+    font-size: 1.35rem;
+}
+
+.registro-paso__titulo p,
+.registro-paso__titulo small {
+    color: var(--texto-suave);
+    line-height: 1.45;
+}
+
+.registro-paso__icono {
+    display: grid;
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border-radius: 14px;
+    color: var(--azul-700);
+    background: var(--azul-50);
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.campo--ancho,
+.registro-elecciones,
+.registro-seguridad {
+    grid-column: 1 / -1;
+}
+
+.registro-elecciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.registro-elecciones article {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3px 10px;
+    padding: 15px;
+    border: 1px solid #dbe3ef;
+    border-radius: 13px;
+    background: #fbfdff;
+}
+
+.registro-elecciones article > span {
+    grid-row: 1 / 3;
+    color: var(--azul-600);
+    font-size: 1.2rem;
+}
+
+.registro-elecciones small {
+    color: var(--texto-suave);
+    line-height: 1.4;
+}
+
+.registro-seguridad {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #a6f4c5;
+    border-radius: 12px;
+    color: #05603a;
+    background: #ecfdf3;
+}
+
+.registro-seguridad p {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+.registro-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.registro-acciones .boton {
+    width: auto;
+    min-width: 170px;
+}
+
+.boton--secundario {
+    border: 1px solid #c8d3e1;
+    color: #26344d;
+    background: #fff;
+}
+
+@keyframes aparecer-registro {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.campo-trampa {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.contrato-mensaje {
+    min-height: 120px;
+    padding-top: 12px;
+    resize: vertical;
+}
+
+.contrato-confirmacion {
+    display: grid;
+    justify-items: center;
+    padding: 30px 10px;
+    text-align: center;
+}
+
+.contrato-confirmacion > span {
+    display: grid;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 22px;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: #079455;
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+.contrato-confirmacion h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3rem);
+    letter-spacing: -0.04em;
+}
+
+.contrato-confirmacion p:not(.etiqueta) {
+    max-width: 590px;
+    margin: 16px 0 26px;
+    color: var(--texto-suave);
+    line-height: 1.65;
+}
+
+.contrato-confirmacion .boton {
+    width: auto;
+}
+
+.seleccion-comercial > div {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.seleccion-comercial__etiqueta {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.seleccion-comercial strong {
+    color: #172554;
+    font-size: 1rem;
+}
+
+@media (max-width: 700px) {
+    .seleccion-comercial {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    .registro-paso,
+    .registro-elecciones {
+        grid-template-columns: 1fr;
+    }
+
+    .registro-progreso__paso strong {
+        display: none;
+    }
+
+    .registro-acciones {
+        flex-direction: column-reverse;
+    }
+
+    .registro-acciones .boton {
+        width: 100%;
+    }
+}

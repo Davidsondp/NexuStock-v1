@@ -1,0 +1,17 @@
+{
+  "name": "NexuStock Inventario",
+  "short_name": "NexuStock",
+  "description": "Inventario empresarial, compras, ventas y trazabilidad.",
+  "lang": "es-CL",
+  "start_url": "/panel",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f6fb",
+  "theme_color": "#10213c",
+  "icons": [{
+    "src": "/static/img/logo-nexustock-isotipo.png",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }]
+}

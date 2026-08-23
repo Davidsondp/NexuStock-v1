@@ -1,0 +1,42 @@
+name: Calidad y pruebas
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nexustock
+          POSTGRES_PASSWORD: nexustock
+          POSTGRES_DB: nexustock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexustock -d nexustock_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://nexustock:nexustock@localhost:5432/nexustock_test
+      DATABASE_URL: postgresql://nexustock:nexustock@localhost:5432/nexustock_test
+      FLASK_ENV: desarrollo
+      SECRET_KEY: secreto-ci-no-productivo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check app tests config.py run.py scripts
+      - run: black --check app tests config.py run.py scripts
+      - run: flask --app run.py db upgrade
+      - run: pytest -q tests/test_postgresql_integracion.py
+      - run: pytest --cov=app --cov-report=term-missing --cov-fail-under=75
+        env:
+          TEST_DATABASE_URL: ""

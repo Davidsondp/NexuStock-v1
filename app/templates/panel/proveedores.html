@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Gestión de proveedores de NexuStock"
+    >
+
+    <title>Proveedores | NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/panel_empresarial.css') }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/proveedores.css') }}"
+    >
+</head>
+
+<body
+    data-api-proveedores="{{ url_for('proveedores.listar') }}"
+    data-permiso-crear="{{ permisos.crear | tojson }}"
+    data-permiso-editar="{{ permisos.editar | tojson }}"
+    data-permiso-eliminar="{{ permisos.eliminar | tojson }}"
+>
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegación empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">NexuStock</p>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav
+                class="navegacion"
+                aria-label="Módulos empresariales"
+            >
+                <p class="navegacion__titulo">Operación</p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ⌂
+                    </span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        □
+                    </span>
+                    <span>Productos</span>
+                </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'panel.inventario'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Inventario</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.proveedores') }}"
+                    aria-current="page"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ◇
+                    </span>
+                    <span>Proveedores</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        $
+                    </span>
+                    <span>Ventas</span>
+                </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Clientes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.compras') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ⇩
+                    </span>
+                    <span>Compras</span>
+                </a>
+
+                <p class="navegacion__titulo">Control</p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.alertas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        !
+                    </span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ▦
+                    </span>
+                    <span>Reportes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('contexto.seleccionar') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ⌖
+                    </span>
+                    <span>Cambiar ubicación</span>
+                </a>
+            </nav>
+
+            <div class="lateral__usuario">
+                <div class="usuario">
+                    <div
+                        class="usuario__avatar"
+                        aria-hidden="true"
+                    >
+                        {{ current_user.nombre[:1] | upper }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{ current_user.apellido or "" }}
+                        </div>
+
+                        <div class="usuario__rol">
+                            {{ current_user.rol
+                                | replace("_", " ")
+                                | title }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">
+                            Proveedores
+                        </h1>
+
+                        <p class="cabecera__contexto">
+                            {{ contexto.sucursal.nombre }}
+                            ·
+                            {{ contexto.bodega.nombre }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <a
+                        class="boton boton--secundario"
+                        href="{{ url_for('panel.inicio') }}"
+                    >
+                        Volver al panel
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('autenticacion.salir') }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            class="boton boton--secundario"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="proveedores-contenido">
+                {% for categoria, mensaje in
+                    get_flashed_messages(with_categories=true) %}
+                    <div class="mensaje mensaje--{{ categoria }}">
+                        {{ mensaje }}
+                    </div>
+                {% endfor %}
+
+                <section>
+                    <div class="proveedores-encabezado">
+                        <div>
+                            <p class="proveedores-encabezado__etiqueta">
+                                Abastecimiento empresarial
+                            </p>
+
+                            <h2>Gestión de proveedores</h2>
+
+                            <p>
+                                Administra los datos comerciales,
+                                contactos y condiciones de compra.
+                            </p>
+                        </div>
+
+                        <div class="proveedores-acciones">
+                            <button
+                                id="actualizar-proveedores"
+                                class="boton boton--secundario"
+                                type="button"
+                            >
+                                Actualizar
+                            </button>
+
+                            {% if permisos.crear %}
+                                <button
+                                    id="crear-proveedor"
+                                    class="boton boton--primario"
+                                    type="button"
+                                >
+                                    Nuevo proveedor
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="proveedores-filtros">
+                        <input
+                            id="buscar-proveedores"
+                            class="campo"
+                            type="search"
+                            placeholder="Buscar por nombre, RUT, correo o ciudad"
+                            aria-label="Buscar proveedores"
+                            autocomplete="off"
+                        >
+
+                        <button
+                            id="ejecutar-busqueda"
+                            class="boton boton--primario"
+                            type="button"
+                        >
+                            Buscar
+                        </button>
+
+                        <label class="proveedores-filtros__alternador">
+                            <input
+                                id="mostrar-inactivos"
+                                type="checkbox"
+                            >
+                            <span>
+                                Mostrar proveedores inactivos
+                            </span>
+                        </label>
+                    </div>
+
+                    <article class="tarjeta proveedores-tabla">
+                        <div class="proveedores-tabla__cabecera">
+                            <div>
+                                <h3
+                                    id="titulo-listado-proveedores"
+                                    class="proveedores-tabla__titulo"
+                                >
+                                    Proveedores activos
+                                </h3>
+
+                                <p
+                                    id="cantidad-proveedores"
+                                    class="proveedores-tabla__detalle"
+                                >
+                                    Cargando directorio…
+                                </p>
+                            </div>
+
+                            <span class="insignia">
+                                {{ empresa.nombre }}
+                            </span>
+                        </div>
+
+                        <div class="tabla-contenedor">
+                            <table class="tabla">
+                                <thead>
+                                    <tr>
+                                        <th>Proveedor</th>
+                                        <th>RUT</th>
+                                        <th>Contacto</th>
+                                        <th>Ciudad</th>
+                                        <th>Entrega</th>
+                                        <th>Compra mínima</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="tabla-proveedores">
+                                    <tr>
+                                        <td
+                                            colspan="8"
+                                            class="estado-carga"
+                                        >
+                                            Cargando proveedores…
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <section
+        id="modal-proveedor"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-modal-proveedor"
+        hidden
+    >
+        <button
+            id="cerrar-modal-proveedor"
+            class="modal__fondo"
+            type="button"
+            aria-label="Cerrar formulario"
+        ></button>
+
+        <div class="modal__contenido">
+            <div class="modal__cabecera">
+                <div>
+                    <p class="modal__etiqueta">
+                        Directorio comercial
+                    </p>
+
+                    <h2 id="titulo-modal-proveedor">
+                        Nuevo proveedor
+                    </h2>
+                </div>
+
+                <button
+                    id="cerrar-modal-proveedor-boton"
+                    class="modal__cerrar"
+                    type="button"
+                    aria-label="Cerrar"
+                >
+                    ×
+                </button>
+            </div>
+
+            <form id="formulario-proveedor" novalidate>
+                <input
+                    id="proveedor-id"
+                    type="hidden"
+                >
+
+                <div class="formulario-cuadricula">
+                    <label class="grupo-campo grupo-campo--ancho">
+                        <span>Nombre *</span>
+
+                        <input
+                            id="proveedor-nombre"
+                            class="campo"
+                            type="text"
+                            maxlength="150"
+                            autocomplete="organization"
+                            required
+                        >
+                    </label>
+
+                    <label class="grupo-campo">
+                        <span>RUT o identificación fiscal</span>
+
+                        <input
+                            id="proveedor-identificacion"
+                            class="campo"
+                            type="text"
+                            maxlength="30"
+                        >
+                    </label>
+
+                    <label class="grupo-campo">
+                        <span>Correo electrónico</span>
+
+                        <input
+                            id="proveedor-email"
+                            class="campo"
+                            type="email"
+                            maxlength="254"
+                            autocomplete="email"
+                        >
+                    </label>
+
+                    <label class="grupo-campo">
+                        <span>Teléfono</span>
+
+                        <input
+                            id="proveedor-telefono"
+                            class="campo"
+                            type="tel"
+                            maxlength="30"
+                            autocomplete="tel"
+                        >
+                    </label>
+
+                    <label class="grupo-campo">
+                        <span>Ciudad</span>
+
+                        <input
+                            id="proveedor-ciudad"
+                            class="campo"
+                            type="text"
+                            maxlength="100"
+                            autocomplete="address-level2"
+                        >
+                    </label>
+
+                    <label class="grupo-campo">
+                        <span>País</span>
+
+                        <input
+                            id="proveedor-pais"
+                            class="campo"
+                            type="text"
+                            maxlength="2"
+                            value="CL"
+                            autocomplete="country"
+                        >
+                    </label>
+
+                    <label class="grupo-campo grupo-campo--ancho">
+                        <span>Dirección</span>
+
+                        <input
+                            id="proveedor-direccion"
+                            class="campo"
+                            type="text"
+                            maxlength="255"
+                            autocomplete="street-address"
+                        >
+                    </label>
+
+                    <label class="grupo-campo grupo-campo--ancho">
+                        <span>Sitio web</span>
+
+                        <input
+                            id="proveedor-sitio-web"
+                            class="campo"
+                            type="url"
+                            maxlength="255"
+                            placeholder="https://"
+                        >
+                    </label>
+
+                    <label class="grupo-campo">
+                        <span>Días de entrega</span>
+
+                        <input
+                            id="proveedor-dias-entrega"
+                            class="campo"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value="7"
+                        >
+                    </label>
+
+                    <label class="grupo-campo">
+                        <span>Compra mínima</span>
+
+                        <input
+                            id="proveedor-compra-minima"
+                            class="campo"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value="0"
+                        >
+                    </label>
+
+                    <label class="grupo-campo grupo-campo--ancho">
+                        <span>Condiciones de pago</span>
+
+                        <input
+                            id="proveedor-condiciones-pago"
+                            class="campo"
+                            type="text"
+                            maxlength="120"
+                            placeholder="Ejemplo: 30 días"
+                        >
+                    </label>
+
+                    <label class="grupo-campo grupo-campo--ancho">
+                        <span>Observaciones</span>
+
+                        <textarea
+                            id="proveedor-observaciones"
+                            class="campo"
+                            rows="4"
+                        ></textarea>
+                    </label>
+                </div>
+
+                <p
+                    id="error-proveedor"
+                    class="formulario-error"
+                    role="alert"
+                    hidden
+                ></p>
+
+                <div class="modal__acciones">
+                    <button
+                        id="cancelar-proveedor"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        id="guardar-proveedor"
+                        class="boton boton--primario"
+                        type="submit"
+                    >
+                        Guardar proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for('static', filename='js/proveedores.js') }}"
+        defer
+    ></script>
+</body>
+</html>

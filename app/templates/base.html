@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="csrf-token"
+        content="{{ csrf_token() }}"
+    >
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <title>
+        {% block title %}NexuStock{% endblock %}
+    </title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/autenticacion.css'
+        ) }}"
+    >
+</head>
+<body>
+    <div
+        id="autenticacion-pagina"
+        class="autenticacion-pagina"
+    >
+        <aside class="autenticacion-marca">
+            <a
+                class="marca"
+                href="{{ url_for('inicio_publico') }}"
+                aria-label="NexuStock"
+            >
+                <img
+                    class="marca__logo-completo"
+                    src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}"
+                    alt=""
+                    width="112"
+                    height="112"
+                >
+
+                <span class="marca__nombre">
+                    NexuStock
+                </span>
+            </a>
+
+            <div class="autenticacion-marca__contenido">
+                <p class="etiqueta">
+                    Inventario empresarial
+                </p>
+
+                <h2>
+                    Controla tu inventario con confianza
+                </h2>
+
+                <p>
+                    Administra existencias, compras, ventas,
+                    alertas y ubicaciones desde un solo lugar.
+                </p>
+
+                <ul class="beneficios">
+                    <li>Stock actualizado por bodega</li>
+                    <li>Alertas y trazabilidad automática</li>
+                    <li>Información protegida por empresa</li>
+                </ul>
+            </div>
+
+            <p class="autenticacion-marca__pie">
+                Operación clara. Decisiones oportunas.
+            </p>
+        </aside>
+
+        <main class="autenticacion-contenido">
+            <div class="autenticacion-contenido__interior">
+                {% with mensajes = get_flashed_messages(
+                    with_categories=true
+                ) %}
+                    {% if mensajes %}
+                        <div
+                            class="mensajes"
+                            aria-live="polite"
+                        >
+                            {% for categoria, mensaje in mensajes %}
+                                <div
+                                    class="mensaje mensaje--{{
+                                        categoria
+                                    }}"
+                                    role="status"
+                                >
+                                    {{ mensaje }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/autenticacion.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

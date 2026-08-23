@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Gestión de productos de NexuStock"
+    >
+
+    <title>Productos | NexuStock</title>
+    <meta name="theme-color" content="#10213c">
+    <link rel="manifest" href="{{ url_for('manifiesto_web') }}">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/panel_empresarial.css') }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/productos.css') }}"
+    >
+</head>
+
+<body
+    data-api-productos="{{ url_for('productos.listar') }}"
+    data-api-proveedores="{{ url_for('proveedores.listar') }}"
+    data-bodega-id="{{ contexto.bodega.id }}"
+    data-permiso-crear="{{ permisos.crear | tojson }}"
+    data-permiso-editar="{{ permisos.editar | tojson }}"
+    data-permiso-eliminar="{{ permisos.eliminar | tojson }}"
+>
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegación empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">NexuStock</p>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav class="navegacion" aria-label="Módulos empresariales">
+                <p class="navegacion__titulo">Operación</p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">⌂</span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                    aria-current="page"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">□</span>
+                    <span>Productos</span>
+                </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'panel.inventario'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Inventario</span>
+                </a>
+
+                <a class="navegacion__enlace" href="{{ url_for('panel.ventas') }}">
+                    <span class="navegacion__icono" aria-hidden="true">$</span>
+                    <span>Ventas</span>
+                </a>
+
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >
+                        ?
+                    </span>
+                    <span>Clientes</span>
+                </a>
+
+                <a class="navegacion__enlace" href="{{ url_for('panel.compras') }}">
+                    <span class="navegacion__icono" aria-hidden="true">⇩</span>
+                    <span>Compras</span>
+                </a>
+
+                <a class="navegacion__enlace" href="{{ url_for('panel.proveedores') }}">
+                    <span class="navegacion__icono" aria-hidden="true">◇</span>
+                    <span>Proveedores</span>
+                </a>
+
+                <p class="navegacion__titulo">Control</p>
+
+                <a class="navegacion__enlace" href="{{ url_for('panel.alertas') }}">
+                    <span class="navegacion__icono" aria-hidden="true">!</span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">▦</span>
+                    <span>Reportes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('contexto.seleccionar') }}"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">⌖</span>
+                    <span>Cambiar ubicación</span>
+                </a>
+            </nav>
+
+            <div class="lateral__usuario">
+                <div class="usuario">
+                    <div class="usuario__avatar" aria-hidden="true">
+                        {{ current_user.nombre[:1] | upper }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{ current_user.apellido or "" }}
+                        </div>
+                        <div class="usuario__rol">
+                            {{ current_user.rol | replace("_", " ") | title }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">Productos</h1>
+                        <p class="cabecera__contexto">
+                            {{ contexto.sucursal.nombre }}
+                            ·
+                            {{ contexto.bodega.nombre }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <a
+                        class="boton boton--secundario"
+                        href="{{ url_for('panel.inicio') }}"
+                    >
+                        Volver al panel
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{{ url_for('autenticacion.salir') }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            class="boton boton--secundario"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="productos-contenido">
+                {% for categoria, mensaje in
+                    get_flashed_messages(with_categories=true) %}
+                    <div class="mensaje mensaje--{{ categoria }}">
+                        {{ mensaje }}
+                    </div>
+                {% endfor %}
+
+                <section>
+                    <div class="productos-encabezado">
+                        <div>
+                            <p class="productos-encabezado__etiqueta">
+                                Catálogo empresarial
+                            </p>
+                            <h2>Gestión de productos</h2>
+                            <p>
+                                Consulta y administra la información comercial,
+                                tributaria y de reposición de tus productos.
+                            </p>
+                        </div>
+
+                        <div class="productos-acciones">
+                            <button
+                                id="escanear-producto"
+                                class="boton boton--secundario"
+                                type="button"
+                            >
+                                <span aria-hidden="true">⌗</span>
+                                Escanear código
+                            </button>
+                            {% if permisos.importar %}
+                                <a
+                                    class="boton boton--secundario"
+                                    href="{{ url_for('panel.importaciones') }}"
+                                >
+                                    Importar documentos
+                                </a>
+                            {% endif %}
+                            <button
+                                id="actualizar-productos"
+                                class="boton boton--secundario"
+                                type="button"
+                            >
+                                Actualizar
+                            </button>
+
+                            {% if permisos.crear %}
+                                <button
+                                    id="crear-producto"
+                                    class="boton boton--primario"
+                                    type="button"
+                                >
+                                    Nuevo producto
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="productos-filtros">
+                        <input
+                            id="buscar-productos"
+                            class="campo"
+                            type="search"
+                            placeholder="Buscar por nombre, código o código de barras"
+                            aria-label="Buscar productos"
+                            autocomplete="off"
+                        >
+
+                        <button
+                            id="ejecutar-busqueda"
+                            class="boton boton--primario"
+                            type="button"
+                        >
+                            Buscar
+                        </button>
+
+                        <label class="productos-filtros__alternador">
+                            <input
+                            id="mostrar-inactivos"
+                            type="checkbox"
+                            >
+                            <span>Mostrar productos inactivos</span>
+                        </label>
+                    </div>
+
+                    <div
+                        id="categorias-productos"
+                        class="nx-colecciones"
+                        aria-label="Colecciones de productos"
+                    ></div>
+
+                    <article class="tarjeta productos-tabla">
+                        <div class="productos-tabla__cabecera">
+                            <div>
+                                <h3
+                                id="titulo-listado-productos"
+                                class="productos-tabla__titulo"
+                                >
+                                Productos activos
+                                </h3>
+                                <p
+                                    id="cantidad-productos"
+                                    class="productos-tabla__detalle"
+                                >
+                                    Cargando catálogo…
+                                </p>
+                            </div>
+
+                            <span class="insignia">
+                                {{ contexto.bodega.nombre }}
+                            </span>
+                        </div>
+
+                        <div class="tabla-contenedor">
+                            <table class="tabla">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Marca</th>
+                                        <th>Precio</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="tabla-productos">
+                                    <tr>
+                                        <td
+                                            colspan="7"
+                                            class="estado-carga"
+                                        >
+                                            Cargando productos…
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="modal-escaner"
+        class="modal nx-escaner"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-escaner"
+        hidden
+    >
+        <div class="modal__contenido nx-escaner__contenido">
+            <div class="modal__cabecera">
+                <div>
+                    <p class="nx-sobretitulo">Consulta móvil</p>
+                    <h2 id="titulo-escaner" class="modal__titulo">Escanear producto</h2>
+                    <p class="modal__descripcion">
+                        Apunta la cámara al código de barras. NexuStock buscará el producto automáticamente.
+                    </p>
+                </div>
+                <button id="cerrar-escaner" class="modal__cerrar" type="button" aria-label="Cerrar escáner">×</button>
+            </div>
+            <div class="nx-escaner__visor">
+                <video id="video-escaner" playsinline muted></video>
+                <div class="nx-escaner__guia" aria-hidden="true"></div>
+                <p id="estado-escaner">Preparando cámara…</p>
+            </div>
+            <div class="nx-escaner__manual">
+                <label for="codigo-escaner-manual">También puedes escribir o usar un lector USB</label>
+                <div>
+                    <input id="codigo-escaner-manual" class="campo" type="text" inputmode="numeric" autocomplete="off" placeholder="Código de barras">
+                    <button id="buscar-codigo-manual" class="boton boton--primario" type="button">Buscar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        id="modal-producto"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-modal-producto"
+        hidden
+    >
+        <div class="modal__contenido">
+            <div class="modal__cabecera">
+                <div>
+                    <h2
+                        id="titulo-modal-producto"
+                        class="modal__titulo"
+                    >
+                        Nuevo producto
+                    </h2>
+                    <p class="modal__descripcion">
+                        Los campos con asterisco son obligatorios.
+                    </p>
+                </div>
+
+                <button
+                    id="cerrar-modal-producto"
+                    class="modal__cerrar"
+                    type="button"
+                    aria-label="Cerrar formulario"
+                >
+                    ×
+                </button>
+            </div>
+
+            <form
+                id="formulario-producto"
+                class="formulario-producto"
+                novalidate
+            >
+                <input id="producto-id" type="hidden">
+
+                <div
+                    id="error-producto"
+                    class="error-formulario"
+                    role="alert"
+                    hidden
+                ></div>
+
+                <div class="grupo-campo">
+                    <label for="producto-codigo">Código *</label>
+                    <input
+                        id="producto-codigo"
+                        class="campo"
+                        name="codigo"
+                        type="text"
+                        maxlength="50"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-codigo-barras">
+                        Código de barras
+                    </label>
+                    <input
+                        id="producto-codigo-barras"
+                        class="campo"
+                        name="codigo_barras"
+                        type="text"
+                        maxlength="150"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="grupo-campo grupo-campo--completo">
+                    <label for="producto-nombre">Nombre *</label>
+                    <input
+                        id="producto-nombre"
+                        class="campo"
+                        name="nombre"
+                        type="text"
+                        maxlength="150"
+                        required
+                    >
+                </div>
+
+                <div class="grupo-campo grupo-campo--completo">
+                    <label for="producto-descripcion">Descripción</label>
+                    <textarea
+                        id="producto-descripcion"
+                        class="campo"
+                        name="descripcion"
+                        rows="3"
+                    ></textarea>
+                </div>
+
+                <div class="grupo-campo grupo-campo--completo">
+                    <label for="producto-campos-personalizados">
+                        Campos personalizados
+                    </label>
+                    <textarea
+                        id="producto-campos-personalizados"
+                        class="campo"
+                        name="campos_personalizados"
+                        rows="4"
+                        placeholder="Color: Azul&#10;Talla: M&#10;Temporada: Invierno"
+                    ></textarea>
+                    <small>Escribe un campo por línea con el formato Nombre: valor. Máximo 20.</small>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-categoria">Categoría</label>
+                    <input
+                        id="producto-categoria"
+                        class="campo"
+                        name="categoria"
+                        type="text"
+                        maxlength="100"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-subcategoria">Subcategoría</label>
+                    <input
+                        id="producto-subcategoria"
+                        class="campo"
+                        name="subcategoria"
+                        type="text"
+                        maxlength="100"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-marca">Marca</label>
+                    <input
+                        id="producto-marca"
+                        class="campo"
+                        name="marca"
+                        type="text"
+                        maxlength="100"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-unidad-medida">
+                        Unidad de medida
+                    </label>
+                    <input
+                        id="producto-unidad-medida"
+                        class="campo"
+                        name="unidad_medida"
+                        type="text"
+                        maxlength="30"
+                        value="unidad"
+                        list="unidades-medida-sugeridas"
+                        autocomplete="off"
+                    >
+                    <datalist
+                        id="unidades-medida-sugeridas"
+                    >
+                        {% for unidad in unidades_sugeridas %}
+                        <option
+                            value="{{ unidad.codigo }}"
+                            label="{{
+                                unidad.nombre
+                            }} ({{
+                                unidad.abreviatura
+                            }})"
+                        ></option>
+                        {% endfor %}
+                    </datalist>
+                    <small>
+                        Selecciona una sugerencia o escribe
+                        una unidad personalizada.
+                    </small>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-unidades-caja">
+                        Unidades por caja
+                    </label>
+                    <input
+                        id="producto-unidades-caja"
+                        class="campo"
+                        name="unidades_por_caja"
+                        type="number"
+                        min="0.001"
+                        step="0.001"
+                        value="1"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-costo">Costo de referencia</label>
+                    <input
+                        id="producto-costo"
+                        class="campo"
+                        name="costo_referencia"
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value="0"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-precio">Precio de venta</label>
+                    <input
+                        id="producto-precio"
+                        class="campo"
+                        name="precio_venta"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value="0"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-impuesto">Tasa de impuesto</label>
+                    <input
+                        id="producto-impuesto"
+                        class="campo"
+                        name="tasa_impuesto"
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value="0.19"
+                    >
+                    <small>
+                        Para IVA de 19%, utiliza 0.19.
+                    </small>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-stock-minimo">Stock mínimo</label>
+                    <input
+                        id="producto-stock-minimo"
+                        class="campo"
+                        name="stock_minimo"
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        value="0"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-punto-reorden">
+                        Punto de reorden
+                    </label>
+                    <input
+                        id="producto-punto-reorden"
+                        class="campo"
+                        name="punto_reorden"
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        value="0"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-stock-maximo">
+                        Stock máximo
+                    </label>
+                    <input
+                        id="producto-stock-maximo"
+                        class="campo"
+                        name="stock_maximo"
+                        type="number"
+                        min="0"
+                        step="0.001"
+                    >
+                    <small>
+                        Puede quedar vacío si no existe un máximo.
+                    </small>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="producto-proveedor">
+                        Proveedor principal
+                    </label>
+
+                    <select
+                    id="producto-proveedor"
+                    class="campo"
+                    name="proveedor_principal_id"
+                    >
+                    <option value="">
+                        Sin proveedor asignado
+                    </option>
+                </select>
+                <small>
+                    Solo se muestran proveedores activos.
+                </small>
+            </div>
+
+                <div class="grupo-opciones">
+                    <label class="opcion">
+                        <input
+                            id="producto-incluye-iva"
+                            name="incluye_iva"
+                            type="checkbox"
+                            checked
+                        >
+                        Incluye IVA
+                    </label>
+
+                    <label class="opcion">
+                        <input
+                            id="producto-requiere-serial"
+                            name="requiere_serial"
+                            type="checkbox"
+                        >
+                        Requiere número de serie
+                    </label>
+
+                    {% if capacidades.control_lotes %}
+                    <label class="opcion">
+                        <input
+                            id="producto-controla-lotes"
+                            name="controla_lotes"
+                            type="checkbox"
+                        >
+                        Controla lotes
+                    </label>
+                    {% endif %}
+
+                    {% if capacidades.control_vencimientos %}
+                    <label class="opcion">
+                        <input
+                            id="producto-controla-vencimiento"
+                            name="controla_vencimiento"
+                            type="checkbox"
+                        >
+                        Controla vencimiento
+                    </label>
+                    {% endif %}
+                </div>
+
+
+                <section
+                    id="seccion-presentaciones-producto"
+                    class="presentaciones-producto"
+                    aria-labelledby="titulo-presentaciones-producto"
+                    hidden
+                >
+                    <div class="presentaciones-producto__encabezado">
+                        <div>
+                            <h3 id="titulo-presentaciones-producto">
+                                Presentaciones de compra y venta
+                            </h3>
+                            <p>
+                                Cada presentación se convierte a la unidad base para mantener un stock
+                                único y confiable.
+                            </p>
+                        </div>
+
+                        {% if permisos.editar %}
+                        <button
+                            id="nueva-presentacion-producto"
+                            class="boton boton--secundario"
+                            type="button"
+                        >
+                            Agregar presentación
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div
+                        id="estado-presentaciones-producto"
+                        class="presentaciones-producto__estado"
+                    >
+                        Guarda primero el producto para administrar
+                        sus presentaciones.
+                    </div>
+
+                    <div
+                        id="lista-presentaciones-producto"
+                        class="presentaciones-producto__lista"
+                        aria-live="polite"
+                    ></div>
+
+                    {% if permisos.editar %}
+                    <div
+                        id="formulario-presentacion-producto"
+                        class="presentacion-editor"
+                        hidden
+                    >
+                        <input
+                            id="presentacion-id"
+                            type="hidden"
+                        >
+
+                        <div class="presentacion-editor__encabezado">
+                            <h4 id="titulo-editor-presentacion">
+                                Nueva presentación
+                            </h4>
+                            <p>
+                                Ejemplo: un display contiene
+                                6 unidades base.
+                            </p>
+                        </div>
+
+                        <div class="presentacion-editor__campos">
+                            <div class="grupo-campo">
+                                <label for="presentacion-codigo">
+                                    Código
+                                </label>
+                                <input
+                                    id="presentacion-codigo"
+                                    class="campo"
+                                    type="text"
+                                    maxlength="50"
+                                    placeholder="Ej.: DISPLAY-6"
+                                    autocomplete="off"
+                                >
+                            </div>
+
+                            <div class="grupo-campo">
+                                <label for="presentacion-nombre">
+                                    Nombre
+                                </label>
+                                <input
+                                    id="presentacion-nombre"
+                                    class="campo"
+                                    type="text"
+                                    maxlength="100"
+                                    placeholder="Ej.: Display de 6"
+                                    autocomplete="off"
+                                >
+                            </div>
+
+                            <div class="grupo-campo">
+                                <label for="presentacion-abreviatura">
+                                    Abreviatura
+                                </label>
+                                <input
+                                    id="presentacion-abreviatura"
+                                    class="campo"
+                                    type="text"
+                                    maxlength="20"
+                                    placeholder="Ej.: disp"
+                                    autocomplete="off"
+                                >
+                            </div>
+
+                            <div class="grupo-campo">
+                                <label for="presentacion-factor">
+                                    Cantidad en unidad base
+                                </label>
+                                <input
+                                    id="presentacion-factor"
+                                    class="campo"
+                                    type="number"
+                                    min="0.001"
+                                    step="0.001"
+                                    placeholder="Ej.: 6"
+                                >
+                            </div>
+                        </div>
+
+                        <p
+                            id="presentacion-equivalencia"
+                            class="presentacion-editor__equivalencia"
+                        >
+                            Indica cuántas unidades base contiene
+                            esta presentación.
+                        </p>
+
+                        <div
+                            id="error-presentacion-producto"
+                            class="formulario-producto__error"
+                            role="alert"
+                            hidden
+                        ></div>
+
+                        <div class="presentacion-editor__acciones">
+                            <button
+                                id="cancelar-presentacion-producto"
+                                class="boton boton--secundario"
+                                type="button"
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                id="guardar-presentacion-producto"
+                                class="boton boton--primario"
+                                type="button"
+                            >
+                                Guardar presentación
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </section>
+
+                <div class="formulario-producto__acciones">
+                    <button
+                        id="cancelar-producto"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        id="guardar-producto"
+                        class="boton boton--primario"
+                        type="submit"
+                    >
+                        Guardar producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for('static', filename='js/productos.js') }}"
+        defer
+    ></script>
+    <script
+        src="{{ url_for('static', filename='js/escaner_productos.js') }}"
+        defer
+    ></script>
+    <script
+        src="{{
+            url_for(
+                'static',
+                filename='js/productos_presentaciones.js'
+            )
+        }}"
+        defer
+    ></script>
+    <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+
+</body>
+</html>

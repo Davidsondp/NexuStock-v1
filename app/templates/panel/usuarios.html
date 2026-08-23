@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Administración empresarial de usuarios"
+    >
+
+    <title>Usuarios | NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/panel_empresarial.css'
+        ) }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/usuarios.css'
+        ) }}"
+    >
+</head>
+
+<body
+    data-api-usuarios="{{ url_for('usuarios.listar') }}"
+    data-api-sucursales="{{
+        url_for('ubicaciones.listar_sucursales')
+    }}"
+    data-usuario-actual-id="{{ current_user.id }}"
+    data-limite-usuarios="{{
+        limite_usuarios
+        if limite_usuarios is not none
+        else ''
+    }}"
+    data-permiso-crear="{{ permisos.crear | tojson }}"
+    data-permiso-editar="{{ permisos.editar | tojson }}"
+    data-permiso-desactivar="{{
+        permisos.desactivar | tojson
+    }}"
+    data-permiso-roles="{{ permisos.roles | tojson }}"
+>
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegación empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">
+                        NexuStock
+                    </p>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav
+                class="navegacion"
+                aria-label="Módulos empresariales"
+            >
+                <p class="navegacion__titulo">
+                    Operación
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌂</span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >□</span>
+                    <span>Productos</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inventario') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >≡</span>
+                    <span>Inventario</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.proveedores') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >P</span>
+                    <span>Proveedores</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >C</span>
+                    <span>Clientes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >$</span>
+                    <span>Ventas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.compras') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⇩</span>
+                    <span>Compras</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Control
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.alertas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >!</span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >▦</span>
+                    <span>Reportes</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Administración
+                </p>
+
+                <a
+                    class="
+                        navegacion__enlace
+                        navegacion__enlace--activo
+                    "
+                    href="{{ url_for(
+                        'panel.administracion_usuarios'
+                    ) }}"
+                    aria-current="page"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >U</span>
+                    <span>Usuarios</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'contexto.seleccionar'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌖</span>
+                    <span>Cambiar ubicación</span>
+                </a>
+            </nav>
+
+            <div class="lateral__usuario">
+                <div class="usuario">
+                    <div
+                        class="usuario__avatar"
+                        aria-hidden="true"
+                    >
+                        {{
+                            current_user.nombre[:1]
+                            | upper
+                        }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{
+                                current_user.apellido
+                                or ""
+                            }}
+                        </div>
+                        <span class="usuario__rol">
+                            {{
+                                current_user.rol
+                                | replace("_", " ")
+                                | title
+                            }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">
+                            Administración de usuarios
+                        </h1>
+                        <p class="cabecera__contexto">
+                            {{ empresa.nombre }}
+                            ·
+                            Equipo empresarial
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    {% if permisos.crear %}
+                        <button
+                            id="abrir-formulario-usuario"
+                            class="boton boton--primario"
+                            type="button"
+                        >
+                            Nuevo usuario
+                        </button>
+                    {% else %}
+                        <button
+                            id="abrir-formulario-usuario"
+                            type="button"
+                            hidden
+                        ></button>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        action="{{ url_for(
+                            'autenticacion.salir'
+                        ) }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            class="boton boton--secundario"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="usuarios-contenido">
+                <section class="usuarios-portada">
+                    <div>
+                        <p class="usuarios-portada__etiqueta">
+                            Seguridad empresarial
+                        </p>
+                        <h2>Equipo y accesos</h2>
+                        <p>
+                            Administra integrantes, roles,
+                            sucursales, sesiones y permisos
+                            especiales desde un solo lugar.
+                        </p>
+                    </div>
+
+                    <div class="usuarios-portada__seguridad">
+                        <span aria-hidden="true">●</span>
+                        <div>
+                            <strong>
+                                Aislamiento por empresa
+                            </strong>
+                            <small>
+                                Acciones protegidas y auditadas
+                            </small>
+                        </div>
+                    </div>
+                </section>
+
+                <section
+                    class="usuarios-resumen"
+                    aria-label="Resumen de usuarios"
+                >
+                    <article>
+                        <span>Usuarios activos</span>
+                        <strong
+                            id="resumen-usuarios-activos"
+                        >
+                            0
+                        </strong>
+                        <small>
+                            Cuentas habilitadas
+                        </small>
+                    </article>
+
+                    <article>
+                        <span>Límite del plan</span>
+                        <strong
+                            id="resumen-limite-usuarios"
+                        >
+                            {{
+                                limite_usuarios
+                                if limite_usuarios is not none
+                                else "Sin límite"
+                            }}
+                        </strong>
+                        <small>
+                            Usuarios activos permitidos
+                        </small>
+                    </article>
+
+                    <article>
+                        <span>Jefaturas</span>
+                        <strong
+                            id="resumen-jefaturas"
+                        >
+                            0
+                        </strong>
+                        <small>
+                            Responsables empresariales
+                        </small>
+                    </article>
+                </section>
+
+                <section class="usuarios-panel">
+                    <div class="usuarios-panel__encabezado">
+                        <div>
+                            <p class="usuarios-panel__etiqueta">
+                                Directorio
+                            </p>
+                            <h3>Usuarios de la empresa</h3>
+                            <p>
+                                Consulta cuentas activas e
+                                inactivas y administra sus
+                                accesos.
+                            </p>
+                        </div>
+
+                        <label class="campo campo--compacto">
+                            <span>Estado</span>
+                            <select id="filtro-estado-usuarios">
+                                <option value="activos">
+                                    Activos
+                                </option>
+                                <option value="todos">
+                                    Todos
+                                </option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div
+                        id="estado-lista-usuarios"
+                        class="usuarios-estado"
+                    >
+                        Cargando usuarios...
+                    </div>
+
+                    <div
+                        id="lista-usuarios"
+                        class="usuarios-lista"
+                        aria-live="polite"
+                    ></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="formulario-usuario"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-formulario-usuario"
+        hidden
+    >
+        <div
+            id="fondo-formulario-usuario"
+            class="modal__fondo"
+        ></div>
+
+        <section class="modal__panel">
+            <div class="modal__encabezado">
+                <div>
+                    <p class="modal__etiqueta">
+                        Cuenta empresarial
+                    </p>
+                    <h2 id="titulo-formulario-usuario">
+                        Nuevo usuario
+                    </h2>
+                    <p>
+                        Define identidad, rol y sucursales.
+                    </p>
+                </div>
+
+                <button
+                    id="cerrar-formulario-usuario"
+                    class="modal__cerrar"
+                    type="button"
+                    aria-label="Cerrar formulario"
+                >
+                    ×
+                </button>
+            </div>
+
+            <form id="formulario-datos-usuario">
+                <input
+                    id="usuario-id"
+                    type="hidden"
+                >
+
+                <div class="usuario-editor__campos">
+                    <label class="campo">
+                        <span>Nombre</span>
+                        <input
+                            id="usuario-nombre"
+                            name="nombre"
+                            type="text"
+                            maxlength="100"
+                            required
+                        >
+                    </label>
+
+                    <label class="campo">
+                        <span>Apellido</span>
+                        <input
+                            id="usuario-apellido"
+                            name="apellido"
+                            type="text"
+                            maxlength="100"
+                        >
+                    </label>
+
+                    <label class="campo">
+                        <span>Correo electrónico</span>
+                        <input
+                            id="usuario-email"
+                            name="email"
+                            type="email"
+                            maxlength="254"
+                            required
+                        >
+                    </label>
+
+                    <label class="campo">
+                        <span>RUT de la persona</span>
+                        <input id="usuario-rut" name="identificacion_fiscal" type="text" maxlength="30" placeholder="12.345.678-9">
+                    </label>
+
+                    <label class="campo">
+                        <span>Teléfono</span>
+                        <input id="usuario-telefono" name="telefono" type="tel" maxlength="30" placeholder="+56 9 1234 5678">
+                    </label>
+
+                    <label class="campo">
+                        <span>Contraseña inicial</span>
+                        <input
+                            id="usuario-password"
+                            name="password"
+                            type="password"
+                            minlength="8"
+                            autocomplete="new-password"
+                        >
+                        <small>
+                            Obligatoria al crear. En edición
+                            se gestiona por separado.
+                        </small>
+                    </label>
+
+                    <label class="campo">
+                        <span>Rol empresarial</span>
+                        <select
+                            id="usuario-rol"
+                            name="rol"
+                            {% if not permisos.roles %}
+                                disabled
+                            {% endif %}
+                        >
+                            <option value="empleado">
+                                Empleado/a
+                            </option>
+                            <option value="supervisor">
+                                Supervisor/a
+                            </option>
+                            <option value="jefe">
+                                Jefe/a de empresa
+                            </option>
+                        </select>
+                    </label>
+                </div>
+
+                <fieldset class="usuario-editor__seccion">
+                    <legend>Sucursales asignadas</legend>
+                    <p>
+                        La primera selección se utilizará
+                        como sucursal principal.
+                    </p>
+
+                    <div
+                        id="usuario-sucursales"
+                        class="usuario-opciones"
+                    >
+                        Cargando sucursales...
+                    </div>
+                </fieldset>
+
+                <fieldset
+                    class="usuario-editor__seccion"
+                    {% if not permisos.roles %}
+                        disabled
+                    {% endif %}
+                >
+                    <legend>Permisos especiales</legend>
+                    <p>
+                        Conserva la configuración del rol,
+                        permite una capacidad o la deniega
+                        expresamente.
+                    </p>
+
+                    <div
+                        id="contenedor-permisos-especiales"
+                        class="permisos-especiales"
+                    >
+                        {% for permiso in permisos_catalogo %}
+                            <label class="permiso-especial">
+                                <span>{{ permiso }}</span>
+                                <select
+                                    data-permiso="{{ permiso }}"
+                                >
+                                    <option value="">
+                                        Según rol
+                                    </option>
+                                    <option value="true">
+                                        Permitir
+                                    </option>
+                                    <option value="false">
+                                        Denegar
+                                    </option>
+                                </select>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <div class="usuario-editor__acciones">
+                    <button
+                        id="cancelar-usuario"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        id="guardar-usuario"
+                        class="boton boton--primario"
+                        type="submit"
+                    >
+                        Guardar usuario
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/usuarios.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

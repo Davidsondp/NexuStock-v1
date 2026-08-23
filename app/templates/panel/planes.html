@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Administración empresarial de planes y suscripciones"
+    >
+
+    <title>Planes y suscripción | NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/panel_empresarial.css'
+        ) }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/planes.css'
+        ) }}"
+    >
+</head>
+
+<body
+    data-api-suscripciones="{{
+        url_for('suscripciones.resumen')
+    }}"
+    data-checkout-webpay-sufijo="/checkout/webpay"
+    data-checkout-mercadopago-sufijo="/checkout/mercadopago"
+    data-mandato-sufijo="/mandato/iniciar"
+    data-puede-solicitar="{{
+        'true' if puede_solicitar else 'false'
+    }}"
+>
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegación empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">
+                        NexuStock
+                    </p>
+                    <span class="marca__empresa">
+                        {{ contexto.sucursal.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav
+                class="navegacion"
+                aria-label="Módulos empresariales"
+            >
+                <p class="navegacion__titulo">
+                    Operación
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌂</span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.productos') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >□</span>
+                    <span>Productos</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inventario') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >≡</span>
+                    <span>Inventario</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.proveedores') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >P</span>
+                    <span>Proveedores</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.clientes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >C</span>
+                    <span>Clientes</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >$</span>
+                    <span>Ventas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.compras') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⇩</span>
+                    <span>Compras</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Control
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.alertas') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >!</span>
+                    <span>Alertas</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.reportes') }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >▦</span>
+                    <span>Reportes</span>
+                </a>
+
+                <p class="navegacion__titulo">
+                    Administración
+                </p>
+
+                <a
+                    class="
+                        navegacion__enlace
+                        navegacion__enlace--activo
+                    "
+                    href="{{ url_for(
+                        'panel.administracion_usuarios'
+                    ) }}"
+                    aria-current="page"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >U</span>
+                    <span>Usuarios</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for(
+                        'contexto.seleccionar'
+                    ) }}"
+                >
+                    <span
+                        class="navegacion__icono"
+                        aria-hidden="true"
+                    >⌖</span>
+                    <span>Cambiar ubicación</span>
+                </a>
+            </nav>
+
+            <div class="lateral__usuario">
+                <div class="usuario">
+                    <div
+                        class="usuario__avatar"
+                        aria-hidden="true"
+                    >
+                        {{
+                            current_user.nombre[:1]
+                            | upper
+                        }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{
+                                current_user.apellido
+                                or ""
+                            }}
+                        </div>
+                        <span class="usuario__rol">
+                            {{
+                                current_user.rol
+                                | replace("_", " ")
+                                | title
+                            }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">
+                            Planes y suscripción
+                        </h1>
+                        <p class="cabecera__contexto">
+                            {{ contexto.sucursal.nombre }}
+                            ·
+                            Gestión comercial
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <button
+                        id="actualizar-planes-cabecera"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Actualizar
+                    </button>
+
+                    <form
+                        method="post"
+                        action="{{ url_for(
+                            'autenticacion.salir'
+                        ) }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            class="boton boton--secundario"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="planes-contenido">
+                <nav class="flujo-planes" aria-label="Progreso de contratación">
+                    <div class="flujo-planes__paso flujo-planes__paso--completo" data-paso="perfil">
+                        <span>1</span><div><strong>Tu negocio</strong><small>Perfil configurado</small></div>
+                    </div>
+                    <div class="flujo-planes__linea"></div>
+                    <div class="flujo-planes__paso flujo-planes__paso--activo" data-paso="plan">
+                        <span>2</span><div><strong>Elige tu plan</strong><small>Capacidad y ciclo</small></div>
+                    </div>
+                    <div class="flujo-planes__linea"></div>
+                    <div class="flujo-planes__paso" data-paso="pago">
+                        <span>3</span><div><strong>Autoriza el pago</strong><small>Sin cobro inicial</small></div>
+                    </div>
+                    <div class="flujo-planes__linea"></div>
+                    <div class="flujo-planes__paso" data-paso="listo">
+                        <span>4</span><div><strong>Todo listo</strong><small>30 días de prueba</small></div>
+                    </div>
+                </nav>
+
+                <section class="planes-portada">
+                    <div>
+                        <p class="planes-portada__etiqueta">
+                            Configuración guiada
+                        </p>
+                        <h2>
+                            Un plan que crece con tu inventario
+                        </h2>
+                        <p class="planes-portada__intro">
+                            Selecciona la capacidad, autoriza un medio de pago seguro
+                            y empieza con 30 días sin cobro. Puedes cancelar antes de
+                            la renovación.
+                        </p>
+                        <div class="planes-portada__beneficios" aria-label="Condiciones de la prueba">
+                            <span>✓ 500 productos</span>
+                            <span>✓ 2 usuarios</span>
+                            <span>✓ Sin cobro hoy</span>
+                        </div>
+                    </div>
+
+                    <div class="planes-ilustracion" aria-hidden="true">
+                        <div class="planes-ilustracion__ventana">
+                            <span></span><span></span><span></span>
+                            <div class="planes-ilustracion__estante">
+                                <i></i><i></i><i></i><i></i>
+                            </div>
+                            <div class="planes-ilustracion__caja">N</div>
+                        </div>
+                        <div class="planes-ilustracion__sello">Inventario conectado</div>
+                    </div>
+                </section>
+
+                <section
+                    class="planes-resumen"
+                    aria-label="Resumen de la suscripción"
+                >
+                    <article>
+                        <span>Plan actual</span>
+                        <strong id="resumen-plan-actual">
+                            Cargando...
+                        </strong>
+                        <small>
+                            Capacidad contratada
+                        </small>
+                    </article>
+
+                    <article>
+                        <span>Estado</span>
+                        <strong
+                            id="resumen-estado-suscripcion"
+                        >
+                            Cargando...
+                        </strong>
+                        <small>
+                            Estado de la suscripción
+                        </small>
+                    </article>
+
+                    <article>
+                        <span>Vigencia</span>
+                        <strong id="resumen-vigencia">
+                            Cargando...
+                        </strong>
+                        <small>
+                            Próxima fecha de término
+                        </small>
+                    </article>
+
+                    <article>
+                        <span>Ciclo</span>
+                        <strong id="resumen-ciclo">
+                            Cargando...
+                        </strong>
+                        <small>
+                            Periodicidad contratada
+                        </small>
+                    </article>
+                </section>
+
+                <section id="activar-mandato" class="checkout-guiado" hidden>
+                    <div class="checkout-guiado__pago">
+                        <p class="planes-panel__etiqueta">Paso 3 · Pago seguro</p>
+                        <h3>Autoriza tu medio de pago</h3>
+                        <p class="checkout-guiado__intro">
+                            No cobraremos hoy. Tus datos bancarios se ingresan y tokenizan
+                            directamente en el proveedor seleccionado.
+                        </p>
+                        <div class="checkout-guiado__proveedor">
+                            <span class="checkout-guiado__escudo" aria-hidden="true">✓</span>
+                            <div>
+                                <strong id="mandato-proveedor-nombre">Mercado Pago Suscripciones</strong>
+                                <small>Conexión cifrada · NexuStock no almacena tarjeta ni CVV</small>
+                            </div>
+                        </div>
+                        <button id="boton-activar-mandato" class="boton boton--primario checkout-guiado__boton" type="button">
+                            Continuar al proveedor seguro →
+                        </button>
+                        <small class="checkout-guiado__legal">
+                            Al continuar autorizas la renovación automática. Puedes cancelarla
+                            desde este panel antes de terminar el período.
+                        </small>
+                    </div>
+                    <aside class="checkout-guiado__resumen" aria-label="Resumen de contratación">
+                        <div class="checkout-guiado__cabecera">
+                            <span>30 días de prueba</span>
+                            <strong>Sin cobro hoy</strong>
+                        </div>
+                        <div class="checkout-guiado__plan">
+                            <small>Plan seleccionado</small>
+                            <h3 id="mandato-plan-nombre">Avanzado</h3>
+                            <strong id="mandato-plan-precio">$9.990 / mes</strong>
+                        </div>
+                        <ul>
+                            <li><span>✓</span> <span id="mandato-limite-productos">Límite del plan seleccionado</span></li>
+                            <li><span>✓</span> <span id="mandato-limite-usuarios">Usuarios del plan seleccionado</span></li>
+                            <li><span>✓</span> Funciones del plan elegido</li>
+                            <li><span>✓</span> Cancelación al terminar el período</li>
+                        </ul>
+                        <p id="mandato-fecha-cobro">El primer cobro se realizará al terminar los 30 días.</p>
+                    </aside>
+                </section>
+
+                <section class="planes-panel">
+                    <div class="planes-panel__encabezado">
+                        <div>
+                            <p class="planes-panel__etiqueta">
+                                Oferta comercial
+                            </p>
+                            <h3>Planes disponibles</h3>
+                            <p>
+                                Todos los planes muestran límites,
+                                capacidades incluidas y funciones
+                                sujetos a la configuración y capacidades de cada plan.
+                            </p>
+                        </div>
+
+                        <div class="planes-panel__acciones">
+                            <label class="campo campo--compacto">
+                                <span>Ciclo de facturación</span>
+                                <select id="selector-ciclo">
+                                    <option value="mensual">
+                                        Mensual
+                                    </option>
+                                    <option value="anual">
+                                        Anual ? mejor valor
+                                    </option>
+                                </select>
+                            </label>
+
+                            <label class="campo campo--compacto">
+                                <span>Proveedor de pago</span>
+                                <select id="selector-proveedor">
+                                    <option value="webpay">Webpay Oneclick</option>
+                                    <option value="mercadopago">Mercado Pago Suscripciones</option>
+                                </select>
+                            </label>
+
+                            <button
+                                id="actualizar-planes"
+                                class="boton boton--secundario"
+                                type="button"
+                            >
+                                Actualizar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        id="estado-planes"
+                        class="planes-estado"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        Cargando planes...
+                    </div>
+
+                    <div
+                        id="lista-planes"
+                        class="planes-lista"
+                    ></div>
+                </section>
+
+                <section class="planes-panel">
+                    <div class="planes-panel__encabezado">
+                        <div>
+                            <p class="planes-panel__etiqueta">
+                                Alcance contratado
+                            </p>
+                            <h3>Límites del plan actual</h3>
+                            <p>
+                                Consulta el volumen operacional
+                                permitido por tu suscripción.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        id="lista-limites-plan"
+                        class="planes-limites"
+                    ></div>
+                </section>
+
+                <section class="planes-panel">
+                    <div class="planes-panel__encabezado">
+                        <div>
+                            <p class="planes-panel__etiqueta">
+                                Matriz funcional
+                            </p>
+                            <h3>Capacidades de NexuStock</h3>
+                            <p>
+                                Compara las 29 capacidades
+                                comerciales disponibles en la
+                                plataforma.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        id="comparador-capacidades"
+                        class="planes-comparador"
+                    >
+                        <div class="planes-comparador__vacio">
+                            Cargando capacidades...
+                        </div>
+                    </div>
+
+                    <div
+                        class="planes-ia"
+                        aria-label="Inteligencia artificial"
+                    >
+                        <div>
+                            <strong>
+                                Inteligencia artificial
+                            </strong>
+                            <p>
+                                Predicción y asistencia avanzada
+                                dentro del flujo operativo.
+                            </p>
+                        </div>
+                        <span class="estado-disponible">Disponible</span>
+                    </div>
+                </section>
+
+                <section class="planes-panel">
+                    <div class="planes-panel__encabezado">
+                        <div>
+                            <p class="planes-panel__etiqueta">
+                                Seguimiento
+                            </p>
+                            <h3>Proceso de cambio de plan</h3>
+                            <p>
+                                Selecciona un plan y paga. Cuando el
+                                proveedor confirme el pago, NexuStock
+                                activará el nuevo plan automáticamente.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        id="historial-solicitudes"
+                        class="planes-solicitudes"
+                    >
+                        Cargando solicitudes...
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <p
+        id="estado-checkout"
+        class="estado-checkout"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></p>
+
+    <form
+        id="formulario-redireccion-webpay"
+        method="post"
+        hidden
+    >
+        <input
+            id="token-ws-webpay"
+            type="hidden"
+            name="token_ws"
+            value=""
+        >
+    </form>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/planes.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

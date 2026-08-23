@@ -1,0 +1,30 @@
+:root { color-scheme: light; }
+body { margin: 0; background: #f4f7fb; color: #172033; font-family: Inter, system-ui, sans-serif; }
+.transferencias-pagina { max-width: 1240px; margin: auto; padding: 32px 22px 60px; }
+.transferencias-cabecera, .filtros, .acciones { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.transferencias-cabecera h1 { margin: 8px 0; font-size: clamp(1.7rem, 4vw, 2.5rem); }
+.transferencias-cabecera p { margin: 0; color: #62708a; }
+.volver { color: #3157d5; text-decoration: none; font-weight: 700; }
+.filtros, .editor, .tabla-panel { margin-top: 22px; padding: 20px; background: white; border: 1px solid #dde4ef; border-radius: 18px; box-shadow: 0 8px 28px #2636590d; }
+.filtros { justify-content: flex-start; }
+label { display: grid; gap: 7px; font-weight: 700; color: #3c4960; }
+input, select, textarea { box-sizing: border-box; width: 100%; padding: 11px 12px; border: 1px solid #cbd5e4; border-radius: 10px; background: white; font: inherit; }
+.campos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.campo-completo { grid-column: 1 / -1; }
+.acciones { justify-content: flex-end; margin-top: 18px; }
+.boton { border: 1px solid #cbd5e4; border-radius: 10px; padding: 10px 15px; background: white; cursor: pointer; font-weight: 800; }
+.boton--primario { color: white; border-color: #3157d5; background: #3157d5; }
+.boton--peligro { color: #a32626; }
+.tabla-contenedor { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 14px 10px; border-bottom: 1px solid #e8edf5; text-align: left; vertical-align: top; }
+th { color: #59677e; font-size: .78rem; text-transform: uppercase; }
+.estado { display: inline-block; padding: 5px 9px; border-radius: 999px; background: #e9efff; font-weight: 800; font-size: .8rem; }
+.detalle { min-width: 230px; font-size: .9rem; }
+.detalle p { margin: 0 0 5px; }
+.acciones-fila { display: flex; flex-wrap: wrap; gap: 6px; }
+.acciones-fila .boton { padding: 7px 9px; font-size: .78rem; }
+.estado-lista { padding: 8px 0 18px; color: #66748a; }
+.notificacion { position: fixed; right: 20px; bottom: 20px; max-width: 360px; padding: 14px 18px; border-radius: 12px; color: white; background: #172033; box-shadow: 0 12px 30px #0003; }
+.notificacion--error { background: #a32626; }
+@media (max-width: 800px) { .transferencias-cabecera { align-items: flex-start; flex-direction: column; } .campos { grid-template-columns: 1fr; } .campo-completo { grid-column: auto; } }

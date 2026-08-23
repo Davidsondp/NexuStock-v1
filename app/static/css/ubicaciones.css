@@ -1,0 +1,555 @@
+.ubicaciones-contenido {
+    display: grid;
+    gap: 24px;
+}
+
+.ubicaciones-portada {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr) minmax(240px, 330px);
+    align-items: center;
+    gap: 28px;
+    padding: clamp(24px, 4vw, 38px);
+    border: 1px solid var(--borde);
+    border-radius: 20px;
+    background:
+        linear-gradient(
+            135deg,
+            var(--superficie) 0%,
+            #f5f7ff 100%
+        );
+    box-shadow: var(--sombra);
+}
+
+.ubicaciones-portada__etiqueta {
+    margin: 0 0 12px;
+    color: #4f46e5;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ubicaciones-portada h2 {
+    max-width: 760px;
+    margin: 0;
+    color: var(--texto);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.05;
+}
+
+.ubicaciones-portada p {
+    max-width: 720px;
+    margin: 16px 0 0;
+    color: var(--texto-suave);
+    line-height: 1.65;
+}
+
+.ubicaciones-portada__seguridad {
+    display: grid;
+    gap: 7px;
+    padding: 18px;
+    border: 1px solid #bfdbfe;
+    border-radius: 14px;
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.ubicaciones-portada__seguridad strong {
+    font-size: 0.92rem;
+}
+
+.ubicaciones-portada__seguridad span {
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+.ubicaciones-resumen {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.ubicaciones-resumen article {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--borde);
+    border-radius: 15px;
+    background: var(--superficie);
+}
+
+.ubicaciones-resumen article > span {
+    display: block;
+    color: var(--texto-suave);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.ubicaciones-resumen strong {
+    display: block;
+    margin-top: 8px;
+    color: var(--texto);
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.ubicaciones-resumen strong span {
+    display: inline;
+}
+
+.ubicaciones-resumen small {
+    display: block;
+    margin-top: 8px;
+    color: var(--texto-suave);
+    font-size: 0.7rem;
+}
+
+.ubicaciones-panel {
+    overflow: hidden;
+    border: 1px solid var(--borde);
+    border-radius: 18px;
+    background: var(--superficie);
+}
+
+.ubicaciones-panel__encabezado {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.ubicaciones-panel__encabezado h2 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.ubicaciones-panel__encabezado p {
+    margin: 6px 0 0;
+    color: var(--texto-suave);
+    font-size: 0.84rem;
+}
+
+.campo--compacto {
+    min-width: 190px;
+}
+
+.campo--compacto label {
+    font-size: 0.74rem;
+}
+
+.campo--completo {
+    grid-column: 1 / -1;
+}
+
+.ubicaciones-estado {
+    padding: 18px 22px;
+    color: var(--texto-suave);
+    font-size: 0.86rem;
+}
+
+.ubicaciones-lista {
+    display: grid;
+    gap: 15px;
+    padding: 0 22px 22px;
+}
+
+.sucursal-tarjeta {
+    overflow: hidden;
+    border: 1px solid var(--borde);
+    border-radius: 15px;
+    background: var(--superficie);
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        transform 160ms ease;
+}
+
+.sucursal-tarjeta:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 14px 34px rgb(15 23 42 / 8%);
+    transform: translateY(-1px);
+}
+
+.sucursal-tarjeta--inactiva {
+    background: #f8fafc;
+    opacity: 0.8;
+}
+
+.sucursal-tarjeta__encabezado {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 17px 18px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.sucursal-tarjeta__titulo,
+.bodega-tarjeta__titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.sucursal-tarjeta__titulo h3,
+.bodega-tarjeta__titulo h4 {
+    margin: 0;
+    color: var(--texto);
+}
+
+.sucursal-tarjeta__titulo h3 {
+    font-size: 1rem;
+}
+
+.bodega-tarjeta__titulo h4 {
+    font-size: 0.86rem;
+}
+
+.sucursal-tarjeta__encabezado p,
+.bodega-tarjeta p {
+    margin: 6px 0 0;
+    color: var(--texto-suave);
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.sucursal-tarjeta__acciones,
+.bodega-tarjeta__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
+.sucursal-tarjeta__bodegas {
+    display: grid;
+    gap: 9px;
+    padding: 13px;
+    background: #f8fafc;
+}
+
+.bodega-tarjeta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+    background: var(--superficie);
+}
+
+.bodega-tarjeta--inactiva {
+    background: #f1f5f9;
+    opacity: 0.76;
+}
+
+.ubicacion-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.67rem;
+    font-weight: 750;
+}
+
+.ubicacion-etiqueta--activa {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.ubicacion-etiqueta--inactiva {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.ubicaciones-vacio {
+    padding: 14px;
+    border: 1px dashed var(--borde);
+    border-radius: 10px;
+    color: var(--texto-suave);
+    background: var(--superficie);
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.modal {
+    position: fixed;
+    z-index: 100;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.modal[hidden] {
+    display: none;
+}
+
+.modal__fondo {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgb(15 23 42 / 58%);
+    cursor: default;
+}
+
+.modal__panel {
+    position: relative;
+    z-index: 1;
+    width: min(760px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    border: 1px solid var(--borde);
+    border-radius: 20px;
+    background: var(--superficie);
+    box-shadow: 0 26px 70px rgb(15 23 42 / 24%);
+}
+
+.modal__encabezado {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--borde);
+    background: var(--superficie);
+}
+
+.modal__encabezado h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.modal__encabezado p {
+    margin: 6px 0 0;
+    color: var(--texto-suave);
+    font-size: 0.82rem;
+}
+
+.modal__cerrar {
+    display: grid;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+    background: var(--superficie);
+    color: var(--texto);
+    cursor: pointer;
+}
+
+.modal-abierto {
+    overflow: hidden;
+}
+
+.ubicacion-editor {
+    display: grid;
+    gap: 22px;
+    padding: 22px;
+}
+
+.ubicacion-editor__campos {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.ubicacion-editor__acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+}
+
+.ubicacion-opcion {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.ubicacion-opcion input {
+    margin-top: 3px;
+}
+
+.ubicacion-opcion strong,
+.ubicacion-opcion small {
+    display: block;
+}
+
+.ubicacion-opcion strong {
+    color: var(--texto);
+    font-size: 0.8rem;
+}
+
+.ubicacion-opcion small {
+    margin-top: 4px;
+    color: var(--texto-suave);
+    font-size: 0.7rem;
+    line-height: 1.4;
+}
+
+.usuarios-sucursal {
+    padding: 20px 22px 22px;
+}
+
+.usuarios-sucursal__lista {
+    display: grid;
+    gap: 9px;
+}
+
+.usuario-sucursal {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px;
+    border: 1px solid var(--borde);
+    border-radius: 11px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.usuario-sucursal:hover {
+    border-color: #c7d2fe;
+    background: #f5f7ff;
+}
+
+.usuario-sucursal input {
+    margin-top: 3px;
+}
+
+.usuario-sucursal strong,
+.usuario-sucursal small {
+    display: block;
+}
+
+.usuario-sucursal strong {
+    color: var(--texto);
+    font-size: 0.82rem;
+}
+
+.usuario-sucursal small {
+    margin-top: 4px;
+    color: var(--texto-suave);
+    font-size: 0.72rem;
+}
+
+.boton--pequeno {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 0.72rem;
+}
+
+.boton--peligro {
+    border-color: #fecaca;
+    background: #fff1f2;
+    color: #be123c;
+}
+
+.boton--peligro:hover {
+    border-color: #fda4af;
+    background: #ffe4e6;
+}
+
+@media (max-width: 900px) {
+    .ubicaciones-portada {
+        grid-template-columns: 1fr;
+    }
+
+    .ubicaciones-resumen {
+        grid-template-columns: 1fr;
+    }
+
+    .sucursal-tarjeta__encabezado {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .sucursal-tarjeta__acciones {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 760px) {
+    .ubicaciones-contenido {
+        gap: 16px;
+    }
+
+    .ubicaciones-portada {
+        padding: 21px;
+        border-radius: 16px;
+    }
+
+    .ubicaciones-panel__encabezado {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .campo--compacto {
+        min-width: 0;
+    }
+
+    .ubicaciones-lista {
+        padding: 0 14px 14px;
+    }
+
+    .bodega-tarjeta {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .sucursal-tarjeta__acciones,
+    .bodega-tarjeta__acciones {
+        flex-direction: column;
+    }
+
+    .sucursal-tarjeta__acciones .boton,
+    .bodega-tarjeta__acciones .boton {
+        width: 100%;
+    }
+
+    .modal {
+        align-items: end;
+        padding: 0;
+    }
+
+    .modal__panel {
+        width: 100%;
+        max-height: 94vh;
+        border-right: 0;
+        border-bottom: 0;
+        border-left: 0;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .ubicacion-editor__campos {
+        grid-template-columns: 1fr;
+    }
+
+    .campo--completo {
+        grid-column: auto;
+    }
+
+    .ubicacion-editor__acciones {
+        flex-direction: column-reverse;
+    }
+
+    .ubicacion-editor__acciones .boton {
+        width: 100%;
+    }
+}

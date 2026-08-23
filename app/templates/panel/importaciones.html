@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Centro de importación | NexuStock</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/importaciones.css') }}">
+</head>
+<body data-preview="{{ url_for('importaciones.previsualizar') }}" data-confirmar="{{ url_for('importaciones.confirmar') }}">
+<main class="importador">
+    <header class="importador__cabecera">
+        <div>
+            <a href="{{ url_for('panel.productos') }}">← Volver a productos</a>
+            <span class="etiqueta">Carga inteligente</span>
+            <h1>Centro de importación</h1>
+            <p>Incorpora catálogos y stock inicial desde Excel, CSV o tablas PDF con una vista previa segura.</p>
+        </div>
+        <div class="contexto"><strong>{{ contexto.bodega.nombre }}</strong><small>{{ contexto.sucursal.nombre }}</small></div>
+    </header>
+
+    <section class="pasos" aria-label="Proceso de importación">
+        <div class="paso paso--activo"><span>1</span><strong>Seleccionar</strong><small>Documento de origen</small></div>
+        <div class="paso" id="paso-revisar"><span>2</span><strong>Revisar</strong><small>Datos y errores</small></div>
+        <div class="paso" id="paso-confirmar"><span>3</span><strong>Confirmar</strong><small>Importación definitiva</small></div>
+    </section>
+
+    <section class="panel-carga">
+        <div id="zona-carga" class="zona-carga">
+            <div class="zona-carga__icono" aria-hidden="true">⇧</div>
+            <h2>Arrastra tu documento aquí</h2>
+            <p>o selecciónalo desde tu equipo</p>
+            <label class="boton" for="archivo">Elegir archivo</label>
+            <input id="archivo" type="file" accept=".csv,.xlsx,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+            <small>CSV, XLSX o PDF · máximo 10 MB y 2.000 filas</small>
+        </div>
+        <aside class="guia">
+            <h2>Columnas recomendadas</h2>
+            <div class="chips"><span>codigo *</span><span>nombre *</span><span>codigo_barras</span><span>costo</span><span>precio</span><span>stock_inicial</span><span>categoria</span><span>marca</span></div>
+            <p>Para PDF, la primera línea debe contener encabezados y las columnas deben estar separadas por <code>|</code> o <code>;</code>.</p>
+            <button id="descargar-plantilla" class="enlace-plantilla" type="button">↓ Descargar plantilla CSV</button>
+        </aside>
+    </section>
+
+    <section id="vista-previa" class="vista-previa" hidden>
+        <div class="vista-previa__cabecera">
+            <div><span class="etiqueta">Antes de importar</span><h2>Revisa los datos detectados</h2><p id="nombre-archivo"></p></div>
+            <div class="resumen"><span><strong id="total-filas">0</strong>Total</span><span class="resumen--ok"><strong id="filas-validas">0</strong>Válidas</span><span class="resumen--error"><strong id="filas-error">0</strong>Con errores</span></div>
+        </div>
+        <div class="tabla-contenedor"><table><thead><tr><th>Fila</th><th>Código</th><th>Producto</th><th>Código de barras</th><th>Costo</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody id="filas-preview"></tbody></table></div>
+        <div class="confirmacion"><p><strong>Importación controlada.</strong> Los productos existentes se actualizarán por código y el stock inicial generará movimientos auditados en la bodega activa.</p><button id="confirmar-importacion" class="boton" type="button" disabled>Confirmar importación</button></div>
+    </section>
+</main>
+<div id="notificacion" role="status" aria-live="polite" hidden></div>
+<script src="{{ url_for('static', filename='js/importaciones.js') }}" defer></script>
+</body>
+</html>

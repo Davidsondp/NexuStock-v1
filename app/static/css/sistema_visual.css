@@ -1,0 +1,305 @@
+:root {
+    --nx-fondo: #f3f6fb;
+    --nx-superficie: rgb(255 255 255 / 92%);
+    --nx-texto: #111827;
+    --nx-suave: #667085;
+    --nx-borde: #e4eaf2;
+    --nx-azul: #3157d5;
+    --nx-azul-oscuro: #243fa4;
+    --nx-tinta: #10213c;
+    --nx-celeste: #eaf2ff;
+    --nx-violeta: #7c3aed;
+    --nx-verde: #059669;
+    --nx-rojo: #e11d48;
+    --nx-radio: 18px;
+    --nx-sombra: 0 16px 42px rgb(15 23 42 / 8%);
+    --nx-sombra-hover: 0 24px 58px rgb(15 23 42 / 13%);
+}
+
+/* NexuStock 2026: capa visual transversal inspirada en aplicaciones de
+   inventario móviles, sin depender de librerías ni recursos externos. */
+body {
+    background-image:
+        radial-gradient(circle at 100% 0, rgb(49 87 213 / 7%), transparent 28rem),
+        linear-gradient(180deg, #f8faff 0, var(--nx-fondo) 28rem);
+}
+
+.lateral,
+.barra-lateral {
+    background-color: var(--nx-tinta) !important;
+}
+
+.cabecera {
+    border-bottom-color: rgb(219 226 239 / 82%) !important;
+    background: rgb(248 250 255 / 88%) !important;
+    box-shadow: 0 8px 30px rgb(16 33 60 / 4%);
+}
+
+.boton--primario {
+    background: linear-gradient(135deg, var(--nx-azul), #4f67e8) !important;
+    box-shadow: 0 9px 22px rgb(49 87 213 / 22%);
+}
+
+.boton--secundario {
+    background-color: rgb(255 255 255 / 88%) !important;
+}
+
+.nx-sobretitulo {
+    margin: 0 0 5px;
+    color: var(--nx-azul);
+    font-size: .7rem;
+    font-weight: 850;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.nx-colecciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 0 0 18px;
+}
+
+.nx-coleccion {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    grid-template-rows: auto auto;
+    gap: 2px 10px;
+    align-items: center;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--nx-borde);
+    border-radius: 15px;
+    background: rgb(255 255 255 / 92%);
+    color: var(--nx-texto);
+    text-align: left;
+}
+
+.nx-coleccion:hover {
+    border-color: #b8c7f4;
+    box-shadow: 0 12px 28px rgb(16 33 60 / 9%);
+}
+
+.nx-coleccion__icono {
+    display: grid;
+    grid-row: 1 / 3;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--nx-celeste);
+    color: var(--nx-azul);
+    font-weight: 900;
+}
+
+.nx-coleccion strong,
+.nx-coleccion small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nx-coleccion strong { font-size: .82rem; }
+.nx-coleccion small { color: var(--nx-suave); font-size: .7rem; }
+
+.nx-escaner__contenido { width: min(94vw, 620px) !important; }
+.nx-escaner__visor {
+    position: relative;
+    display: grid;
+    min-height: 300px;
+    overflow: hidden;
+    place-items: center;
+    border-radius: 18px;
+    background: #07111f;
+    color: white;
+}
+.nx-escaner__visor video { width: 100%; max-height: 55vh; object-fit: cover; }
+.nx-escaner__visor p {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    left: 14px;
+    margin: 0;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: rgb(7 17 31 / 76%);
+    font-size: .76rem;
+    text-align: center;
+}
+.nx-escaner__guia {
+    position: absolute;
+    width: min(76%, 400px);
+    height: 120px;
+    border: 2px solid #7dd3fc;
+    border-radius: 14px;
+    box-shadow: 0 0 0 999px rgb(7 17 31 / 30%);
+}
+.nx-escaner__error { color: #fecdd3; }
+.nx-escaner__manual { display: grid; gap: 7px; margin-top: 16px; }
+.nx-escaner__manual label { color: var(--nx-suave); font-size: .77rem; font-weight: 750; }
+.nx-escaner__manual > div { display: grid; grid-template-columns: 1fr auto; gap: 9px; }
+
+html {
+    accent-color: var(--nx-azul);
+}
+
+body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+.marca__icono:has(.marca__logo) {
+    overflow: hidden;
+    border: 1px solid rgb(219 234 254 / 75%);
+    background: #fff;
+    box-shadow: 0 8px 22px rgb(15 23 42 / 18%);
+}
+
+.marca__logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.marca__logo-completo,
+.marca-publica__logo {
+    display: block;
+    flex: 0 0 auto;
+    border-radius: 18px;
+    background: #fff;
+    object-fit: contain;
+    box-shadow: 0 12px 28px rgb(2 36 78 / 22%);
+}
+
+.marca__logo-completo { width: 74px; height: 74px; }
+.marca-publica__logo { width: 48px; height: 48px; border-radius: 13px; }
+
+body::selection {
+    background: #bfdbfe;
+    color: #172554;
+}
+
+body :where(button, a, input, select, textarea) {
+    -webkit-tap-highlight-color: transparent;
+}
+
+body :where(button, a, input, select, textarea):focus-visible {
+    outline: 3px solid rgb(37 99 235 / 22%);
+    outline-offset: 2px;
+}
+
+body :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    border-color: var(--nx-borde);
+    border-radius: 12px;
+    background-color: #fff;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+body :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea):hover {
+    border-color: #cbd5e1;
+}
+
+body :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 4px rgb(37 99 235 / 10%);
+    outline: none;
+}
+
+body :where(input, textarea)::placeholder {
+    color: #98a2b3;
+}
+
+body :where(button, .boton) {
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+body :where(button, .boton):not(:disabled):hover {
+    transform: translateY(-2px);
+}
+
+body :where(button, .boton):disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+body :where(.tarjeta, .card, article, section) {
+    scroll-margin-top: 100px;
+}
+
+body :where(.tarjeta, .panel, .modal__contenido, .modal-contenido) {
+    border-color: var(--nx-borde);
+}
+
+body :where(.tarjeta, .card) {
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+body :where(.tarjeta, .card):focus-within {
+    border-color: #bfdbfe;
+    box-shadow: var(--nx-sombra-hover);
+}
+
+body :where(table) {
+    font-variant-numeric: tabular-nums;
+}
+
+body :where(tbody tr) {
+    transition: background-color 140ms ease;
+}
+
+body :where(dialog, [role="dialog"]) {
+    backdrop-filter: blur(8px);
+}
+
+body :where(.insignia, .badge, [class*="estado--"]) {
+    letter-spacing: 0.01em;
+}
+
+body :where(.estado-carga, .tabla__vacio, .estado-vacio) {
+    color: var(--nx-suave);
+}
+
+body :where(.notificacion, #notificacion, #mensaje) {
+    backdrop-filter: blur(14px);
+}
+
+* {
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: #cbd5e1;
+    background-clip: padding-box;
+}
+
+@media (hover: hover) {
+    body :where(.tabla tbody tr, tbody tr):hover {
+        background-color: #f8faff;
+    }
+}
+
+@media (max-width: 640px) {
+    body :where(button, .boton, input, select) {
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}

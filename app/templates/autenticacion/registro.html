@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Crear empresa | NexuStock{% endblock %}
+
+{% block content %}
+<section
+    class="tarjeta-autenticacion
+           tarjeta-autenticacion--amplia"
+    {% if plan_seleccionado %}
+        data-plan-seleccionado="{{ plan_seleccionado.codigo }}"
+        data-ciclo-seleccionado="{{ ciclo_seleccionado }}"
+    {% endif %}
+>
+    <header class="tarjeta-autenticacion__cabecera registro-cabecera">
+        <p class="etiqueta">Configuración guiada · 30 días gratis</p>
+        <h1>Prepara tu espacio de trabajo</h1>
+        <p>Completa cuatro pasos breves. No realizaremos ningún cobro hoy.</p>
+    </header>
+
+    <nav class="registro-progreso" aria-label="Progreso del registro">
+        {% for numero, titulo in [(1, "Negocio"), (2, "Operación"), (3, "Responsable"), (4, "Acceso")] %}
+            <button
+                class="registro-progreso__paso{{ ' registro-progreso__paso--activo' if numero == 1 else '' }}"
+                type="button"
+                data-ir-paso="{{ numero }}"
+                aria-current="{{ 'step' if numero == 1 else 'false' }}"
+            >
+                <span>{{ numero }}</span>
+                <strong>{{ titulo }}</strong>
+            </button>
+        {% endfor %}
+    </nav>
+
+    {% if plan_seleccionado %}
+        <aside
+            class="seleccion-comercial"
+            aria-label="Plan seleccionado"
+        >
+            <div>
+                <span
+                    class="seleccion-comercial__etiqueta"
+                >
+                    Plan seleccionado
+                </span>
+                <strong
+                    id="resumen-plan-seleccionado"
+                >
+                    {{ plan_seleccionado.nombre }}
+                </strong>
+            </div>
+
+            <div class="seleccion-comercial__garantia">
+                <span>Primer cobro</span>
+                <strong>Después de 30 días</strong>
+                <small>La prueba comienza al autorizar la tarjeta.</small>
+            </div>
+
+            <div>
+                <span class="seleccion-comercial__etiqueta">Proveedor</span>
+                <strong id="resumen-proveedor-seleccionado">
+                    {{ "Webpay" if proveedor_seleccionado == "webpay" else "Mercado Pago" }}
+                </strong>
+            </div>
+
+            <div>
+                <span
+                    class="seleccion-comercial__etiqueta"
+                >
+                    Facturación
+                </span>
+                <strong
+                    id="resumen-ciclo-seleccionado"
+                >
+                    {{
+                        "Anual"
+                        if ciclo_seleccionado == "anual"
+                        else "Mensual"
+                    }}
+                </strong>
+            </div>
+
+            <a
+                class="enlace enlace--destacado"
+                href="{{ url_for('planes_publicos') }}"
+            >
+                Cambiar plan
+            </a>
+        </aside>
+    {% endif %}
+
+    <form
+        id="formulario-registro"
+        class="formulario-autenticacion
+               formulario-autenticacion--rejilla"
+        method="post"
+        novalidate
+    >
+        {{ form.hidden_tag() }}
+
+        <section class="registro-paso" data-paso="1">
+            <div class="registro-paso__titulo">
+                <span class="registro-paso__icono" aria-hidden="true">▦</span>
+                <div><small>Paso 1 de 4</small><h2>Cuéntanos sobre tu negocio</h2><p>Usaremos esta información para crear tu empresa aislada y segura.</p></div>
+            </div>
+            {% for field in [form.empresa_nombre, form.empresa_identificacion_fiscal, form.empresa_telefono] %}
+                <div class="campo">
+                    {{ field.label(class="campo__etiqueta") }}
+                    {{ field(class="campo__control") }}
+                    {% for error in field.errors %}<span class="campo__error" role="alert">{{ error }}</span>{% endfor %}
+                </div>
+            {% endfor %}
+        </section>
+
+        <section class="registro-paso" data-paso="2" hidden>
+            <div class="registro-paso__titulo">
+                <span class="registro-paso__icono" aria-hidden="true">⌁</span>
+                <div><small>Paso 2 de 4</small><h2>Personaliza la operación</h2><p>NexuStock adaptará capacidades, ejemplos y configuración inicial.</p></div>
+            </div>
+            <div class="campo campo--ancho">
+                {{ form.rubro.label(class="campo__etiqueta") }}
+                {{ form.rubro(class="campo__control") }}
+                {% for error in form.rubro.errors %}<span class="campo__error" role="alert">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="registro-elecciones" aria-label="Lo que podrás controlar">
+                <article><span>▣</span><strong>Productos y existencias</strong><small>Stock, mínimos, ubicaciones y alertas.</small></article>
+                <article><span>⇄</span><strong>Compras y ventas</strong><small>Flujos conectados con trazabilidad.</small></article>
+                <article><span>⌂</span><strong>Sucursales y bodegas</strong><small>Según los límites del plan elegido.</small></article>
+                <article><span>◫</span><strong>Reportes y decisiones</strong><small>Indicadores para dirigir la operación.</small></article>
+            </div>
+        </section>
+
+        <section class="registro-paso" data-paso="3" hidden>
+            <div class="registro-paso__titulo">
+                <span class="registro-paso__icono" aria-hidden="true">◎</span>
+                <div><small>Paso 3 de 4</small><h2>Identifica al responsable</h2><p>Esta persona será la primera jefatura de la cuenta.</p></div>
+            </div>
+            {% for field in [form.nombre, form.apellido, form.identificacion_fiscal, form.telefono] %}
+                <div class="campo">
+                    {{ field.label(class="campo__etiqueta") }}
+                    {{ field(class="campo__control") }}
+                    {% for error in field.errors %}<span class="campo__error" role="alert">{{ error }}</span>{% endfor %}
+                </div>
+            {% endfor %}
+        </section>
+
+        <section class="registro-paso" data-paso="4" hidden>
+            <div class="registro-paso__titulo">
+                <span class="registro-paso__icono" aria-hidden="true">◇</span>
+                <div><small>Paso 4 de 4</small><h2>Protege tu acceso</h2><p>Enviaremos un enlace de verificación antes de permitir el ingreso.</p></div>
+            </div>
+            <div class="campo campo--ancho">
+                {{ form.email.label(class="campo__etiqueta") }}
+                {{ form.email(class="campo__control", autocomplete="email") }}
+                {% for error in form.email.errors %}<span class="campo__error" role="alert">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="campo">
+            {{
+                form.password.label(
+                    class="campo__etiqueta"
+                )
+            }}
+
+            <div class="campo-password">
+                {{
+                    form.password(
+                        id="password",
+                        class="campo__control",
+                        autocomplete="new-password"
+                    )
+                }}
+
+                <button
+                    id="alternar-password"
+                    class="campo-password__alternar"
+                    type="button"
+                    data-alternar-password="password"
+                    aria-label="Mostrar contraseña"
+                    aria-pressed="false"
+                >
+                    Mostrar
+                </button>
+            </div>
+
+            {% for error in form.password.errors %}
+                <span class="campo__error" role="alert">
+                    {{ error }}
+                </span>
+            {% endfor %}
+            </div>
+
+            <div class="campo">
+            {{
+                form.confirmar_password.label(
+                    class="campo__etiqueta"
+                )
+            }}
+
+            <div class="campo-password">
+                {{
+                    form.confirmar_password(
+                        id="confirmar_password",
+                        class="campo__control",
+                        autocomplete="new-password"
+                    )
+                }}
+
+                <button
+                    id="alternar-confirmacion"
+                    class="campo-password__alternar"
+                    type="button"
+                    data-alternar-password="confirmar_password"
+                    aria-label="Mostrar confirmación"
+                    aria-pressed="false"
+                >
+                    Mostrar
+                </button>
+            </div>
+
+            {% for error in
+                form.confirmar_password.errors
+            %}
+                <span class="campo__error" role="alert">
+                    {{ error }}
+                </span>
+            {% endfor %}
+            </div>
+            <div class="registro-seguridad campo--ancho">
+                <span aria-hidden="true">✓</span>
+                <p><strong>Pago protegido y sin cobro hoy.</strong> Después de verificar tu correo autorizarás la tarjeta. Los 30 días comienzan cuando el proveedor confirme el mandato.</p>
+            </div>
+        </section>
+
+        <div class="formulario-autenticacion__acciones registro-acciones">
+            <button id="registro-anterior" class="boton boton--secundario" type="button" hidden>← Anterior</button>
+            <button id="registro-siguiente" class="boton boton--primario" type="button">Continuar →</button>
+            {{ form.submit(id="registro-enviar", class="boton boton--primario", hidden=true) }}
+        </div>
+    </form>
+
+    <footer class="tarjeta-autenticacion__pie">
+        <span>¿Ya tienes una cuenta?</span>
+        <a
+            id="enlace-ingreso"
+            class="enlace enlace--destacado"
+            href="{{ url_for(
+                'autenticacion.ingresar'
+            ) }}"
+        >
+            Ya tengo una cuenta
+        </a>
+    </footer>
+</section>
+{% endblock %}

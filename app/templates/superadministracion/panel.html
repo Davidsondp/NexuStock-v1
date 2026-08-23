@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta
+        name="description"
+        content="Panel global de administración de NexuStock"
+    >
+
+    <title>Super Administración | NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/panel_superadministracion.css') }}"
+    >
+</head>
+
+<body>
+    <div class="panel">
+        <aside
+            id="barra-lateral"
+            class="panel__lateral"
+            aria-label="Navegación principal"
+        >
+            <div class="marca">
+                <div class="marca__icono"><img class="marca__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="56" height="56"></div>
+
+                <div>
+                    <p class="marca__nombre">NexuStock</p>
+                    <span class="marca__ambito">Control global</span>
+                </div>
+            </div>
+
+            <nav class="navegacion" aria-label="Super Administración">
+                <p class="navegacion__titulo">Plataforma</p>
+
+                <button
+                    class="navegacion__enlace"
+                    type="button"
+                    data-seccion="resumen"
+                    aria-current="page"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">⌂</span>
+                    <span>Resumen global</span>
+                </button>
+
+                <button
+                    class="navegacion__enlace"
+                    type="button"
+                    data-seccion="empresas"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">▦</span>
+                    <span>Empresas</span>
+                </button>
+
+                <button
+                    class="navegacion__enlace"
+                    type="button"
+                    data-seccion="planes"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">◇</span>
+                    <span>Planes</span>
+                </button>
+
+                <button
+                    class="navegacion__enlace"
+                    type="button"
+                    data-seccion="suscripciones"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">↻</span>
+                    <span>Suscripciones</span>
+                </button>
+
+                <button
+                    class="navegacion__enlace"
+                    type="button"
+                    data-seccion="pagos"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">$</span>
+                    <span>Pagos</span>
+                </button>
+
+                <a class="navegacion__enlace" href="{{ url_for('panel_superadministracion.usuarios') }}"><span class="navegacion__icono" aria-hidden="true">U</span><span>Personas y accesos</span></a>
+
+                <p class="navegacion__titulo">Seguridad</p>
+
+                <button
+                    class="navegacion__enlace"
+                    type="button"
+                    data-seccion="auditoria"
+                >
+                    <span class="navegacion__icono" aria-hidden="true">◉</span>
+                    <span>Auditoría</span>
+                </button>
+
+                <a class="navegacion__enlace" href="{{ url_for('panel_superadministracion.sistema') }}">
+                    <span class="navegacion__icono" aria-hidden="true">⚙</span>
+                    <span>Salud y seguridad</span>
+                </a>
+            </nav>
+
+            <div class="panel__usuario">
+                <div class="usuario">
+                    <div class="usuario__avatar" aria-hidden="true">
+                        {{ current_user.nombre[:1] | upper }}
+                    </div>
+
+                    <div>
+                        <div class="usuario__nombre">
+                            {{ current_user.nombre }}
+                            {{ current_user.apellido or "" }}
+                        </div>
+                        <div class="usuario__rol">Super Admin global</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button
+            id="cerrar-menu"
+            class="superposicion"
+            type="button"
+            aria-label="Cerrar menú"
+        ></button>
+
+        <div class="panel__principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 id="titulo-pagina" class="cabecera__titulo">
+                            Panel global
+                        </h1>
+                        <p class="cabecera__subtitulo">
+                            Administración integral de la plataforma NexuStock
+                        </p>
+                    </div>
+                </div>
+
+                <form
+                    method="post"
+                    action="{{ url_for('autenticacion.salir') }}"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <button
+                        class="boton boton--secundario"
+                        type="submit"
+                    >
+                        Cerrar sesión
+                    </button>
+                </form>
+            </header>
+
+            <main class="contenido">
+                {% for categoria, mensaje in
+                    get_flashed_messages(with_categories=true) %}
+                    <div class="mensaje mensaje--{{ categoria }}">
+                        {{ mensaje }}
+                    </div>
+                {% endfor %}
+
+                <section
+                    id="seccion-resumen"
+                    class="seccion-panel"
+                    data-contenido-seccion="resumen"
+                >
+                    <div class="encabezado-seccion">
+                        <div>
+                            <p class="encabezado-seccion__etiqueta">
+                                Vista ejecutiva
+                            </p>
+                            <h2>Resumen global</h2>
+                            <p>
+                                Estado comercial y operativo general de
+                                NexuStock, sin acceso al inventario interno
+                                de las empresas.
+                            </p>
+                        </div>
+
+                        <button
+                            class="boton boton--primario"
+                            type="button"
+                            data-actualizar="resumen"
+                        >
+                            Actualizar datos
+                        </button>
+                    </div>
+
+                    <div class="tarjetas">
+                        <article class="tarjeta tarjeta--metrica" data-ir-seccion="empresas" tabindex="0" role="button">
+                            <div class="metrica__cabecera">
+                                <p class="metrica__nombre">
+                                    Empresas registradas
+                                </p>
+                                <span class="insignia">Global</span>
+                            </div>
+                            <p
+                                id="metrica-empresas"
+                                class="metrica__valor"
+                            >—</p>
+                            <p class="metrica__detalle">
+                                Total de cuentas empresariales
+                            </p>
+                        </article>
+
+                        <article class="tarjeta tarjeta--metrica" data-ir-seccion="empresas" tabindex="0" role="button">
+                            <div class="metrica__cabecera">
+                                <p class="metrica__nombre">
+                                    Empresas activas
+                                </p>
+                                <span class="insignia insignia--exito">
+                                    Activas
+                                </span>
+                            </div>
+                            <p
+                                id="metrica-empresas-activas"
+                                class="metrica__valor"
+                            >—</p>
+                            <p class="metrica__detalle">
+                                Empresas habilitadas actualmente
+                            </p>
+                        </article>
+
+                        <article class="tarjeta tarjeta--metrica" data-ir-usuarios="{{ url_for('panel_superadministracion.usuarios') }}" tabindex="0" role="link">
+                            <div class="metrica__cabecera">
+                                <p class="metrica__nombre">
+                                    Usuarios empresariales
+                                </p>
+                                <span class="insignia">Usuarios</span>
+                            </div>
+                            <p
+                                id="metrica-usuarios"
+                                class="metrica__valor"
+                            >—</p>
+                            <p class="metrica__detalle">
+                                No incluye cuentas Super Admin
+                            </p>
+                        </article>
+
+                        <article class="tarjeta tarjeta--metrica" data-ir-seccion="suscripciones" tabindex="0" role="button">
+                            <div class="metrica__cabecera">
+                                <p class="metrica__nombre">
+                                    Suscripciones vigentes
+                                </p>
+                                <span class="insignia insignia--exito">
+                                    Vigentes
+                                </span>
+                            </div>
+                            <p
+                                id="metrica-suscripciones"
+                                class="metrica__valor"
+                            >—</p>
+                            <p class="metrica__detalle">
+                                Activas o en periodo de prueba
+                            </p>
+                        </article>
+
+                        <article class="tarjeta tarjeta--metrica" data-ir-seccion="pagos" tabindex="0" role="button">
+                            <div class="metrica__cabecera">
+                                <p class="metrica__nombre">
+                                    Pagos confirmados
+                                </p>
+                                <span class="insignia">Pagos</span>
+                            </div>
+                            <p
+                                id="metrica-pagos"
+                                class="metrica__valor"
+                            >—</p>
+                            <p class="metrica__detalle">
+                                Transacciones confirmadas
+                            </p>
+                        </article>
+
+                        <article class="tarjeta tarjeta--metrica" data-ir-seccion="pagos" tabindex="0" role="button">
+                            <div class="metrica__cabecera">
+                                <p class="metrica__nombre">
+                                    Ingresos confirmados
+                                </p>
+                                <span class="insignia insignia--exito">
+                                    CLP
+                                </span>
+                            </div>
+                            <p
+                                id="metrica-ingresos"
+                                class="metrica__valor"
+                            >—</p>
+                            <p class="metrica__detalle">
+                                Total histórico confirmado
+                            </p>
+                        </article>
+                    </div>
+
+                    <section class="analitica-ejecutiva" aria-labelledby="titulo-analitica">
+                        <div class="analitica-ejecutiva__cabecera">
+                            <div>
+                                <p class="encabezado-seccion__etiqueta">Pulso del negocio</p>
+                                <h3 id="titulo-analitica">Velocidad de crecimiento</h3>
+                                <p>Ingresos confirmados en CLP y expansión de la plataforma.</p>
+                            </div>
+                            <label class="selector-periodo">
+                                <span>Período</span>
+                                <select id="periodo-analitica">
+                                    <option value="6">Últimos 6 meses</option>
+                                    <option value="12" selected>Últimos 12 meses</option>
+                                    <option value="24">Últimos 24 meses</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="indicadores-velocidad">
+                            <article><span>Ingresos del período</span><strong id="analitica-ingresos">—</strong><small id="analitica-comparacion">Comparando…</small></article>
+                            <article><span>Velocidad de ganancia</span><strong id="analitica-crecimiento">—</strong><small>Versus período anterior equivalente</small></article>
+                            <article><span>Ticket promedio</span><strong id="analitica-ticket">—</strong><small id="analitica-pagos">Pagos confirmados</small></article>
+                            <article><span>Activación empresarial</span><strong id="analitica-activacion">—</strong><small id="analitica-altas">Empresas nuevas</small></article>
+                        </div>
+
+                        <div class="graficas-ejecutivas">
+                            <article class="grafica-panel grafica-panel--principal">
+                                <div class="grafica-panel__cabecera"><div><h4>Ingresos confirmados</h4><p>Evolución mensual en pesos chilenos</p></div><span class="leyenda"><i></i> Ingresos</span></div>
+                                <div id="grafica-ingresos" class="grafica-svg" role="img" aria-label="Evolución mensual de ingresos"><p class="estado-carga">Preparando gráfica…</p></div>
+                            </article>
+                            <article class="grafica-panel">
+                                <div class="grafica-panel__cabecera"><div><h4>Nuevas empresas</h4><p>Altas mensuales</p></div></div>
+                                <div id="grafica-empresas" class="grafica-barras" role="img" aria-label="Empresas registradas por mes"></div>
+                            </article>
+                            <article class="grafica-panel">
+                                <div class="grafica-panel__cabecera"><div><h4>Planes vigentes</h4><p>Composición actual</p></div></div>
+                                <div id="grafica-planes" class="planes-composicion"></div>
+                            </article>
+                        </div>
+                        <p id="analitica-actualizada" class="analitica-actualizada">Cargando indicadores…</p>
+                    </section>
+
+                    <div class="rejilla">
+                        <article class="tarjeta">
+                            <div class="tarjeta__cabecera">
+                                <div>
+                                    <h3 class="tarjeta__titulo">
+                                        Empresas recientes
+                                    </h3>
+                                    <p class="tarjeta__descripcion">
+                                        Últimas empresas registradas
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="tabla-contenedor">
+                                <table class="tabla">
+                                    <thead>
+                                        <tr>
+                                            <th>Empresa</th>
+                                            <th>Identificación</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resumen-empresas">
+                                        <tr>
+                                            <td
+                                                colspan="3"
+                                                class="estado-carga"
+                                            >
+                                                Cargando información…
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+
+                        <article class="tarjeta">
+                            <div class="tarjeta__cabecera">
+                                <div>
+                                    <h3 class="tarjeta__titulo">
+                                        Actividad reciente
+                                    </h3>
+                                    <p class="tarjeta__descripcion">
+                                        Últimos eventos globales
+                                    </p>
+                                </div>
+                            </div>
+
+                            <ul
+                                id="resumen-actividad"
+                                class="lista-actividad"
+                            >
+                                <li class="estado-carga">
+                                    Cargando actividad…
+                                </li>
+                            </ul>
+                        </article>
+                    </div>
+                </section>
+
+                <section
+                    id="seccion-empresas"
+                    class="seccion-panel"
+                    data-contenido-seccion="empresas"
+                    hidden
+                >
+                    <div class="encabezado-seccion">
+                        <div>
+                            <p class="encabezado-seccion__etiqueta">
+                                Clientes
+                            </p>
+                            <h2>Empresas</h2>
+                            <p>
+                                Consulta y administración del estado de
+                                las empresas registradas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <article class="tarjeta">
+                        <div class="filtros">
+                            <input
+                                id="filtro-empresa-buscar"
+                                class="campo"
+                                type="search"
+                                placeholder="Buscar empresa"
+                                aria-label="Buscar empresa"
+                            >
+
+                            <select
+                                id="filtro-empresa-estado"
+                                class="campo"
+                                aria-label="Filtrar por estado"
+                            >
+                                <option value="">Todos los estados</option>
+                                <option value="activa">Activa</option>
+                                <option value="suspendida">Suspendida</option>
+                                <option value="cancelada">Cancelada</option>
+                            </select>
+
+                            <button
+                                id="buscar-empresas"
+                                class="boton boton--primario"
+                                type="button"
+                            >
+                                Buscar
+                            </button>
+                        </div>
+
+                        <div class="tabla-contenedor">
+                            <table class="tabla">
+                                <thead>
+                                    <tr>
+                                        <th>Empresa</th>
+                                        <th>Correo</th>
+                                        <th>Identificación</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-empresas">
+                                    <tr>
+                                        <td colspan="5" class="estado-carga">
+                                            Selecciona la sección para cargar.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+
+                <section
+                    id="seccion-planes"
+                    class="seccion-panel"
+                    data-contenido-seccion="planes"
+                    hidden
+                >
+                    <div class="encabezado-seccion">
+                        <div>
+                            <p class="encabezado-seccion__etiqueta">
+                                Oferta comercial
+                            </p>
+                            <h2>Planes</h2>
+                            <p>
+                                Cuatro planes comerciales alineados con la portada.
+                                La prueba es un período del plan elegido, no un quinto plan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="resumen-catalogo" aria-label="Resumen del catálogo">
+                        <article><strong id="total-planes-publicos">4</strong><span>Planes públicos</span></article>
+                        <article><strong id="total-planes-facturables">4</strong><span>Planes facturables</span></article>
+                        <article><strong id="total-niveles-internos">0</strong><span>Niveles visibles internos</span></article>
+                    </div>
+
+                    <div id="lista-planes" class="tarjetas">
+                        <article class="tarjeta estado-carga">
+                            Selecciona la sección para cargar.
+                        </article>
+                    </div>
+                </section>
+
+                <section
+                    id="seccion-suscripciones"
+                    class="seccion-panel"
+                    data-contenido-seccion="suscripciones"
+                    hidden
+                >
+                    <div class="encabezado-seccion">
+                        <div>
+                            <p class="encabezado-seccion__etiqueta">
+                                Ciclo comercial
+                            </p>
+                            <h2>Suscripciones</h2>
+                            <p>
+                                Los planes se activan automáticamente
+                                después de la confirmación del proveedor.
+                                Las correcciones excepcionales requieren un motivo y quedan auditadas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <article class="tarjeta">
+                        <div class="tabla-contenedor">
+                            <table class="tabla">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Empresa</th>
+                                        <th>Plan</th>
+                                        <th>Estado</th>
+                                        <th>Ciclo</th>
+                                        <th>Inicio</th>
+                                        <th>Finalización</th>
+                                        <th>Renovación</th>
+                                        <th>Control</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-suscripciones">
+                                    <tr>
+                                        <td colspan="9" class="estado-carga">
+                                            Selecciona la sección para cargar.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article class="tarjeta">
+                        <div class="encabezado-seccion encabezado-seccion--interno">
+                            <div><p class="encabezado-seccion__etiqueta">Empresarial</p><h3>Solicitudes de contrato</h3><p>Seguimiento comercial separado de los cobros automáticos.</p></div>
+                        </div>
+                        <div class="tabla-contenedor">
+                            <table class="tabla">
+                                <thead><tr><th>Empresa</th><th>Contacto</th><th>Capacidad</th><th>Estado</th><th>Fecha</th><th>Control</th></tr></thead>
+                                <tbody id="tabla-contratos-empresariales"><tr><td colspan="6" class="estado-carga">Selecciona la sección para cargar.</td></tr></tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+
+                <section
+                    id="seccion-pagos"
+                    class="seccion-panel"
+                    data-contenido-seccion="pagos"
+                    hidden
+                >
+                    <div class="encabezado-seccion">
+                        <div>
+                            <p class="encabezado-seccion__etiqueta">
+                                Finanzas
+                            </p>
+                            <h2>Pagos</h2>
+                            <p>
+                                Avisos consolidados de los proveedores.
+                                Un pago aprobado activa el plan de la
+                                empresa automáticamente; aquí sólo se
+                                supervisa su resultado.
+                            </p>
+                        </div>
+                    </div>
+
+                    <article class="tarjeta">
+                        <div class="tabla-contenedor">
+                            <table class="tabla">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Empresa</th>
+                                        <th>Proveedor</th>
+                                        <th>Referencia</th>
+                                        <th>Estado</th>
+                                        <th>Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-pagos">
+                                    <tr>
+                                        <td colspan="6" class="estado-carga">
+                                            Selecciona la sección para cargar.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+
+                <section
+                    id="seccion-auditoria"
+                    class="seccion-panel"
+                    data-contenido-seccion="auditoria"
+                    hidden
+                >
+                    <div class="encabezado-seccion">
+                        <div>
+                            <p class="encabezado-seccion__etiqueta">
+                                Trazabilidad
+                            </p>
+                            <h2>Auditoría</h2>
+                            <p>
+                                Consulta de eventos administrativos y
+                                empresariales registrados por la plataforma.
+                            </p>
+                        </div>
+                    </div>
+
+                    <article class="tarjeta">
+                        <div class="tabla-contenedor">
+                            <table class="tabla">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Acción</th>
+                                        <th>Módulo</th>
+                                        <th>Empresa</th>
+                                        <th>Usuario</th>
+                                        <th>Entidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-auditoria">
+                                    <tr>
+                                        <td colspan="6" class="estado-carga">
+                                            Selecciona la sección para cargar.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <dialog id="editor-plan" class="modal-plan">
+        <form id="formulario-plan" class="formulario-plan">
+            <header class="modal-plan__cabecera">
+                <div>
+                    <p class="encabezado-seccion__etiqueta">Oferta comercial</p>
+                    <h2 id="editor-plan-titulo">Editar plan</h2>
+                    <p id="editor-plan-codigo"></p>
+                </div>
+                <button id="cerrar-editor-plan" class="boton boton--secundario boton--pequeno" type="button">Cerrar</button>
+            </header>
+
+            <input id="editor-plan-id" type="hidden">
+
+            <div class="formulario-plan__rejilla">
+                <label>Nombre<input id="plan-nombre" required maxlength="80"></label>
+                <label>Orden<input id="plan-orden" type="number" min="0" required></label>
+                <label class="formulario-plan__ancho">Descripción<textarea id="plan-descripcion" rows="3"></textarea></label>
+                <label>Precio mensual<input id="plan-precio-mensual" type="number" min="0" step="1" required></label>
+                <label>Precio anual<input id="plan-precio-anual" type="number" min="0" step="1" required></label>
+                <label>Días de prueba<input id="plan-dias-prueba" type="number" min="0" required></label>
+                <label>Productos<input id="plan-limite-productos" type="number" min="0" placeholder="Vacío = ilimitado"></label>
+                <label>Usuarios<input id="plan-limite-usuarios" type="number" min="0" placeholder="Vacío = ilimitado"></label>
+                <label>Movimientos/mes<input id="plan-limite-movimientos" type="number" min="0" placeholder="Vacío = ilimitado"></label>
+                <label>Sucursales<input id="plan-limite-sucursales" type="number" min="0" placeholder="Vacío = ilimitado"></label>
+                <label>Bodegas<input id="plan-limite-bodegas" type="number" min="0" placeholder="Vacío = ilimitado"></label>
+                <label>Almacenamiento (MB)<input id="plan-almacenamiento" type="number" min="0" placeholder="Vacío = ilimitado"></label>
+            </div>
+
+            <fieldset class="funciones-plan">
+                <legend>Funciones incluidas</legend>
+                <div id="editor-plan-funciones" class="funciones-plan__rejilla"></div>
+            </fieldset>
+
+            <label class="interruptor-plan">
+                <input id="plan-activo" type="checkbox">
+                <span id="plan-activo-etiqueta">Plan disponible para nuevas contrataciones</span>
+            </label>
+
+            <footer class="modal-plan__acciones">
+                <button id="cancelar-editor-plan" class="boton boton--secundario" type="button">Cancelar</button>
+                <button id="guardar-plan" class="boton boton--primario" type="submit">Guardar cambios</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <div
+        id="notificacion"
+        class="notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for('static', filename='js/panel_superadministracion.js') }}"
+        defer
+    ></script>
+</body>
+</html>
