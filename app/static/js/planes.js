@@ -1035,7 +1035,7 @@ function renderizarSolicitudes() {
         );
 
         const etiquetasEstado = {
-            pendiente: "Pago pendiente",
+            pendiente: "Pendiente",
             pago_en_proceso: "Esperando confirmación del proveedor",
             cancelacion_en_revision: "Cancelación en revisión",
             aprobada: "Activado automáticamente",
@@ -1059,113 +1059,6 @@ function renderizarSolicitudes() {
             estadoSolicitud,
         );
 
-        if (
-            solicitud.estado === "pendiente"
-            && puedeSolicitar
-        ) {
-            const requiereMandato = (
-                estado.suscripcion?.estado === "prueba"
-                && estado.suscripcion?.metodo_pago_recurrente_estado !== "activo"
-            );
-            const botonPago = crear(
-                "button",
-                "boton boton--primario",
-                "Pagar con Webpay",
-            );
-
-            botonPago.type = "button";
-            botonPago.addEventListener(
-                "click",
-                () => iniciarCheckoutWebpay(
-                    solicitud,
-                    botonPago,
-                ),
-            );
-
-            const botonMercadoPago = crear(
-                "button",
-                "boton boton--mercadopago",
-                "Pagar con Mercado Pago",
-            );
-
-            botonMercadoPago.type = "button";
-            botonMercadoPago.addEventListener(
-                "click",
-                () => iniciarCheckoutMercadoPago(
-                    solicitud,
-                    botonMercadoPago,
-                ),
-            );
-
-            const boton = crear(
-                "button",
-                "boton boton--peligro",
-                "Cancelar",
-            );
-
-            boton.type = "button";
-            boton.addEventListener(
-                "click",
-                () => cancelarSolicitud(
-                    solicitud,
-                ),
-            );
-
-            const ultimoTerminal = ["rechazado", "cancelado", "vencido"].includes(
-                solicitud.ultimo_pago?.estado,
-            );
-            if (requiereMandato) {
-                const botonMandato = crear(
-                    "button",
-                    "boton boton--primario",
-                    "Autorizar prueba de 30 días",
-                );
-                botonMandato.type = "button";
-                botonMandato.addEventListener("click", activarMandato);
-                fila.append(botonMandato);
-            }
-            else if (!solicitud.ultimo_pago && !ultimoTerminal) {
-                fila.append(
-                    solicitud.proveedor_preferido === "mercadopago"
-                        ? botonMercadoPago
-                        : botonPago,
-                );
-            }
-            else {
-                fila.append(botonPago, botonMercadoPago);
-            }
-            fila.append(boton);
-        }
-        else if (
-            [
-                "pago_en_proceso",
-                "cancelacion_en_revision",
-            ].includes(solicitud.estado)
-            && puedeSolicitar
-        ) {
-            const actualizar = crear(
-                "button",
-                "boton boton--secundario",
-                "Consultar estado",
-            );
-            actualizar.type = "button";
-            actualizar.addEventListener("click", () => consultarEstadoSolicitud(solicitud));
-            fila.append(actualizar);
-
-            if (solicitud.estado === "pago_en_proceso") {
-                const cancelar = crear(
-                    "button",
-                    "boton boton--peligro",
-                    "Solicitar cancelación",
-                );
-                cancelar.type = "button";
-                cancelar.addEventListener(
-                    "click",
-                    () => cancelarSolicitud(solicitud),
-                );
-                fila.append(cancelar);
-            }
-        }
 
         contenedor.append(fila);
     }

@@ -85,6 +85,48 @@ def _evento(referencia="PAGO-001", estado="pagado", monto="19990.00", moneda="CL
     return cuerpo, marca, firma
 
 
+def test_seguimiento_de_solicitud_es_solo_informativo():
+    from pathlib import Path
+
+    javascript = Path(
+        "app/static/js/planes.js"
+    ).read_text(encoding="utf-8-sig")
+
+    inicio = javascript.find(
+        "function renderizarSolicitudes"
+    )
+    fin = javascript.find(
+        "function actualizarFlujoContratacion",
+        inicio,
+    )
+
+    assert inicio != -1
+    assert fin != -1
+
+    bloque = javascript[inicio:fin]
+
+    acciones_prohibidas = (
+        "Pagar con Webpay",
+        "Pagar con Mercado Pago",
+        "Autorizar medio de pago",
+        "Consultar estado",
+        "Solicitar cancelaci",
+        "cancelarSolicitud(",
+    )
+
+    for accion in acciones_prohibidas:
+        assert accion not in bloque
+
+    assert 'pendiente: "Pendiente",' in bloque
+
+    plantilla = Path(
+        "app/templates/panel/planes.html"
+    ).read_text(encoding="utf-8-sig")
+
+    assert "Seguimiento de la solicitud" in plantilla
+    assert "Proceso de cambio de plan" not in plantilla
+
+
 def test_cliente_mercadopago_conserva_error_http_seguro(
     app,
     monkeypatch,

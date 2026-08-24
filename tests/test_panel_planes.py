@@ -88,7 +88,7 @@ def test_panel_planes_incluye_contrato_visual(
         "Capacidades de NexuStock",
         "Inteligencia artificial",
         "Disponible",
-        "activará el nuevo plan automáticamente",
+        "Seguimiento de la solicitud",
     )
 
     for texto in textos:
@@ -221,7 +221,6 @@ def test_javascript_planes_conecta_checkout_webpay():
         "solicitud.id",
         "formulario.action",
         "formulario.submit()",
-        "Pagar con Webpay",
     )
 
     for contrato in contratos:
@@ -238,7 +237,6 @@ def test_panel_planes_conecta_checkout_mercadopago(client):
     for contrato in (
         "checkoutMercadoPagoSufijo",
         "iniciarCheckoutMercadoPago",
-        "Pagar con Mercado Pago",
         "window.location.assign",
         "/checkout/mercadopago",
     ):
