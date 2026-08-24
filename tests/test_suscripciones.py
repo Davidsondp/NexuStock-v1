@@ -23,6 +23,7 @@ from app.services.pagos_recurrentes import (
     ErrorPagoRecurrente,
     confirmar_mandato_mercadopago,
     confirmar_mandato_oneclick,
+    cliente_oneclick,
     iniciar_mandato,
     procesar_evento_suscripcion_mercadopago,
     procesar_renovaciones,
@@ -150,6 +151,38 @@ class MercadoPagoRecurrenteFalso:
             "preapproval_id": "preapproval-1",
             "status": "processed",
         }
+
+
+def test_oneclick_usa_ambiente_independiente_de_webpay_plus():
+    credenciales = {
+        "WEBPAY_ONECLICK_PARENT_COMMERCE_CODE": "padre",
+        "WEBPAY_ONECLICK_CHILD_COMMERCE_CODE": "hijo",
+        "WEBPAY_ONECLICK_API_KEY": "secreto",
+    }
+
+    cliente_integracion = cliente_oneclick(
+        {
+            **credenciales,
+            "WEBPAY_ENV": "production",
+            "WEBPAY_ONECLICK_ENV": "integration",
+        }
+    )
+
+    assert cliente_integracion.base_url == (
+        "https://webpay3gint.transbank.cl"
+    )
+
+    cliente_produccion = cliente_oneclick(
+        {
+            **credenciales,
+            "WEBPAY_ENV": "integration",
+            "WEBPAY_ONECLICK_ENV": "production",
+        }
+    )
+
+    assert cliente_produccion.base_url == (
+        "https://webpay3g.transbank.cl"
+    )
 
 
 class OneclickFalso:

@@ -47,6 +47,14 @@ class Configuracion:
         .strip()
         .lower()
     )
+    WEBPAY_ONECLICK_ENV = (
+        os.getenv(
+            "WEBPAY_ONECLICK_ENV",
+            "integration",
+        )
+        .strip()
+        .lower()
+    )
     MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
     MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
     MERCADOPAGO_ENV = os.getenv("MERCADOPAGO_ENV", "sandbox").strip().lower()

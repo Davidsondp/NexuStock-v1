@@ -157,7 +157,7 @@ def errores_integraciones_produccion(configuracion):
 
     webpay_oneclick_completo = all(
         (
-            configuracion.get("WEBPAY_ENV") == "production",
+            configuracion.get("WEBPAY_ONECLICK_ENV") == "production",
             configuracion.get("WEBPAY_ONECLICK_PARENT_COMMERCE_CODE"),
             configuracion.get("WEBPAY_ONECLICK_CHILD_COMMERCE_CODE"),
             configuracion.get("WEBPAY_ONECLICK_API_KEY"),

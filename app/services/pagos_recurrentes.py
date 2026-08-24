@@ -229,7 +229,10 @@ def cliente_oneclick(configuracion):
     api_key = str(configuracion.get("WEBPAY_ONECLICK_API_KEY") or "").strip()
     if not padre or not hijo or not api_key:
         raise ErrorPagoRecurrente("Faltan las credenciales de Webpay Oneclick Mall")
-    ambiente = str(configuracion.get("WEBPAY_ENV") or "integration").lower()
+    ambiente = str(
+        configuracion.get("WEBPAY_ONECLICK_ENV")
+        or "integration"
+    ).strip().lower()
     base_url = (
         "https://webpay3gint.transbank.cl"
         if ambiente == "integration"
