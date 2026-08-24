@@ -159,8 +159,11 @@ def test_empresarial_usa_flujo_contractual_y_registra_solicitud(app, client):
             "usuarios_estimados": "30",
             "mensaje": "Necesitamos tres centros de distribución.",
         },
+        follow_redirects=True,
     )
     assert respuesta.status_code == 200
+    assert len(respuesta.history) == 1
+    assert respuesta.history[0].status_code == 302
     assert "Solicitud recibida".encode() in respuesta.data
 
     from app.models import SolicitudContratoEmpresarial
@@ -190,6 +193,7 @@ def test_solicitud_empresarial_notifica_a_comercial_y_contacto(
                 "usuarios_estimados": "30",
                 "mensaje": "Necesitamos una propuesta empresarial.",
             },
+            follow_redirects=True,
         )
 
     assert respuesta.status_code == 200
@@ -239,9 +243,12 @@ def test_solicitud_empresarial_se_conserva_si_falla_el_correo(
             "usuarios_estimados": "20",
             "mensaje": "Necesitamos evaluar el plan Empresarial.",
         },
+        follow_redirects=True,
     )
 
     assert respuesta.status_code == 200
+    assert len(respuesta.history) == 1
+    assert respuesta.history[0].status_code == 302
     assert "Solicitud recibida".encode() in respuesta.data
 
     from app.models import SolicitudContratoEmpresarial

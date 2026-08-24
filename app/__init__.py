@@ -209,7 +209,14 @@ def crear_aplicacion(nombre_configuracion: str | None = None) -> Flask:
             )
 
             notificar_solicitud_empresarial(solicitud)
-            enviado = True
+
+            return redirect(
+                url_for(
+                    "solicitar_contrato_empresarial",
+                    enviado="1",
+                )
+            )
+
         return render_template(
             "contrato_empresarial.html",
             enviado=enviado or request.args.get("enviado") == "1",
