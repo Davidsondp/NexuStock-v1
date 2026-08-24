@@ -43,6 +43,7 @@ from ...services.pagos_recurrentes import (
     confirmar_mandato_mercadopago,
     confirmar_mandato_oneclick,
     iniciar_mandato,
+    procesar_evento_suscripcion_mercadopago,
 )
 
 suscripciones_bp = Blueprint("suscripciones", __name__, url_prefix="/api/suscripciones")
@@ -563,7 +564,16 @@ def retorno_mercadopago():
 @csrf.exempt
 def webhook_mercadopago():
     datos = request.get_json(silent=True) or {}
-    data_id = str(request.args.get("data.id") or (datos.get("data") or {}).get("id") or "").strip()
+    data_id = str(
+        request.args.get("data.id")
+        or (datos.get("data") or {}).get("id")
+        or ""
+    ).strip()
+    tipo_evento = str(
+        datos.get("type")
+        or request.args.get("type")
+        or "payment"
+    ).strip().lower()
     try:
         verificar_firma_mercadopago(
             secreto=current_app.config.get("MERCADOPAGO_WEBHOOK_SECRET"),
@@ -571,6 +581,29 @@ def webhook_mercadopago():
             request_id=request.headers.get("X-Request-Id"),
             data_id=data_id,
         )
+        if tipo_evento.startswith("subscription_"):
+            suscripcion, procesado, estado = (
+                procesar_evento_suscripcion_mercadopago(
+                    tipo_evento=tipo_evento,
+                    referencia=data_id,
+                    configuracion=current_app.config,
+                )
+            )
+
+            return jsonify(
+                {
+                    "recibido": True,
+                    "procesado": procesado,
+                    "tipo": tipo_evento,
+                    "suscripcion_id": (
+                        suscripcion.id
+                        if suscripcion
+                        else None
+                    ),
+                    "estado": estado,
+                }
+            )
+
         pago, procesado = procesar_webhook_mercadopago(
             cliente=obtener_cliente_mercadopago(current_app.config),
             pago_proveedor_id=data_id,
@@ -593,3 +626,5 @@ def webhook_mercadopago():
         return _error(exc, 502)
     except ErrorCheckoutMercadoPago as exc:
         return _error(exc, 400)
+    except ErrorPagoRecurrente as exc:
+        return _error(exc, 502)

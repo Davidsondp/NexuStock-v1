@@ -22,6 +22,7 @@ from app.services.pagos_recurrentes import (
     confirmar_mandato_mercadopago,
     confirmar_mandato_oneclick,
     iniciar_mandato,
+    procesar_evento_suscripcion_mercadopago,
     procesar_renovaciones,
 )
 from app.services.planes import CATALOGO_CAPACIDADES
@@ -96,6 +97,13 @@ class MercadoPagoRecurrenteFalso:
     def buscar_cobros(self, referencia):
         return []
 
+    def obtener_cobro_autorizado(self, referencia):
+        return {
+            "id": referencia,
+            "preapproval_id": "preapproval-1",
+            "status": "processed",
+        }
+
 
 class OneclickFalso:
     def iniciar_inscripcion(self, **datos):
@@ -126,6 +134,9 @@ def test_mandato_mercadopago_inicia_sin_cobro_y_activa_renovacion(app, client):
         assert falso.datos["auto_recurring"]["start_date"].startswith(
             suscripcion.fecha_fin.date().isoformat()
         )
+        assert falso.datos["notification_url"] == (
+            "https://nexustock.test/webhooks/pagos/mercadopago"
+        )
         assert suscripcion.renovacion_automatica is False
         confirmar_mandato_mercadopago(
             suscripcion=suscripcion,
@@ -134,6 +145,97 @@ def test_mandato_mercadopago_inicia_sin_cobro_y_activa_renovacion(app, client):
         assert suscripcion.metodo_pago_recurrente_estado == "activo"
         assert suscripcion.renovacion_automatica is True
         assert suscripcion.fecha_proximo_cobro == suscripcion.fecha_fin
+
+
+def test_evento_preapproval_activa_mandato_sin_duplicar(app, client):
+    ids = _preparar(app, client)
+    falso = MercadoPagoRecurrenteFalso()
+    configuracion = {
+        "MERCADOPAGO_SUSCRIPCIONES_FACTORY": lambda: falso,
+    }
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+
+        ServicioSuscripciones(usuario).solicitar_cambio(
+            plan_codigo="profesional",
+            ciclo="mensual",
+            proveedor="mercadopago",
+        )
+
+        suscripcion = usuario.empresa.suscripcion_actual
+
+        iniciar_mandato(
+            usuario=usuario,
+            proveedor="mercadopago",
+            base_url="https://nexustock.test",
+            configuracion=configuracion,
+        )
+
+        sincronizada, procesado, estado = (
+            procesar_evento_suscripcion_mercadopago(
+                tipo_evento="subscription_preapproval",
+                referencia="preapproval-1",
+                configuracion=configuracion,
+            )
+        )
+
+        assert sincronizada.id == suscripcion.id
+        assert procesado is True
+        assert estado == "authorized"
+        assert (
+            sincronizada.metodo_pago_recurrente_estado
+            == "activo"
+        )
+
+        _, procesado_repetido, estado_repetido = (
+            procesar_evento_suscripcion_mercadopago(
+                tipo_evento="subscription_preapproval",
+                referencia="preapproval-1",
+                configuracion=configuracion,
+            )
+        )
+
+        assert procesado_repetido is False
+        assert estado_repetido == "authorized"
+
+
+def test_evento_cobro_autorizado_reconoce_suscripcion(app, client):
+    ids = _preparar(app, client)
+    falso = MercadoPagoRecurrenteFalso()
+    configuracion = {
+        "MERCADOPAGO_SUSCRIPCIONES_FACTORY": lambda: falso,
+    }
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+
+        ServicioSuscripciones(usuario).solicitar_cambio(
+            plan_codigo="profesional",
+            ciclo="mensual",
+            proveedor="mercadopago",
+        )
+
+        suscripcion = usuario.empresa.suscripcion_actual
+
+        iniciar_mandato(
+            usuario=usuario,
+            proveedor="mercadopago",
+            base_url="https://nexustock.test",
+            configuracion=configuracion,
+        )
+
+        sincronizada, procesado, estado = (
+            procesar_evento_suscripcion_mercadopago(
+                tipo_evento="subscription_authorized_payment",
+                referencia="authorized-payment-1",
+                configuracion=configuracion,
+            )
+        )
+
+        assert sincronizada.id == suscripcion.id
+        assert procesado is True
+        assert estado == "processed"
 
 
 def test_mandato_oneclick_guarda_solo_referencia_tokenizada(app, client):

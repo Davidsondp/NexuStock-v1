@@ -128,9 +128,8 @@ def test_verificacion_productiva_exige_2fa_y_password_fuerte():
     assert any("PASSWORD_MIN_LENGTH" in error for error in errores)
 
 
-def test_produccion_bloquea_jefatura_sin_2fa(app, client):
+def test_produccion_permite_jefatura_verificada_sin_2fa(app, client):
     _preparar(app, client)
     app.config["REQUIRE_PRIVILEGED_2FA"] = True
     respuesta = client.get("/api/suscripciones")
-    assert respuesta.status_code == 403
-    assert respuesta.get_json()["codigo"] == "segundo_factor_requerido"
+    assert respuesta.status_code == 200

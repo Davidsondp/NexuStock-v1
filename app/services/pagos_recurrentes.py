@@ -69,6 +69,12 @@ class ClienteMercadoPagoSuscripciones:
     def obtener_mandato(self, referencia):
         return self._solicitar("GET", f"/preapproval/{referencia}")
 
+    def obtener_cobro_autorizado(self, referencia):
+        return self._solicitar(
+            "GET",
+            f"/authorized_payments/{referencia}",
+        )
+
     def buscar_cobros(self, referencia):
         datos = self._solicitar(
             "GET", "/v1/payments/search", params={"subscription_id": referencia}
@@ -210,6 +216,7 @@ def iniciar_mandato(*, usuario, proveedor, base_url, configuracion):
                 "external_reference": referencia_externa,
                 "payer_email": ((str(os.getenv("MERCADOPAGO_TEST_PAYER_EMAIL") or "").strip().lower() or usuario.email) if current_app.debug else usuario.email),
                 "back_url": base_url.rstrip("/") + "/webhooks/pagos/mandato/mercadopago/retorno",
+                "notification_url": base_url.rstrip("/") + "/webhooks/pagos/mercadopago",
                 "auto_recurring": {
                     "frequency": frecuencia,
                     "frequency_type": tipo,
@@ -287,6 +294,100 @@ def confirmar_mandato_mercadopago(*, suscripcion, configuracion):
     if datos.get("status") != "authorized" or datos.get("external_reference") != esperada:
         raise ErrorPagoRecurrente("Mercado Pago todavía no autorizó la suscripción")
     return _activar_mandato(suscripcion, "mercadopago", referencia)
+
+
+def procesar_evento_suscripcion_mercadopago(
+    *,
+    tipo_evento,
+    referencia,
+    configuracion,
+):
+    """Sincroniza eventos recurrentes sin tratarlos como pagos normales."""
+
+    tipo_evento = str(tipo_evento or "").strip().lower()
+    referencia = str(referencia or "").strip()
+
+    if not referencia:
+        raise ErrorPagoRecurrente(
+            "Mercado Pago no informo el identificador del evento"
+        )
+
+    cliente = cliente_mercadopago(configuracion)
+
+    if tipo_evento == "subscription_preapproval":
+        datos = cliente.obtener_mandato(referencia)
+
+        suscripcion = db.session.scalar(
+            db.select(Suscripcion).where(
+                Suscripcion.proveedor_cobro == "mercadopago",
+                Suscripcion.referencia_metodo_pago == referencia,
+            )
+        )
+
+        estado = str(datos.get("status") or "").strip().lower()
+
+        if not suscripcion:
+            return None, False, estado or "desconocido"
+
+        referencia_esperada = (
+            f"NS-SUB-{suscripcion.empresa_id}-{suscripcion.id}"
+        )
+        referencia_recibida = str(
+            datos.get("external_reference") or ""
+        ).strip()
+
+        if referencia_recibida != referencia_esperada:
+            raise ErrorPagoRecurrente(
+                "La referencia externa de la suscripcion no coincide"
+            )
+
+        if estado == "authorized":
+            if suscripcion.metodo_pago_recurrente_estado == "activo":
+                return suscripcion, False, estado
+
+            _activar_mandato(
+                suscripcion,
+                "mercadopago",
+                referencia,
+            )
+            return suscripcion, True, estado
+
+        if estado in {"cancelled", "paused"}:
+            suscripcion.metodo_pago_recurrente_estado = "revocado"
+            suscripcion.renovacion_automatica = False
+            db.session.commit()
+            return suscripcion, True, estado
+
+        return suscripcion, False, estado or "pendiente"
+
+    if tipo_evento == "subscription_authorized_payment":
+        datos = cliente.obtener_cobro_autorizado(referencia)
+
+        mandato_id = str(
+            datos.get("preapproval_id")
+            or datos.get("subscription_id")
+            or ""
+        ).strip()
+
+        suscripcion = db.session.scalar(
+            db.select(Suscripcion).where(
+                Suscripcion.proveedor_cobro == "mercadopago",
+                Suscripcion.referencia_metodo_pago == mandato_id,
+            )
+        )
+
+        estado = str(
+            datos.get("status") or "recibido"
+        ).strip().lower()
+
+        return suscripcion, bool(suscripcion), estado
+
+    if tipo_evento == "subscription_preapproval_plan":
+        return None, False, "ignorado"
+
+    raise ErrorPagoRecurrente(
+        "Tipo de evento de suscripcion no admitido"
+    )
 
 
 def confirmar_mandato_oneclick(*, suscripcion, token, configuracion):

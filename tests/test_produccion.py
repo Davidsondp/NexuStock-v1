@@ -64,16 +64,20 @@ def test_render_declara_configuracion_webpay_completa():
 
 def test_verificacion_estricta_exige_integraciones_comerciales():
     errores = errores_integraciones_produccion({})
-    for variable in (
+
+    requisitos = (
+        "DATABASE_URL",
         "BASE_URL",
-        "WEBPAY_COMMERCE_CODE",
-        "WEBPAY_API_KEY",
-        "WEBPAY_ONECLICK_PARENT_COMMERCE_CODE",
-        "MERCADOPAGO_ACCESS_TOKEN",
-        "MERCADOPAGO_WEBHOOK_SECRET",
+        "Mercado Pago Suscripciones o Webpay Oneclick",
+        "DTE_PROVIDER_URL",
+        "DTE_API_KEY",
         "OPENAI_API_KEY",
-    ):
-        assert any(variable in error for error in errores)
+        "REQUIRE_PRIVILEGED_2FA",
+        "PASSWORD_MIN_LENGTH",
+    )
+
+    for requisito in requisitos:
+        assert any(requisito in error for error in errores)
 
 
 def test_verificacion_estricta_acepta_configuracion_completa():
