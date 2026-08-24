@@ -231,7 +231,7 @@ def ingresar():
             flash("Debes verificar tu correo antes de ingresar.", "peligro")
 
         else:
-            if usuario.two_factor_enabled:
+            if usuario.rol == "super_admin" and usuario.two_factor_enabled:
                 session["2fa_usuario_id"] = usuario.id
                 session["2fa_recordar"] = bool(formulario.recordar.data)
                 session["2fa_destino"] = _destino_seguro(request.args.get("siguiente"))
@@ -262,7 +262,11 @@ def ingresar():
 def segundo_factor():
     usuario_id = session.get("2fa_usuario_id")
     usuario = db.session.get(Usuario, usuario_id) if usuario_id else None
-    if not usuario or not usuario.two_factor_enabled:
+    if (
+        not usuario
+        or usuario.rol != "super_admin"
+        or not usuario.two_factor_enabled
+    ):
         session.pop("2fa_usuario_id", None)
         return redirect(url_for("autenticacion.ingresar"))
     if request.method == "POST":
@@ -328,9 +332,27 @@ def reenviar_verificacion():
 def seguridad_cuenta():
     if not current_user.is_authenticated:
         return redirect(url_for("autenticacion.ingresar"))
-    secreto = session.get("2fa_configuracion_secreto")
+    permitir_2fa = (
+        current_user.rol == "super_admin"
+        and current_user.empresa_id is None
+    )
+    secreto = (
+        session.get("2fa_configuracion_secreto")
+        if permitir_2fa
+        else None
+    )
     if request.method == "POST":
         accion = request.form.get("accion")
+        if (
+            accion in {"iniciar", "confirmar", "desactivar"}
+            and not permitir_2fa
+        ):
+            session.pop("2fa_configuracion_secreto", None)
+            flash(
+                "El segundo factor está reservado para el Super Admin.",
+                "peligro",
+            )
+            return redirect(url_for("autenticacion.seguridad_cuenta"))
         try:
             if accion == "iniciar":
                 secreto = iniciar_2fa(current_user)
@@ -356,7 +378,12 @@ def seguridad_cuenta():
             "otpauth://totp/NexuStock:"
             f"{urllib.parse.quote(current_user.email)}?secret={secreto}&issuer=NexuStock"
         )
-    return render_template("autenticacion/seguridad.html", secreto=secreto, uri=uri)
+    return render_template(
+        "autenticacion/seguridad.html",
+        secreto=secreto,
+        uri=uri,
+        permitir_2fa=permitir_2fa,
+    )
 
 
 @autenticacion_bp.post("/salir")

@@ -241,7 +241,7 @@ def crear_aplicacion(nombre_configuracion: str | None = None) -> Flask:
         """Impide operar en producción hasta proteger cuentas administrativas."""
         if not app.config.get("REQUIRE_PRIVILEGED_2FA", False):
             return None
-        if not current_user.is_authenticated or current_user.rol not in {"super_admin", "jefe"}:
+        if not current_user.is_authenticated or current_user.rol != "super_admin":
             return None
         if current_user.two_factor_enabled:
             return None
