@@ -212,6 +212,24 @@ def test_panel_muestra_solo_cuatro_planes_comerciales(app, client):
     assert facturables == {"avanzado", "ultra", "profesional", "empresa"}
 
 
+def test_superadmin_lista_suscripciones_sin_error(
+    app,
+    client,
+):
+    _preparar(app, client)
+    _login(client)
+
+    respuesta = client.get(
+        "/api/superadmin/suscripciones"
+    )
+
+    assert respuesta.status_code == 200
+    assert isinstance(
+        respuesta.get_json()["suscripciones"],
+        list,
+    )
+
+
 def test_superadmin_controla_solicitud_empresarial(app, client):
     _preparar(app, client)
     with app.app_context():

@@ -151,7 +151,35 @@ def editar_plan(plan_id):
 @requerir_permiso("superadmin.suscripciones")
 def suscripciones():
     datos = ServicioSuperAdministracion(current_user).listar_suscripciones(
-        empresa_id=request.args.get("empresa_id", type=int), estado=request.args.get("estado")
+        empresa_id=request.args.get("empresa_id", type=int),
+        estado=request.args.get("estado"),
+    )
+    return jsonify(
+        {
+            "suscripciones": [
+                {
+                    "id": s.id,
+                    "empresa_id": s.empresa_id,
+                    "plan_id": s.plan_id,
+                    "estado": s.estado,
+                    "ciclo": s.ciclo,
+                    "fecha_inicio": s.fecha_inicio.isoformat(),
+                    "fecha_fin": (
+                        s.fecha_fin.isoformat()
+                        if s.fecha_fin
+                        else None
+                    ),
+                    "renovacion_automatica": (
+                        s.renovacion_automatica
+                    ),
+                    "cancelar_al_fin_periodo": (
+                        s.cancelar_al_fin_periodo
+                    ),
+                    "proveedor_cobro": s.proveedor_cobro,
+                }
+                for s in datos
+            ]
+        }
     )
 
 
@@ -196,25 +224,6 @@ def actualizar_contrato_empresarial(solicitud_id):
         return jsonify(_contrato_empresarial(solicitud))
     except ErrorSuperAdministracion as exc:
         return _error(exc)
-    return jsonify(
-        {
-            "suscripciones": [
-                {
-                    "id": s.id,
-                    "empresa_id": s.empresa_id,
-                    "plan_id": s.plan_id,
-                    "estado": s.estado,
-                    "ciclo": s.ciclo,
-                    "fecha_inicio": s.fecha_inicio.isoformat(),
-                    "fecha_fin": s.fecha_fin.isoformat() if s.fecha_fin else None,
-                    "renovacion_automatica": s.renovacion_automatica,
-                    "cancelar_al_fin_periodo": s.cancelar_al_fin_periodo,
-                    "proveedor_cobro": s.proveedor_cobro,
-                }
-                for s in datos
-            ]
-        }
-    )
 
 
 @superadministracion_bp.patch("/suscripciones/<int:suscripcion_id>")
