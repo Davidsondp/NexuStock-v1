@@ -203,6 +203,12 @@ def crear_aplicacion(nombre_configuracion: str | None = None) -> Flask:
             )
             db.session.add(solicitud)
             db.session.commit()
+
+            from .services.contratos_empresariales import (
+                notificar_solicitud_empresarial,
+            )
+
+            notificar_solicitud_empresarial(solicitud)
             enviado = True
         return render_template(
             "contrato_empresarial.html",

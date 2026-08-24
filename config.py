@@ -36,6 +36,10 @@ class Configuracion:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "no-responder@nexustock.cl")
     SOPORTE_EMAIL = os.getenv("SOPORTE_EMAIL", "equipos@nexustock.cl")
+    COMERCIAL_EMAIL = os.getenv(
+        "COMERCIAL_EMAIL",
+        "equipos@nexustock.cl",
+    )
     BASE_URL = os.getenv("BASE_URL")
     WEBPAY_COMMERCE_CODE = os.getenv("WEBPAY_COMMERCE_CODE")
     WEBPAY_API_KEY = os.getenv("WEBPAY_API_KEY")

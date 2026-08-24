@@ -4,6 +4,7 @@ import re
 import pytest
 
 from app.commands import PLANES
+from app.extensions import correo
 from app.models import PlanSaaS, db
 
 
@@ -168,6 +169,92 @@ def test_empresarial_usa_flujo_contractual_y_registra_solicitud(app, client):
         solicitud = db.session.scalar(db.select(SolicitudContratoEmpresarial))
         assert solicitud.empresa_nombre == "Empresa Nacional"
         assert solicitud.productos_estimados == 25000
+        assert solicitud.estado == "nueva"
+
+
+def test_solicitud_empresarial_notifica_a_comercial_y_contacto(
+    app,
+    client,
+):
+    app.config["COMERCIAL_EMAIL"] = "comercial@nexustock.cl"
+
+    with correo.record_messages() as enviados:
+        respuesta = client.post(
+            "/empresarial/solicitar",
+            data={
+                "empresa_nombre": "Empresa Nacional",
+                "contacto_nombre": "Ana Responsable",
+                "email": "ana@empresa.cl",
+                "telefono": "+56912345678",
+                "productos_estimados": "25000",
+                "usuarios_estimados": "30",
+                "mensaje": "Necesitamos una propuesta empresarial.",
+            },
+        )
+
+    assert respuesta.status_code == 200
+    assert len(enviados) == 2
+
+    destinatarios = {
+        mensaje.recipients[0]
+        for mensaje in enviados
+    }
+
+    assert destinatarios == {
+        "comercial@nexustock.cl",
+        "ana@empresa.cl",
+    }
+
+    aviso = next(
+        mensaje
+        for mensaje in enviados
+        if mensaje.recipients == ["comercial@nexustock.cl"]
+    )
+
+    assert aviso.reply_to == "ana@empresa.cl"
+    assert "Empresa Nacional" in aviso.body
+
+
+def test_solicitud_empresarial_se_conserva_si_falla_el_correo(
+    app,
+    client,
+    monkeypatch,
+):
+    def fallar(*args, **kwargs):
+        raise OSError("SMTP no disponible")
+
+    monkeypatch.setattr(
+        "app.services.contratos_empresariales.correo.send",
+        fallar,
+    )
+
+    respuesta = client.post(
+        "/empresarial/solicitar",
+        data={
+            "empresa_nombre": "Empresa Resiliente",
+            "contacto_nombre": "Contacto Responsable",
+            "email": "contacto@resiliente.cl",
+            "telefono": "+56911112222",
+            "productos_estimados": "15000",
+            "usuarios_estimados": "20",
+            "mensaje": "Necesitamos evaluar el plan Empresarial.",
+        },
+    )
+
+    assert respuesta.status_code == 200
+    assert "Solicitud recibida".encode() in respuesta.data
+
+    from app.models import SolicitudContratoEmpresarial
+
+    with app.app_context():
+        solicitud = db.session.scalar(
+            db.select(SolicitudContratoEmpresarial).where(
+                SolicitudContratoEmpresarial.email
+                == "contacto@resiliente.cl"
+            )
+        )
+
+        assert solicitud is not None
         assert solicitud.estado == "nueva"
 
 
