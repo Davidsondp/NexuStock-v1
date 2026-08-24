@@ -194,6 +194,76 @@ def test_mandato_mercadopago_inicia_sin_cobro_y_activa_renovacion(app, client):
         assert suscripcion.fecha_proximo_cobro == suscripcion.fecha_fin
 
 
+def test_retorno_mandato_activo_es_idempotente(
+    app,
+    client,
+    monkeypatch,
+):
+    ids = _preparar(app, client)
+    falso = MercadoPagoRecurrenteFalso()
+
+    app.config["MERCADOPAGO_SUSCRIPCIONES_FACTORY"] = (
+        lambda: falso
+    )
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+
+        ServicioSuscripciones(usuario).solicitar_cambio(
+            plan_codigo="profesional",
+            ciclo="mensual",
+            proveedor="mercadopago",
+        )
+
+        suscripcion = usuario.empresa.suscripcion_actual
+
+        iniciar_mandato(
+            usuario=usuario,
+            proveedor="mercadopago",
+            base_url="https://nexustock.test",
+            configuracion=app.config,
+        )
+
+        confirmar_mandato_mercadopago(
+            suscripcion=suscripcion,
+            configuracion=app.config,
+        )
+        db.session.commit()
+
+        assert (
+            suscripcion.metodo_pago_recurrente_estado
+            == "activo"
+        )
+        assert suscripcion.renovacion_automatica is True
+
+    def no_confirmar_nuevamente(**kwargs):
+        raise AssertionError(
+            "Una suscripcion activa no debe confirmarse nuevamente"
+        )
+
+    monkeypatch.setattr(
+        "app.blueprints.suscripciones.routes."
+        "confirmar_mandato_mercadopago",
+        no_confirmar_nuevamente,
+    )
+
+    ruta_retorno = (
+        "/webhooks/pagos/mandato/mercadopago/retorno"
+        "?preapproval_id=preapproval-1"
+    )
+
+    primera_respuesta = client.get(ruta_retorno)
+    segunda_respuesta = client.get(ruta_retorno)
+
+    for respuesta in (
+        primera_respuesta,
+        segunda_respuesta,
+    ):
+        assert respuesta.status_code == 302
+        assert "/panel" in respuesta.headers["Location"]
+        assert "mandato=activo" in respuesta.headers["Location"]
+
+
 def test_evento_preapproval_activa_mandato_sin_duplicar(app, client):
     ids = _preparar(app, client)
     falso = MercadoPagoRecurrenteFalso()

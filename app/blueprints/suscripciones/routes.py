@@ -231,13 +231,20 @@ def retorno_mandato_webpay():
 def retorno_mandato_mercadopago():
     referencia = str(request.args.get("preapproval_id") or request.args.get("id") or "").strip()
     suscripcion = db.session.scalar(
-        db.select(Suscripcion).where(
+        db.select(Suscripcion)
+        .execution_options(populate_existing=True)
+        .where(
             Suscripcion.referencia_metodo_pago == referencia,
-            Suscripcion.metodo_pago_recurrente_estado == "pendiente",
+            Suscripcion.proveedor_cobro == "mercadopago",
         )
     )
     if not referencia or not suscripcion:
         return _error(ErrorPagoRecurrente("Suscripción de Mercado Pago no encontrada"), 400)
+    if suscripcion.metodo_pago_recurrente_estado == "activo":
+        return redirect(
+            url_for("panel.inicio", mandato="activo")
+        )
+
     try:
         confirmar_mandato_mercadopago(
             suscripcion=suscripcion,
