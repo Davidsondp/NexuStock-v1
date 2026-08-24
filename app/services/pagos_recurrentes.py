@@ -47,6 +47,8 @@ class ClienteMercadoPagoSuscripciones:
         }
 
     def _solicitar(self, metodo, ruta, **kwargs):
+        respuesta = None
+
         try:
             respuesta = requests.request(
                 metodo,
@@ -56,11 +58,75 @@ class ClienteMercadoPagoSuscripciones:
                 **kwargs,
             )
             respuesta.raise_for_status()
+        except requests.RequestException as exc:
+            estado_http = (
+                respuesta.status_code
+                if respuesta is not None
+                else None
+            )
+            mensaje_proveedor = ""
+
+            if respuesta is not None:
+                try:
+                    detalle = respuesta.json()
+                except ValueError:
+                    detalle = {}
+
+                if isinstance(detalle, dict):
+                    mensaje_proveedor = str(
+                        detalle.get("message")
+                        or detalle.get("error")
+                        or ""
+                    ).strip()
+
+                    causas = detalle.get("cause") or []
+                    if causas and isinstance(causas[0], dict):
+                        causa = str(
+                            causas[0].get("description")
+                            or causas[0].get("code")
+                            or ""
+                        ).strip()
+
+                        if causa:
+                            mensaje_proveedor = (
+                                f"{mensaje_proveedor}: {causa}"
+                                if mensaje_proveedor
+                                else causa
+                            )
+
+            mensaje_proveedor = mensaje_proveedor[:240]
+
+            current_app.logger.warning(
+                "Mercado Pago rechazo una solicitud: "
+                "ruta=%s estado=%s mensaje=%s",
+                ruta,
+                estado_http,
+                mensaje_proveedor or "sin detalle",
+            )
+
+            if estado_http:
+                raise ErrorPagoRecurrente(
+                    "Mercado Pago rechazo la suscripcion "
+                    f"(HTTP {estado_http}): "
+                    f"{mensaje_proveedor or 'sin detalle'}"
+                ) from exc
+
+            raise ErrorPagoRecurrente(
+                "No fue posible conectar con Mercado Pago Suscripciones"
+            ) from exc
+
+        try:
             datos = respuesta.json()
-        except (requests.RequestException, ValueError) as exc:
-            raise ErrorPagoRecurrente("Mercado Pago Suscripciones no está disponible") from exc
+        except ValueError as exc:
+            raise ErrorPagoRecurrente(
+                "Mercado Pago devolvio una respuesta invalida"
+            ) from exc
+
         if not isinstance(datos, dict):
-            raise ErrorPagoRecurrente("Mercado Pago devolvió una respuesta inválida")
+            raise ErrorPagoRecurrente(
+                "Mercado Pago devolvio una respuesta invalida"
+            )
+
         return datos
 
     def crear_mandato(self, datos):

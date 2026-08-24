@@ -19,6 +19,8 @@ from app.models import (
     utcnow,
 )
 from app.services.pagos_recurrentes import (
+    ClienteMercadoPagoSuscripciones,
+    ErrorPagoRecurrente,
     confirmar_mandato_mercadopago,
     confirmar_mandato_oneclick,
     iniciar_mandato,
@@ -80,6 +82,51 @@ def _evento(referencia="PAGO-001", estado="pagado", monto="19990.00", moneda="CL
     marca = str(int(time.time()))
     firma = hmac.new(SECRETO.encode(), marca.encode() + b"." + cuerpo, hashlib.sha256).hexdigest()
     return cuerpo, marca, firma
+
+
+def test_cliente_mercadopago_conserva_error_http_seguro(
+    app,
+    monkeypatch,
+):
+    class RespuestaRechazada:
+        status_code = 400
+
+        def raise_for_status(self):
+            from requests import HTTPError
+
+            raise HTTPError(
+                "Bad Request",
+                response=self,
+            )
+
+        def json(self):
+            return {
+                "message": "bad request",
+                "cause": [
+                    {
+                        "description": "invalid transaction amount",
+                    }
+                ],
+            }
+
+    monkeypatch.setattr(
+        "app.services.pagos_recurrentes.requests.request",
+        lambda *args, **kwargs: RespuestaRechazada(),
+    )
+
+    with app.app_context():
+        cliente = ClienteMercadoPagoSuscripciones(
+            "token-no-real-para-pruebas"
+        )
+
+        with pytest.raises(
+            ErrorPagoRecurrente,
+            match=(
+                r"HTTP 400.*"
+                r"invalid transaction amount"
+            ),
+        ):
+            cliente.crear_mandato({})
 
 
 class MercadoPagoRecurrenteFalso:
