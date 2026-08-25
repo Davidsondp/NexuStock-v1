@@ -355,12 +355,24 @@ FUNCIONES_POR_PLAN: Final = {
     "ultra": _matriz(
         CAPACIDADES_BASE,
         CAPACIDADES_PROFESIONALES,
-        {"exportacion.avanzada", "multisucursal", "multibodega", "transferencias"},
+        {
+            "exportacion.avanzada",
+            "multisucursal",
+            "multibodega",
+            "transferencias",
+            "ia",
+        },
     ),
     "profesional": _matriz(
         CAPACIDADES_BASE,
         CAPACIDADES_PROFESIONALES,
-        {"exportacion.avanzada", "multisucursal", "multibodega", "transferencias"},
+        {
+            "exportacion.avanzada",
+            "multisucursal",
+            "multibodega",
+            "transferencias",
+            "ia",
+        },
     ),
     "empresa": _matriz(
         CAPACIDADES_BASE,

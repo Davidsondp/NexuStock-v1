@@ -123,10 +123,11 @@ def test_plan_profesional_ofrece_control_avanzado():
         "multisucursal",
         "multibodega",
         "transferencias",
+        "ia",
     }:
         assert funciones[capacidad] is False
 
-    assert funciones["ia"] is False
+    assert funciones["ia"] is True
 
 
 def test_plan_empresa_ofrece_toda_capacidad_disponible():
@@ -164,4 +165,4 @@ def test_capacidades_del_plan_genera_contrato_comercial():
     assert por_codigo["reportes.avanzados"]["incluida"] is True
     assert por_codigo["api"]["incluida"] is False
     assert por_codigo["ia"]["estado"] == "disponible"
-    assert por_codigo["ia"]["incluida"] is False
+    assert por_codigo["ia"]["incluida"] is True

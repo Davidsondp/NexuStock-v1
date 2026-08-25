@@ -1,5 +1,18 @@
-from app.models import Bodega, Empresa, InteraccionIA, Inventario, Producto, Usuario, db
+from app.models import (
+    AlertaInventario,
+    Bodega,
+    Empresa,
+    InteraccionIA,
+    Inventario,
+    Producto,
+    Sucursal,
+    Usuario,
+    Venta,
+    db,
+    utcnow,
+)
 from app.services.asistente_ia import ServicioAsistenteIA
+from app.services.planes import funciones_plan
 from tests.test_autenticacion import REGISTRO
 
 
@@ -82,6 +95,122 @@ def test_historial_y_feedback_son_personales(app, client):
     assert client.post(f"/api/ia/{creada['id']}/valorar", json={"valoracion": 1}).status_code == 200
     historial = client.get("/api/ia").get_json()["interacciones"]
     assert len(historial) == 1 and historial[0]["valoracion"] == 1
+
+
+def test_ia_solo_en_ultra_profesional_y_empresarial():
+    assert funciones_plan("avanzado")["ia"] is False
+    assert funciones_plan("ultra")["ia"] is True
+    assert funciones_plan("profesional")["ia"] is True
+    assert funciones_plan("empresa")["ia"] is True
+
+
+def test_contexto_ia_respeta_sucursales_y_bodegas_autorizadas(
+    app,
+    client,
+):
+    usuario_id = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, usuario_id)
+
+        sucursal = Sucursal(
+            empresa_id=usuario.empresa_id,
+            codigo="NO-AUTORIZADA",
+            nombre="Sucursal no autorizada",
+        )
+        db.session.add(sucursal)
+        db.session.flush()
+
+        bodega = Bodega(
+            empresa_id=usuario.empresa_id,
+            sucursal_id=sucursal.id,
+            codigo="BOD-SECRETA",
+            nombre="Bodega secreta",
+        )
+        producto = Producto(
+            empresa_id=usuario.empresa_id,
+            codigo="SECRETO-SUCURSAL",
+            nombre="Producto secreto de otra sucursal",
+            costo_referencia=100,
+            precio_venta=200,
+            stock_minimo=5,
+            punto_reorden=8,
+        )
+        db.session.add_all([bodega, producto])
+        db.session.flush()
+
+        db.session.add(
+            Inventario(
+                empresa_id=usuario.empresa_id,
+                producto_id=producto.id,
+                bodega_id=bodega.id,
+                cantidad=99,
+                cantidad_reservada=0,
+                costo_promedio=100,
+            )
+        )
+        db.session.add(
+            Venta(
+                empresa_id=usuario.empresa_id,
+                bodega_id=bodega.id,
+                creada_por_id=usuario.id,
+                numero="VENTA-SECRETA-IA",
+                estado="confirmada",
+                subtotal=999,
+                total=999,
+                confirmada_en=utcnow(),
+            )
+        )
+        db.session.add(
+            AlertaInventario(
+                empresa_id=usuario.empresa_id,
+                producto_id=producto.id,
+                bodega_id=bodega.id,
+                tipo="stock_bajo",
+                estado="activa",
+                prioridad="alta",
+                titulo="ALERTA-SECRETA-IA",
+                mensaje="No debe enviarse a este usuario.",
+                datos={"marcador": "SECRETO-ALERTA"},
+            )
+        )
+        db.session.commit()
+
+        contexto = ServicioAsistenteIA(usuario)._contexto()
+        serializado = str(contexto)
+
+        assert "SECRETO-SUCURSAL" not in serializado
+        assert "ALERTA-SECRETA-IA" not in serializado
+        assert contexto["resumen"]["ventas_30_dias"] == 0
+        assert contexto["resumen"]["alertas_activas"] == 0
+
+
+def test_contexto_enviado_depende_del_modo():
+    contexto = {
+        "fecha_utc": "2026-08-25T00:00:00",
+        "moneda": "CLP",
+        "resumen": {},
+        "productos_prioritarios": [],
+        "productos_mas_vendidos": [],
+        "alertas": [],
+    }
+
+    ventas = ServicioAsistenteIA._contexto_para_modo(
+        "ventas",
+        contexto,
+    )
+    riesgos = ServicioAsistenteIA._contexto_para_modo(
+        "riesgos",
+        contexto,
+    )
+
+    assert "productos_mas_vendidos" in ventas
+    assert "productos_prioritarios" not in ventas
+    assert "alertas" not in ventas
+
+    assert "productos_prioritarios" in riesgos
+    assert "alertas" in riesgos
+    assert "productos_mas_vendidos" not in riesgos
 
 
 def test_contexto_ia_no_incluye_empresa_ajena(app, client):
