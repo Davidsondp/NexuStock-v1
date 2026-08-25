@@ -52,12 +52,12 @@ def notificar_solicitud_empresarial(solicitud):
         f"Hola {solicitud.contacto_nombre},\n\n"
         "Recibimos la solicitud de contrato Empresarial "
         f"para {solicitud.empresa_nombre}.\n\n"
-        "Nuestro equipo revisar? la capacidad solicitada y "
-        "se comunicar? contigo para organizar el alcance, "
+        "Nuestro equipo revisará la capacidad solicitada y "
+        "se comunicará contigo para organizar el alcance, "
         "la propuesta y el contrato.\n\n"
         "Enviar esta solicitud no activa cobros ni inicia "
-        "de forma automatica el periodo de evaluacion.\n\n"
-        f"N?mero de solicitud: {solicitud.id}\n\n"
+        "de forma automática el período de evaluación.\n\n"
+        f"Número de solicitud: {solicitud.id}\n\n"
         "Equipo comercial de NexuStock\n"
     )
 
@@ -67,7 +67,7 @@ def notificar_solicitud_empresarial(solicitud):
             recipients=[solicitud.email],
             body=cuerpo_contacto,
         ),
-        descripcion="la confirmaci?n al contacto",
+        descripcion="la confirmación al contacto",
     )
 
     return {

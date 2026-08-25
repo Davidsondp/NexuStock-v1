@@ -213,6 +213,15 @@ def test_solicitud_empresarial_notifica_a_comercial_y_contacto(
     assert aviso.reply_to == "ana@empresa.cl"
     assert "Empresa Nacional" in aviso.body
 
+    confirmacion = next(mensaje for mensaje in enviados if mensaje.recipients == ["ana@empresa.cl"])
+
+    assert "revisar\u00e1" in confirmacion.body
+    assert "se comunicar\u00e1" in confirmacion.body
+    assert "N\u00famero de solicitud" in confirmacion.body
+    assert "autom\u00e1tica" in confirmacion.body
+    assert "per\u00edodo de evaluaci\u00f3n" in confirmacion.body
+    assert "?" not in confirmacion.body
+
 
 def test_solicitud_empresarial_se_conserva_si_falla_el_correo(
     app,
