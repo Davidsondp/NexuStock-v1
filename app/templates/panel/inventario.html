@@ -692,7 +692,8 @@
                             <input
                                 id="movimiento-costo-unitario"
                                 class="campo"
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
                                 min="0"
                                 step="0.0001"
                             >
@@ -708,7 +709,8 @@
                             <input
                                 id="movimiento-precio-unitario"
                                 class="campo"
-                                type="number"
+                                type="text"
+                                inputmode="decimal"
                                 min="0"
                                 step="0.01"
                             >
@@ -808,6 +810,10 @@
         hidden
     ></div>
 
+    <script
+        src="{{ url_for('static', filename='js/numeros.js') }}"
+        defer
+    ></script>
     <script
         src="{{ url_for(
             'static',

@@ -439,8 +439,8 @@ function agregarLineaVenta(datos = {}) {
 
     const precio = document.createElement("input");
     precio.className = "campo linea-precio";
-    precio.type = "number";
-    precio.min = "0";
+    precio.type = "text";
+    precio.inputMode = "decimal";
     precio.step = "0.01";
     precio.value = String(
         datos.precio_presentacion
@@ -612,11 +612,12 @@ function construirDatosVenta() {
             ).value
         );
 
-        const precioUnitario = Number(
-            linea.querySelector(
-                ".linea-precio"
-            ).value
-        );
+        const precioUnitario =
+            NexuNumeros.numeroMoneda(
+                linea.querySelector(
+                    ".linea-precio"
+                ).value
+            );
 
         const selectorPresentacion =
             linea.querySelector(

@@ -593,7 +593,8 @@
                         id="producto-costo"
                         class="campo"
                         name="costo_referencia"
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
                         min="0"
                         step="0.0001"
                         value="0"
@@ -606,7 +607,8 @@
                         id="producto-precio"
                         class="campo"
                         name="precio_venta"
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
                         min="0"
                         step="0.01"
                         value="0"
@@ -923,6 +925,10 @@
         hidden
     ></div>
 
+    <script
+        src="{{ url_for('static', filename='js/numeros.js') }}"
+        defer
+    ></script>
     <script
         src="{{ url_for('static', filename='js/productos.js') }}"
         defer

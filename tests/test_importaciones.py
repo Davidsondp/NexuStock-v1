@@ -113,3 +113,40 @@ def test_pdf_danado_se_rechaza_sin_guardarlo(app, client):
 def test_centro_importacion_respeta_plan(app, client):
     client.post("/autenticacion/registro", data=REGISTRO)
     assert client.get("/panel/importaciones").status_code == 403
+
+
+def test_csv_normaliza_dinero_chileno_sin_alterar_cantidades(
+    app,
+    client,
+):
+    _registrar(app, client)
+
+    previa = _csv(
+        client,
+        "codigo;nombre;costo;precio;stock_inicial\n"
+        "CLP-1;Formato chileno;3.000,00;"
+        "$ 4.500,50;3.000\n",
+    )
+
+    assert previa.status_code == 200
+    datos = previa.get_json()
+    fila = datos["filas"][0]["datos"]
+
+    assert datos["con_errores"] == 0
+    assert fila["costo_referencia"] == "3000.00"
+    assert fila["precio_venta"] == "4500.50"
+    assert fila["stock_inicial"] == "3.000"
+
+    confirmada = client.post(
+        "/importaciones/confirmar",
+        json={"token": datos["token"]},
+    )
+
+    assert confirmada.status_code == 200
+
+    with app.app_context():
+        producto = db.session.scalar(db.select(Producto).where(Producto.codigo == "CLP-1"))
+
+        assert producto.costo_referencia == 3000
+        assert producto.precio_venta == 4500.50
+        assert db.session.scalar(db.select(Inventario.cantidad)) == 3

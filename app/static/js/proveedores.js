@@ -268,9 +268,12 @@ function construirDatosProveedor() {
         valorNumerico("proveedor-dias-entrega", "7")
     );
 
-    const compraMinima = Number(
-        valorNumerico("proveedor-compra-minima")
-    );
+    const compraMinima =
+        NexuNumeros.numeroMoneda(
+            valorNumerico(
+                "proveedor-compra-minima"
+            )
+        );
 
     if (
         !Number.isInteger(diasEntrega) ||

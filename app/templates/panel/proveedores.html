@@ -566,7 +566,8 @@
                         <input
                             id="proveedor-compra-minima"
                             class="campo"
-                            type="number"
+                            type="text"
+                            inputmode="decimal"
                             min="0"
                             step="1"
                             value="0"
@@ -632,6 +633,10 @@
         hidden
     ></div>
 
+    <script
+        src="{{ url_for('static', filename='js/numeros.js') }}"
+        defer
+    ></script>
     <script
         src="{{ url_for('static', filename='js/proveedores.js') }}"
         defer

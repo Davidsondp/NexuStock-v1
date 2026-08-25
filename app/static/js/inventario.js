@@ -1375,11 +1375,12 @@ function construirMovimiento() {
         tipo === "entrada"
         || tipo === "devolucion"
     ) {
-        const costo = numero(
-            elemento(
-                "movimiento-costo-unitario"
-            ).value
-        );
+        const costo =
+            NexuNumeros.numeroMoneda(
+                elemento(
+                    "movimiento-costo-unitario"
+                ).value
+            );
 
         if (costo < 0) {
             throw new Error(
@@ -1396,7 +1397,10 @@ function construirMovimiento() {
         ).value;
 
         if (valorPrecio !== "") {
-            const precio = numero(valorPrecio);
+            const precio =
+                NexuNumeros.numeroMoneda(
+                    valorPrecio
+                );
 
             if (precio < 0) {
                 throw new Error(

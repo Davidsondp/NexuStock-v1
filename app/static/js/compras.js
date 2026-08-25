@@ -386,8 +386,8 @@ function agregarLineaCompra(datos = {}) {
 
     const precio = document.createElement("input");
     precio.className = "campo linea-precio";
-    precio.type = "number";
-    precio.min = "0";
+    precio.type = "text";
+    precio.inputMode = "decimal";
     precio.step = "0.0001";
     precio.value = String(
         datos.precio_presentacion ??
@@ -455,9 +455,10 @@ function agregarLineaCompra(datos = {}) {
                 presentacion.selectedOptions[0]
                     ?.dataset.factor || 1
             );
-            const costoActual = Number(
-                precio.value || 0
-            );
+            const costoActual =
+                NexuNumeros.numeroMoneda(
+                    precio.value || 0
+                );
 
             if (
                 Number.isFinite(costoActual) &&
@@ -667,9 +668,12 @@ function construirDatosCompra() {
         const cantidad = Number(
             linea.querySelector(".linea-cantidad").value
         );
-        const precioUnitario = Number(
-            linea.querySelector(".linea-precio").value
-        );
+        const precioUnitario =
+            NexuNumeros.numeroMoneda(
+                linea.querySelector(
+                    ".linea-precio"
+                ).value
+            );
 
         const descuento = Number(
             linea.querySelector(

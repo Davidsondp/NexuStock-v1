@@ -52,14 +52,56 @@ ALIASES = {
     "stock_maximo": "stock_maximo",
 }
 
-NUMERICOS = {
+MONETARIOS = {
     "costo_referencia",
     "precio_venta",
+}
+
+CANTIDADES = {
     "stock_inicial",
     "stock_minimo",
     "punto_reorden",
     "stock_maximo",
 }
+
+NUMERICOS = MONETARIOS | CANTIDADES
+
+
+def _decimal_local(valor, monetario=False):
+    texto = str(valor or "").strip()
+    texto = texto.replace("\xa0", "").replace(" ", "")
+
+    if monetario:
+        texto = re.sub(r"[^0-9,().+\-]", "", texto)
+
+    if texto.startswith("(") and texto.endswith(")"):
+        texto = f"-{texto[1:-1]}"
+
+    if texto.startswith("+"):
+        texto = texto[1:]
+
+    coma = texto.rfind(",")
+    punto = texto.rfind(".")
+    separador_decimal = None
+
+    if coma >= 0 and punto >= 0:
+        separador_decimal = "," if coma > punto else "."
+    elif coma >= 0:
+        agrupado = bool(re.fullmatch(r"[+-]?\d{1,3}(,\d{3})+", texto))
+        separador_decimal = None if monetario and agrupado else ","
+    elif punto >= 0:
+        agrupado = bool(re.fullmatch(r"[+-]?\d{1,3}(\.\d{3})+", texto))
+        separador_decimal = None if monetario and agrupado else "."
+
+    if separador_decimal:
+        posicion = texto.rfind(separador_decimal)
+        entero = re.sub(r"[.,]", "", texto[:posicion])
+        decimales = re.sub(r"[.,]", "", texto[posicion + 1 :])
+        texto = f"{entero}.{decimales}" if decimales else entero
+    elif monetario:
+        texto = re.sub(r"[.,]", "", texto)
+
+    return Decimal(texto)
 
 
 def _normalizar(texto):
@@ -213,7 +255,10 @@ class ServicioImportaciones:
                 if campo not in datos:
                     continue
                 try:
-                    numero_decimal = Decimal(datos[campo].replace(" ", "").replace(",", "."))
+                    numero_decimal = _decimal_local(
+                        datos[campo],
+                        monetario=campo in MONETARIOS,
+                    )
                     if numero_decimal < 0:
                         raise InvalidOperation
                     datos[campo] = str(numero_decimal)

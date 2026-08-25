@@ -339,12 +339,14 @@ function construirDatosProducto() {
             "producto-unidades-caja",
             "1"
         ),
-        costo_referencia: valorNumerico(
-            "producto-costo"
-        ),
-        precio_venta: valorNumerico(
-            "producto-precio"
-        ),
+        costo_referencia:
+            NexuNumeros.normalizarMoneda(
+                valorNumerico("producto-costo")
+            ),
+        precio_venta:
+            NexuNumeros.normalizarMoneda(
+                valorNumerico("producto-precio")
+            ),
         tasa_impuesto: valorNumerico(
             "producto-impuesto",
             "0.19"
