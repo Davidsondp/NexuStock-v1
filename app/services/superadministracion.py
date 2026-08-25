@@ -203,6 +203,28 @@ class ServicioSuperAdministracion:
                     if valor < 0:
                         raise ErrorSuperAdministracion(f"{campo} no puede ser negativo")
                     setattr(plan, campo, valor)
+            if "limite_productos" in datos:
+                limite_productos = datos["limite_productos"]
+
+                if limite_productos is None:
+                    raise ErrorSuperAdministracion(
+                        "El límite de productos es obligatorio " "en los planes comerciales"
+                    )
+
+                try:
+                    limite_productos = int(limite_productos)
+                except (TypeError, ValueError) as exc:
+                    raise ErrorSuperAdministracion(
+                        "El límite de productos debe ser " "un número entero"
+                    ) from exc
+
+                if limite_productos <= 0:
+                    raise ErrorSuperAdministracion(
+                        "El límite de productos debe ser " "mayor que cero"
+                    )
+
+                datos["limite_productos"] = limite_productos
+
             for campo in (
                 "limite_productos",
                 "limite_usuarios",

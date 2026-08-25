@@ -141,6 +141,7 @@ PLANES = (
 CAPACIDADES_GOBERNADAS = frozenset(
     {
         "ia",
+        "etiquetas_qr",
     }
 )
 

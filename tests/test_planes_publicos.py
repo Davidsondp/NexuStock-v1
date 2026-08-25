@@ -305,3 +305,12 @@ def test_css_planes_publicos_es_responsive():
 
     for contrato in contratos:
         assert contrato in contenido
+
+
+def test_planes_publicos_declaran_etiquetas_qr_ilimitadas():
+    from pathlib import Path
+
+    plantilla = Path("app/templates/planes_publicos.html").read_text(encoding="utf-8-sig")
+
+    assert "Creación ilimitada de códigos QR " "y etiquetas de códigos de barras" in plantilla
+    assert "Productos sin límite" not in plantilla

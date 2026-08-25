@@ -7,6 +7,7 @@ from app.services.planes import (
 CAPACIDADES_BASE = {
     "dashboard",
     "productos",
+    "etiquetas_qr",
     "unidades_presentaciones",
     "inventario",
     "movimientos",
@@ -51,6 +52,21 @@ TODAS_LAS_CAPACIDADES = CAPACIDADES_BASE | CAPACIDADES_PROFESIONALES | CAPACIDAD
 
 def planes_por_codigo():
     return {plan["codigo"]: plan for plan in PLANES}
+
+
+def test_cuatro_planes_comerciales_tienen_productos_finitos():
+    planes = planes_por_codigo()
+
+    limites_esperados = {
+        "avanzado": 500,
+        "ultra": 2000,
+        "profesional": 5000,
+        "empresa": 10000,
+    }
+
+    for codigo, limite in limites_esperados.items():
+        assert planes[codigo]["limite_productos"] == limite
+        assert limite > 0
 
 
 def test_catalogo_cubre_toda_la_capacidad():

@@ -256,11 +256,15 @@ def test_etiqueta_producto_entrega_qr_autocontenido(app, client):
         "/api/productos",
         json={"codigo": "QR-1", "codigo_barras": "7801234567890", "nombre": "Etiquetado"},
     ).get_json()
-    respuesta = client.get(f"/api/productos/{creado['id']}/etiqueta")
-    assert respuesta.status_code == 200
-    datos = respuesta.get_json()
-    assert datos["producto"]["codigo_barras"] == "7801234567890"
-    assert datos["producto"]["qr"].startswith("data:image/svg+xml;base64,")
+    respuestas = [client.get(f"/api/productos/{creado['id']}/etiqueta") for _ in range(12)]
+
+    assert all(respuesta.status_code == 200 for respuesta in respuestas)
+
+    for respuesta in respuestas:
+        datos = respuesta.get_json()
+
+        assert datos["producto"]["codigo_barras"] == "7801234567890"
+        assert datos["producto"]["qr"].startswith("data:image/svg+xml;base64,")
 
 
 def test_id_ajeno_en_api_responde_403(app, client):

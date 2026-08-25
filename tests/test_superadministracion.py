@@ -107,6 +107,50 @@ def test_editar_plan_valida_precio_limites_y_funciones(app, client):
             servicio.editar_plan(plan.id, funciones={"api": "sí"})
 
 
+def test_superadmin_no_permite_productos_ilimitados(
+    app,
+    client,
+):
+    _preparar(app, client)
+    app.test_cli_runner().invoke(args=["seed-planes"])
+    _login(client)
+
+    with app.app_context():
+        plan_id = db.session.scalar(db.select(PlanSaaS.id).where(PlanSaaS.codigo == "avanzado"))
+
+    respuesta = client.patch(
+        f"/api/superadmin/planes/{plan_id}",
+        json={
+            "limite_productos": None,
+        },
+    )
+
+    assert respuesta.status_code == 400
+    assert "límite de productos es obligatorio" in respuesta.get_json()["mensaje"]
+
+
+def test_superadmin_no_permite_limite_productos_cero(
+    app,
+    client,
+):
+    _preparar(app, client)
+    app.test_cli_runner().invoke(args=["seed-planes"])
+    _login(client)
+
+    with app.app_context():
+        plan_id = db.session.scalar(db.select(PlanSaaS.id).where(PlanSaaS.codigo == "ultra"))
+
+    respuesta = client.patch(
+        f"/api/superadmin/planes/{plan_id}",
+        json={
+            "limite_productos": 0,
+        },
+    )
+
+    assert respuesta.status_code == 400
+    assert "mayor que cero" in respuesta.get_json()["mensaje"]
+
+
 def test_superadmin_edita_plan_desde_api_y_panel(app, client):
     ids = _preparar(app, client)
     app.test_cli_runner().invoke(args=["seed-planes"])

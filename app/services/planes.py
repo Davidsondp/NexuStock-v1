@@ -22,6 +22,17 @@ CATALOGO_CAPACIDADES: Final = (
         "condicion": None,
     },
     {
+        "codigo": "etiquetas_qr",
+        "nombre": "Códigos QR y etiquetas",
+        "descripcion": (
+            "Generación ilimitada de códigos QR y etiquetas "
+            "de códigos de barras para los productos registrados."
+        ),
+        "grupo": "operacion",
+        "estado": "disponible",
+        "condicion": None,
+    },
+    {
         "codigo": "unidades_presentaciones",
         "nombre": "Unidades y presentaciones",
         "descripcion": ("Compra y venta mediante unidades " "base o presentaciones comerciales."),
@@ -288,6 +299,7 @@ CAPACIDADES_BASE: Final = frozenset(
     {
         "dashboard",
         "productos",
+        "etiquetas_qr",
         "unidades_presentaciones",
         "inventario",
         "movimientos",

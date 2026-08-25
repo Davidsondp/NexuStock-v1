@@ -259,7 +259,8 @@
                     <ul>
                         <li>30 días sin cobro inicial</li>
                         <li>{% if plan.codigo == 'empresa' %}Activación mediante contrato{% else %}Tarjeta requerida y renovación automática{% endif %}</li>
-                        <li>{% if plan.limite_productos is none %}Productos sin límite{% else %}Hasta {{ '{:,}'.format(plan.limite_productos).replace(',', '.') }} productos{% endif %}</li>
+                        <li>Hasta {{ '{:,}'.format(plan.limite_productos).replace(',', '.') }} productos</li>
+                        <li>Creación ilimitada de códigos QR y etiquetas de códigos de barras</li>
                         <li>{% if plan.limite_usuarios is none %}Usuarios sin límite{% else %}{{ plan.limite_usuarios }} usuarios{% endif %}</li>
                         <li>{% if plan.limite_movimientos_mes is none %}Movimientos sin límite{% else %}{{ '{:,}'.format(plan.limite_movimientos_mes).replace(',', '.') }} movimientos mensuales{% endif %}</li>
                         {% if plan.codigo == 'avanzado' %}
