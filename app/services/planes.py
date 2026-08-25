@@ -26,7 +26,7 @@ CATALOGO_CAPACIDADES: Final = (
         "nombre": "Códigos QR y etiquetas",
         "descripcion": (
             "Generación ilimitada de códigos QR y etiquetas "
-            "de códigos de barras para los productos registrados."
+            "de códigos de barras para los artículos registrados."
         ),
         "grupo": "operacion",
         "estado": "disponible",

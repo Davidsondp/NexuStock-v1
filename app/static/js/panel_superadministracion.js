@@ -817,7 +817,7 @@ function renderizarCatalogoPlanes(planes) {
 
         agregarDetallePlan(
             limites,
-            "Productos",
+            "Artículos únicos",
             formatearLimite(plan.limite_productos)
         );
 

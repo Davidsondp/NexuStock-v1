@@ -259,7 +259,7 @@
                     <ul>
                         <li>30 días sin cobro inicial</li>
                         <li>{% if plan.codigo == 'empresa' %}Activación mediante contrato{% else %}Tarjeta requerida y renovación automática{% endif %}</li>
-                        <li>Hasta {{ '{:,}'.format(plan.limite_productos).replace(',', '.') }} productos</li>
+                        <li>Hasta {{ '{:,}'.format(plan.limite_productos).replace(',', '.') }} artículos únicos</li>
                         <li>Creación ilimitada de códigos QR y etiquetas de códigos de barras</li>
                         <li>{% if plan.limite_usuarios is none %}Usuarios sin límite{% else %}{{ plan.limite_usuarios }} usuarios{% endif %}</li>
                         <li>{% if plan.limite_movimientos_mes is none %}Movimientos sin límite{% else %}{{ '{:,}'.format(plan.limite_movimientos_mes).replace(',', '.') }} movimientos mensuales{% endif %}</li>
@@ -377,6 +377,18 @@
             </div>
 
             <div class="preguntas-planes__lista">
+                <details>
+                    <summary>
+                        ¿Qué es un artículo único?
+                    </summary>
+                    <p>
+                        Cada referencia, SKU o código diferente cuenta como un artículo único. La cantidad física disponible y su distribución entre bodegas no aumentan el límite.
+                    </p>
+                    <p>
+                        Las variantes con SKU o código diferente cuentan como artículos únicos independientes.
+                    </p>
+                </details>
+
                 <details>
                     <summary>
                         ¿Puedo cambiar de plan después?

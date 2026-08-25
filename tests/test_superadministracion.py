@@ -126,7 +126,7 @@ def test_superadmin_no_permite_productos_ilimitados(
     )
 
     assert respuesta.status_code == 400
-    assert "límite de productos es obligatorio" in respuesta.get_json()["mensaje"]
+    assert "límite de artículos únicos es obligatorio" in respuesta.get_json()["mensaje"]
 
 
 def test_superadmin_no_permite_limite_productos_cero(

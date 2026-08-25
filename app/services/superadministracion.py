@@ -208,19 +208,19 @@ class ServicioSuperAdministracion:
 
                 if limite_productos is None:
                     raise ErrorSuperAdministracion(
-                        "El límite de productos es obligatorio " "en los planes comerciales"
+                        "El límite de artículos únicos es obligatorio " "en los planes comerciales"
                     )
 
                 try:
                     limite_productos = int(limite_productos)
                 except (TypeError, ValueError) as exc:
                     raise ErrorSuperAdministracion(
-                        "El límite de productos debe ser " "un número entero"
+                        "El límite de artículos únicos debe ser " "un número entero"
                     ) from exc
 
                 if limite_productos <= 0:
                     raise ErrorSuperAdministracion(
-                        "El límite de productos debe ser " "mayor que cero"
+                        "El límite de artículos únicos debe ser " "mayor que cero"
                     )
 
                 datos["limite_productos"] = limite_productos

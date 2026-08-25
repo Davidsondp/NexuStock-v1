@@ -117,8 +117,14 @@ def test_limite_productos_no_cuenta_eliminados(app, client):
         db.session.commit()
         servicio = ServicioProductos(usuario)
         primero = servicio.crear(codigo="P-1", nombre="Primero")
-        with pytest.raises(LimiteProductosAlcanzado):
-            servicio.crear(codigo="P-2", nombre="Segundo")
+        with pytest.raises(LimiteProductosAlcanzado) as error:
+            servicio.crear(
+                codigo="P-2",
+                nombre="Segundo",
+            )
+
+        assert "límite de artículos únicos del plan" in str(error.value)
+        assert "cantidades disponibles" in str(error.value)
         servicio.eliminar_logicamente(primero.id)
         segundo = servicio.crear(codigo="P-2", nombre="Segundo")
         assert segundo.id is not None

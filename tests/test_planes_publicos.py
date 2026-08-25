@@ -314,3 +314,27 @@ def test_planes_publicos_declaran_etiquetas_qr_ilimitadas():
 
     assert "Creación ilimitada de códigos QR " "y etiquetas de códigos de barras" in plantilla
     assert "Productos sin límite" not in plantilla
+
+
+def test_terminologia_comercial_de_articulos_unicos():
+    from pathlib import Path
+
+    plantilla = Path("app/templates/planes_publicos.html").read_text(encoding="utf-8-sig")
+    planes_js = Path("app/static/js/planes.js").read_text(encoding="utf-8-sig")
+    super_js = Path("app/static/js/panel_superadministracion.js").read_text(encoding="utf-8-sig")
+    panel_super = Path("app/templates/superadministracion/panel.html").read_text(
+        encoding="utf-8-sig"
+    )
+
+    assert "artículos únicos</li>" in plantilla
+    assert "¿Qué es un artículo único?" in plantilla
+    assert (
+        "La cantidad física disponible y su "
+        "distribución entre bodegas no aumentan "
+        "el límite." in plantilla
+    )
+    assert "Artículos únicos" in planes_js
+    assert "artículos únicos`" in planes_js
+    assert "Productos según contrato" not in planes_js
+    assert "Artículos únicos" in super_js
+    assert "Límite de artículos únicos" in panel_super

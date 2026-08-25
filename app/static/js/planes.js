@@ -70,7 +70,7 @@ async function activarMandato() {
 }
 
 const etiquetasLimites = Object.freeze({
-    productos: "Productos",
+    productos: "Artículos únicos",
     usuarios: "Usuarios",
     movimientos_mes: "Movimientos mensuales",
     sucursales: "Sucursales",
@@ -1107,8 +1107,8 @@ function actualizarFlujoContratacion() {
         const usuarios = elemento("mandato-limite-usuarios");
         if (productos) {
             productos.textContent = plan.limites.productos === null
-                ? "Productos según contrato"
-                : `Hasta ${Number(plan.limites.productos).toLocaleString("es-CL")} productos`;
+                ? "Artículos únicos según contrato"
+                : `Hasta ${Number(plan.limites.productos).toLocaleString("es-CL")} artículos únicos`;
         }
         if (usuarios) {
             usuarios.textContent = plan.limites.usuarios === null

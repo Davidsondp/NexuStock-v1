@@ -317,7 +317,10 @@ class ServicioProductos:
             )
         )
         if cantidad >= limite:
-            raise LimiteProductosAlcanzado("Se alcanzó el límite de productos del plan")
+            raise LimiteProductosAlcanzado(
+                "Se alcanzó el límite de artículos únicos del plan. Las "
+                "cantidades disponibles de cada artículo no consumen capacidad adicional."
+            )
 
     def _exigir(self, permiso):
         decision = evaluar_permiso(self.usuario, permiso, empresa_id=self.usuario.empresa_id)
