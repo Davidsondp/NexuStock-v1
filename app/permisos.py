@@ -207,6 +207,7 @@ FUNCION_POR_PERMISO: Final[dict[str, str]] = {
     "bodegas.crear": "multibodega",
     "bodegas.editar": "multibodega",
     "bodegas.desactivar": "multibodega",
+    "transferencias.ver": "transferencias",
     "transferencias.crear": "transferencias",
     "transferencias.despachar": "transferencias",
     "transferencias.recibir": "transferencias",

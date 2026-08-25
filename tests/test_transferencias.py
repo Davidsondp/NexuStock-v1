@@ -330,3 +330,40 @@ def test_transferencia_serializada_mueve_serial_y_cambia_estados(app, client):
         assert serial.estado == "disponible"
         assert serial.bodega_id == ids[2]
         assert serial.transferencia_item_id is None
+
+
+def test_plan_sin_transferencias_rechaza_consulta_servicio_y_api(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+        transferencia = _crear(ids)
+        transferencia_id = transferencia.id
+
+        plan = usuario.empresa.suscripcion_actual.plan
+        plan.funciones = {
+            **(plan.funciones or {}),
+            "transferencias": False,
+        }
+        db.session.commit()
+
+        servicio = ServicioTransferencias(usuario)
+
+        with pytest.raises(PermissionError):
+            servicio.listar()
+
+        with pytest.raises(PermissionError):
+            servicio.obtener(transferencia_id)
+
+    listado = client.get("/api/transferencias")
+
+    assert listado.status_code == 403
+    assert listado.get_json()["codigo"] == ("plan_insuficiente")
+
+    detalle = client.get(f"/api/transferencias/{transferencia_id}")
+
+    assert detalle.status_code == 403
+    assert detalle.get_json()["codigo"] == ("plan_insuficiente")

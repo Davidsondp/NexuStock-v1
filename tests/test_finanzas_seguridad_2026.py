@@ -33,10 +33,26 @@ def test_catalogo_tiene_cuatro_planes_comerciales_con_prueba():
 
 def test_limites_multisucursal_coinciden_con_capacidades():
     planes = {plan["codigo"]: plan for plan in PLANES}
-    for codigo in ("ultra", "profesional", "empresa"):
-        assert planes[codigo]["limite_sucursales"] != 1
-        assert planes[codigo]["funciones"]["multisucursal"] is True
-        assert planes[codigo]["funciones"]["multibodega"] is True
+
+    limites = {
+        "avanzado": (1, 1, False),
+        "ultra": (2, 3, True),
+        "profesional": (5, 10, True),
+        "empresa": (10, 25, True),
+    }
+
+    for codigo, (
+        sucursales,
+        bodegas,
+        distribuido,
+    ) in limites.items():
+        plan = planes[codigo]
+
+        assert plan["limite_sucursales"] == sucursales
+        assert plan["limite_bodegas"] == bodegas
+        assert plan["funciones"]["multisucursal"] is distribuido
+        assert plan["funciones"]["multibodega"] is distribuido
+        assert plan["funciones"]["transferencias"] is distribuido
 
 
 def test_avanzado_inicia_prueba_y_empresarial_es_el_nivel_mayor():

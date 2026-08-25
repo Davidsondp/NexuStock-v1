@@ -90,8 +90,8 @@ PLANES = (
         limite_productos=5000,
         limite_usuarios=10,
         limite_movimientos_mes=50000,
-        limite_sucursales=3,
-        limite_bodegas=3,
+        limite_sucursales=5,
+        limite_bodegas=10,
         almacenamiento_mb=5000,
         funciones=funciones_plan("profesional"),
         nivel_comercial="premium",
@@ -108,8 +108,8 @@ PLANES = (
         limite_productos=10000,
         limite_usuarios=12,
         limite_movimientos_mes=None,
-        limite_sucursales=None,
-        limite_bodegas=None,
+        limite_sucursales=10,
+        limite_bodegas=25,
         almacenamiento_mb=20000,
         funciones=funciones_plan("empresa"),
         nivel_comercial="empresa",
@@ -142,6 +142,16 @@ CAPACIDADES_GOBERNADAS = frozenset(
     {
         "ia",
         "etiquetas_qr",
+        "multisucursal",
+        "multibodega",
+        "transferencias",
+    }
+)
+
+LIMITES_GOBERNADOS = frozenset(
+    {
+        "limite_sucursales",
+        "limite_bodegas",
     }
 )
 
@@ -262,11 +272,21 @@ def registrar_comandos(app):
                             incluida,
                         )
                 plan.funciones = funciones
+
+                for campo in LIMITES_GOBERNADOS:
+                    setattr(
+                        plan,
+                        campo,
+                        datos[campo],
+                    )
+
                 plan.dias_prueba = datos["dias_prueba"]
                 if plan.codigo in {"prueba", "basico", "corporativo"}:
                     plan.activo = False
         db.session.commit()
-        click.echo("Planes y capacidades faltantes configurados; ediciones existentes preservadas.")
+        click.echo(
+            "Planes, capacidades y l?mites oficiales " "sincronizados; otras ediciones preservadas."
+        )
 
     @app.cli.command("crear-super-admin")
     @click.option("--nombre", prompt=True)

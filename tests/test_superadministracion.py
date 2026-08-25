@@ -492,3 +492,59 @@ def test_resumen_seguridad_mide_cobertura_2fa(app, client):
         resumen = ServicioSuperAdministracion(db.session.get(Usuario, ids[0])).resumen_seguridad()
         assert resumen["cuentas_privilegiadas"] >= 1
         assert 0 <= resumen["cobertura_2fa_pct"] <= 100
+
+
+def test_seed_planes_sincroniza_limites_oficiales_de_ubicaciones(
+    app,
+):
+    runner = app.test_cli_runner()
+    runner.invoke(args=["seed-planes"])
+
+    with app.app_context():
+        ultra = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "ultra"))
+        profesional = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "profesional"))
+        empresa = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "empresa"))
+
+        ultra.limite_sucursales = 99
+        ultra.limite_bodegas = 99
+        profesional.limite_sucursales = 99
+        profesional.limite_bodegas = 99
+        empresa.limite_sucursales = None
+        empresa.limite_bodegas = None
+
+        db.session.commit()
+
+    resultado = runner.invoke(args=["seed-planes"])
+
+    assert resultado.exit_code == 0
+
+    with app.app_context():
+        planes = {
+            plan.codigo: plan
+            for plan in db.session.scalars(
+                db.select(PlanSaaS).where(
+                    PlanSaaS.codigo.in_(
+                        (
+                            "ultra",
+                            "profesional",
+                            "empresa",
+                        )
+                    )
+                )
+            )
+        }
+
+        assert (
+            planes["ultra"].limite_sucursales,
+            planes["ultra"].limite_bodegas,
+        ) == (2, 3)
+
+        assert (
+            planes["profesional"].limite_sucursales,
+            planes["profesional"].limite_bodegas,
+        ) == (5, 10)
+
+        assert (
+            planes["empresa"].limite_sucursales,
+            planes["empresa"].limite_bodegas,
+        ) == (10, 25)
