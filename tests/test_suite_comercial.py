@@ -1,3 +1,4 @@
+from decimal import Decimal
 from app.models import (
     AccesoEmpresaUsuario,
     Bodega,
@@ -19,6 +20,7 @@ from app.models import (
 from app.services.contexto import ContextoOperacion
 from app.services.inventario import ServicioInventario
 from app.services.suite_comercial import (
+    ErrorSuiteComercial,
     ServicioDTE,
     ServicioGrupoEmpresarial,
     ServicioIntegraciones,
@@ -112,6 +114,289 @@ def test_wms_guia_picking_packing_y_despacho(app, client):
         orden = wms.avanzar(orden.id, transportista="Blue Express", seguimiento="TRACK-1")
         assert orden.estado == "despachada"
         assert db.session.get(Venta, venta.id).estado == "confirmada"
+
+
+def test_wms_acepta_codigo_barras_y_cantidad_fraccionaria(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(
+            Usuario,
+            ids[0],
+        )
+        producto = db.session.get(
+            Producto,
+            ids[2],
+        )
+        producto.codigo_barras = "7801234567890"
+        db.session.commit()
+
+        ventas = ServicioVentas(usuario)
+        venta = ventas.crear(
+            numero="WMS-BARRAS-1",
+            bodega_id=ids[1],
+            items=[
+                {
+                    "producto_id": ids[2],
+                    "cantidad": "1.125",
+                    "precio_unitario": 200,
+                }
+            ],
+        )
+        ventas.reservar(venta.id)
+
+        servicio = ServicioWMS(usuario)
+        orden = servicio.crear(
+            venta.id,
+            "OW-BARRAS-1",
+        )
+        orden = servicio.avanzar(orden.id)
+
+        servicio.escanear(
+            orden.id,
+            etapa="picking",
+            codigo_producto=("7801234567890"),
+            cantidad="0.125",
+        )
+        orden = servicio.escanear(
+            orden.id,
+            etapa="picking",
+            codigo_producto="COM-1",
+            cantidad="1",
+        )
+
+        assert Decimal(orden.progreso["pickeados"][str(producto.id)]) == Decimal("1.125")
+
+
+def test_wms_rechaza_operador_desconocido(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(
+            Usuario,
+            ids[0],
+        )
+        ventas = ServicioVentas(usuario)
+        venta = ventas.crear(
+            numero="WMS-ASIGNACION-1",
+            bodega_id=ids[1],
+            items=[
+                {
+                    "producto_id": ids[2],
+                    "cantidad": 1,
+                    "precio_unitario": 200,
+                }
+            ],
+        )
+        ventas.reservar(venta.id)
+
+        with pytest.raises(
+            ErrorSuiteComercial,
+            match="operador asignado",
+        ):
+            ServicioWMS(usuario).crear(
+                venta.id,
+                "OW-ASIGNACION-1",
+                asignada_a_id=999999,
+            )
+
+
+def test_wms_rechaza_producto_inactivo(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(
+            Usuario,
+            ids[0],
+        )
+        ventas = ServicioVentas(usuario)
+        venta = ventas.crear(
+            numero="WMS-INACTIVO-1",
+            bodega_id=ids[1],
+            items=[
+                {
+                    "producto_id": ids[2],
+                    "cantidad": 1,
+                    "precio_unitario": 200,
+                }
+            ],
+        )
+        ventas.reservar(venta.id)
+
+        servicio = ServicioWMS(usuario)
+        orden = servicio.crear(
+            venta.id,
+            "OW-INACTIVO-1",
+        )
+        orden = servicio.avanzar(orden.id)
+
+        producto = db.session.get(
+            Producto,
+            ids[2],
+        )
+        producto.activo = False
+        db.session.commit()
+
+        with pytest.raises(
+            ErrorSuiteComercial,
+            match="no requerido",
+        ):
+            servicio.escanear(
+                orden.id,
+                etapa="picking",
+                codigo_producto="COM-1",
+                cantidad=1,
+            )
+
+
+def test_api_wms_lista_filtra_y_entrega_detalle(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(
+            Usuario,
+            ids[0],
+        )
+        ventas = ServicioVentas(usuario)
+        venta = ventas.crear(
+            numero="WMS-API-1",
+            bodega_id=ids[1],
+            items=[
+                {
+                    "producto_id": ids[2],
+                    "cantidad": "2.500",
+                    "precio_unitario": 200,
+                }
+            ],
+        )
+        ventas.reservar(venta.id)
+        orden = ServicioWMS(usuario).crear(
+            venta.id,
+            "OW-API-1",
+        )
+        orden_id = orden.id
+
+    listado = client.get("/api/comercial/wms/ordenes")
+
+    assert listado.status_code == 200
+    datos = listado.get_json()
+    assert len(datos["ordenes"]) == 1
+    assert datos["ordenes"][0]["id"] == orden_id
+    assert datos["ordenes"][0]["progreso"]["requeridos"] == {str(ids[2]): "2.500"}
+
+    filtrado = client.get("/api/comercial/wms/ordenes" "?estado=pendiente")
+
+    assert filtrado.status_code == 200
+    assert len(filtrado.get_json()["ordenes"]) == 1
+
+    vacio = client.get("/api/comercial/wms/ordenes" "?estado=packing")
+
+    assert vacio.status_code == 200
+    assert vacio.get_json() == {"ordenes": []}
+
+    detalle = client.get(f"/api/comercial/wms/ordenes/{orden_id}")
+
+    assert detalle.status_code == 200
+    assert detalle.get_json()["numero"] == ("OW-API-1")
+    assert detalle.get_json()["bodega_id"] == (ids[1])
+
+
+def test_api_wms_rechaza_filtro_de_estado_invalido(
+    app,
+    client,
+):
+    _preparar(app, client)
+
+    respuesta = client.get("/api/comercial/wms/ordenes" "?estado=inventado")
+
+    assert respuesta.status_code == 400
+    assert "Estado WMS no válido" in respuesta.get_json()["mensaje"]
+
+
+def test_empleado_no_opera_orden_asignada_a_otro(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        jefe = db.session.get(
+            Usuario,
+            ids[0],
+        )
+
+        operador_asignado = Usuario(
+            empresa_id=jefe.empresa_id,
+            nombre="Operador asignado",
+            email="wms-asignado@nexustock.cl",
+            password_hash="hash-prueba",
+            rol="empleado",
+            activo=True,
+        )
+        otro_operador = Usuario(
+            empresa_id=jefe.empresa_id,
+            nombre="Otro operador",
+            email="wms-otro@nexustock.cl",
+            password_hash="hash-prueba",
+            rol="empleado",
+            activo=True,
+        )
+        db.session.add_all(
+            [
+                operador_asignado,
+                otro_operador,
+            ]
+        )
+        db.session.flush()
+
+        ventas = ServicioVentas(jefe)
+        venta = ventas.crear(
+            numero="WMS-OPERADOR-1",
+            bodega_id=ids[1],
+            items=[
+                {
+                    "producto_id": ids[2],
+                    "cantidad": 1,
+                    "precio_unitario": 200,
+                }
+            ],
+        )
+        ventas.reservar(venta.id)
+
+        orden = ServicioWMS(jefe).crear(
+            venta.id,
+            "OW-OPERADOR-1",
+            asignada_a_id=(operador_asignado.id),
+        )
+        orden_id = orden.id
+
+        servicio_ajeno = ServicioWMS(otro_operador)
+
+        assert servicio_ajeno.listar() == []
+
+        with pytest.raises(
+            PermissionError,
+            match="otro operador",
+        ):
+            servicio_ajeno.obtener(orden_id)
+
+        with pytest.raises(
+            PermissionError,
+            match="otro operador",
+        ):
+            servicio_ajeno.avanzar(orden_id)
 
 
 def test_dte_proveedor_certificado_e_idempotencia(app, client):

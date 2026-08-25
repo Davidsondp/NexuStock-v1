@@ -9,6 +9,7 @@ import json
 import time
 import requests
 
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from ..models import (
@@ -26,6 +27,7 @@ from ..models import (
     PagoVenta,
     Producto,
     TurnoCaja,
+    Usuario,
     Venta,
     db,
     utcnow,
@@ -81,6 +83,22 @@ def _decimal(valor, nombre="monto"):
         raise ErrorSuiteComercial(f"El {nombre} no es válido") from exc
     if resultado < 0:
         raise ErrorSuiteComercial(f"El {nombre} no puede ser negativo")
+    return resultado
+
+
+def _cantidad_wms(valor):
+    try:
+        resultado = Decimal(str(valor)).quantize(Decimal("0.001"))
+    except (
+        InvalidOperation,
+        TypeError,
+        ValueError,
+    ) as exc:
+        raise ErrorSuiteComercial("La cantidad de escaneo no es válida") from exc
+
+    if resultado <= 0:
+        raise ErrorSuiteComercial("La cantidad de escaneo debe ser " "mayor que cero")
+
     return resultado
 
 
@@ -321,6 +339,7 @@ class ServicioPOS(_ServicioEmpresa):
 
 class ServicioWMS(_ServicioEmpresa):
     permiso = "wms.operar"
+
     TRANSICIONES = {
         "pendiente": "picking",
         "picking": "pickeada",
@@ -330,117 +349,330 @@ class ServicioWMS(_ServicioEmpresa):
     }
 
     @staticmethod
-    def _cantidades_completas(orden, clave):
-        requeridos = orden.progreso.get("requeridos", {})
-        registrados = orden.progreso.get(clave, {})
+    def _cantidades_completas(
+        orden,
+        clave,
+    ):
+        requeridos = orden.progreso.get(
+            "requeridos",
+            {},
+        )
+        registrados = orden.progreso.get(
+            clave,
+            {},
+        )
+
         return set(requeridos) == set(registrados) and all(
             Decimal(requeridos[item]) == Decimal(registrados[item]) for item in requeridos
         )
 
-    def crear(self, venta_id, numero, asignada_a_id=None):
+    def _validar_operador(self, orden):
+        if (
+            orden.asignada_a_id
+            and self.usuario.rol == "empleado"
+            and orden.asignada_a_id != self.usuario.id
+        ):
+            raise PermissionError("La orden WMS está asignada " "a otro operador")
+
+    def _obtener_orden(
+        self,
+        orden_id,
+        *,
+        bloquear=False,
+    ):
+        consulta = db.select(OrdenWMS).where(OrdenWMS.id == orden_id)
+
+        if bloquear:
+            consulta = consulta.with_for_update()
+
+        orden = db.session.scalar(consulta)
+
+        if not orden:
+            raise ErrorSuiteComercial("Orden WMS no disponible")
+
+        if orden.empresa_id != self.usuario.empresa_id:
+            raise PermissionError("La orden WMS pertenece " "a otra empresa")
+
+        self._validar_operador(orden)
+
+        return orden
+
+    def listar(self, estado=None):
         self.exigir()
+
+        estado = str(estado or "").strip().lower()
+
+        estados_validos = frozenset(
+            {
+                *self.TRANSICIONES,
+                *self.TRANSICIONES.values(),
+                "cancelada",
+            }
+        )
+
+        if estado and estado not in estados_validos:
+            raise ErrorSuiteComercial("Estado WMS no válido")
+
+        consulta = db.select(OrdenWMS).where(OrdenWMS.empresa_id == self.usuario.empresa_id)
+
+        if self.usuario.rol == "empleado":
+            consulta = consulta.where(
+                or_(
+                    OrdenWMS.asignada_a_id.is_(None),
+                    OrdenWMS.asignada_a_id == self.usuario.id,
+                )
+            )
+
+        if estado:
+            consulta = consulta.where(OrdenWMS.estado == estado)
+
+        consulta = consulta.order_by(OrdenWMS.id.desc())
+
+        return list(db.session.scalars(consulta))
+
+    def obtener(self, orden_id):
+        self.exigir()
+
+        return self._obtener_orden(orden_id)
+
+    def crear(
+        self,
+        venta_id,
+        numero,
+        asignada_a_id=None,
+    ):
+        self.exigir()
+
+        numero = str(numero or "").strip().upper()
+
+        if not numero or len(numero) > 50:
+            raise ErrorSuiteComercial(
+                "El número de la orden WMS es " "obligatorio y admite hasta " "50 caracteres"
+            )
+
         venta = db.session.scalar(
             db.select(Venta).where(
-                Venta.id == venta_id, Venta.empresa_id == self.usuario.empresa_id
+                Venta.id == venta_id,
+                Venta.empresa_id == self.usuario.empresa_id,
             )
         )
+
         if not venta or venta.estado != "reservada":
             raise ErrorSuiteComercial("La venta debe estar reservada")
+
+        if asignada_a_id is not None:
+            try:
+                asignada_a_id = int(asignada_a_id)
+            except (
+                TypeError,
+                ValueError,
+            ) as exc:
+                raise ErrorSuiteComercial("El operador asignado " "no es válido") from exc
+
+            operador = db.session.scalar(
+                db.select(Usuario).where(
+                    Usuario.id == asignada_a_id,
+                    Usuario.empresa_id == self.usuario.empresa_id,
+                    Usuario.activo.is_(True),
+                    Usuario.eliminado.is_(False),
+                )
+            )
+
+            if not operador:
+                raise ErrorSuiteComercial(
+                    "El operador asignado no " "pertenece a la empresa " "o est? inactivo"
+                )
+
+            decision = evaluar_permiso(
+                operador,
+                self.permiso,
+                empresa_id=(self.usuario.empresa_id),
+            )
+
+            if not decision.permitido:
+                raise ErrorSuiteComercial("El operador asignado no " "est? autorizado para WMS")
+
         requeridos = {str(item.producto_id): str(item.cantidad) for item in venta.items}
+
         orden = OrdenWMS(
             empresa_id=self.usuario.empresa_id,
             venta_id=venta.id,
             bodega_id=venta.bodega_id,
-            numero=str(numero).strip().upper(),
+            numero=numero,
             asignada_a_id=asignada_a_id,
-            progreso={"requeridos": requeridos, "pickeados": {}, "empacados": {}},
+            progreso={
+                "requeridos": requeridos,
+                "pickeados": {},
+                "empacados": {},
+            },
         )
+
         try:
             db.session.add(orden)
             db.session.flush()
-            self.auditar("wms.orden_creada", "OrdenWMS", orden.id)
+            self.auditar(
+                "wms.orden_creada",
+                "OrdenWMS",
+                orden.id,
+            )
             db.session.commit()
             return orden
         except IntegrityError as exc:
             db.session.rollback()
-            raise ErrorSuiteComercial("La venta ya posee una orden WMS") from exc
+            raise ErrorSuiteComercial("La venta o el número ya poseen " "una orden WMS") from exc
 
-    def avanzar(self, orden_id, *, transportista=None, seguimiento=None):
+    def avanzar(
+        self,
+        orden_id,
+        *,
+        transportista=None,
+        seguimiento=None,
+    ):
         self.exigir()
-        orden = db.session.scalar(
-            db.select(OrdenWMS)
-            .where(OrdenWMS.id == orden_id, OrdenWMS.empresa_id == self.usuario.empresa_id)
-            .with_for_update()
+
+        orden = self._obtener_orden(
+            orden_id,
+            bloquear=True,
         )
-        if not orden or orden.estado not in self.TRANSICIONES:
+
+        if orden.estado not in self.TRANSICIONES:
             raise ErrorSuiteComercial("La orden no admite esa transición")
+
         nuevo = self.TRANSICIONES[orden.estado]
-        if nuevo == "pickeada" and not self._cantidades_completas(orden, "pickeados"):
+
+        if nuevo == "pickeada" and not self._cantidades_completas(
+            orden,
+            "pickeados",
+        ):
             raise ErrorSuiteComercial(
-                "Debes escanear exactamente todos los productos antes de cerrar picking"
+                "Debes escanear exactamente todos " "los productos antes de cerrar " "picking"
             )
-        if nuevo == "empacada" and not self._cantidades_completas(orden, "empacados"):
+
+        if nuevo == "empacada" and not self._cantidades_completas(
+            orden,
+            "empacados",
+        ):
             raise ErrorSuiteComercial(
-                "Debes verificar exactamente todos los productos antes de cerrar packing"
+                "Debes verificar exactamente todos " "los productos antes de cerrar " "packing"
             )
+
         if nuevo == "pickeada":
             orden.pickeada_en = utcnow()
+
         if nuevo == "empacada":
             orden.empacada_en = utcnow()
+
         if nuevo == "despachada":
             if not transportista or not seguimiento:
-                raise ErrorSuiteComercial("Transportista y seguimiento son obligatorios")
-            ServicioVentas(self.usuario).confirmar(orden.venta_id, confirmar_transaccion=False)
-            orden.transportista, orden.seguimiento, orden.despachada_en = (
-                str(transportista)[:100],
-                str(seguimiento)[:150],
-                utcnow(),
+                raise ErrorSuiteComercial("Transportista y seguimiento " "son obligatorios")
+
+            ServicioVentas(self.usuario).confirmar(
+                orden.venta_id,
+                confirmar_transaccion=False,
             )
+
+            orden.transportista = str(transportista)[:100]
+            orden.seguimiento = str(seguimiento)[:150]
+            orden.despachada_en = utcnow()
+
         orden.estado = nuevo
-        self.auditar(f"wms.{nuevo}", "OrdenWMS", orden.id)
+
+        self.auditar(
+            f"wms.{nuevo}",
+            "OrdenWMS",
+            orden.id,
+        )
         db.session.commit()
+
         return orden
 
-    def escanear(self, orden_id, *, etapa, codigo_producto, cantidad):
+    def escanear(
+        self,
+        orden_id,
+        *,
+        etapa,
+        codigo_producto,
+        cantidad,
+    ):
         self.exigir()
-        if etapa not in {"picking", "packing"}:
+
+        if etapa not in {
+            "picking",
+            "packing",
+        }:
             raise ErrorSuiteComercial("Etapa de escaneo inválida")
-        orden = db.session.scalar(
-            db.select(OrdenWMS)
-            .where(OrdenWMS.id == orden_id, OrdenWMS.empresa_id == self.usuario.empresa_id)
-            .with_for_update()
+
+        orden = self._obtener_orden(
+            orden_id,
+            bloquear=True,
         )
+
         estado_requerido = "picking" if etapa == "picking" else "packing"
-        if not orden or orden.estado != estado_requerido:
-            raise ErrorSuiteComercial("La orden no está en la etapa indicada")
+
+        if orden.estado != estado_requerido:
+            raise ErrorSuiteComercial("La orden no está en " "la etapa indicada")
+
+        codigo = str(codigo_producto or "").strip()
+
+        if not codigo or len(codigo) > 150:
+            raise ErrorSuiteComercial("El código escaneado no es válido")
+
         producto = db.session.scalar(
             db.select(Producto).where(
                 Producto.empresa_id == self.usuario.empresa_id,
-                Producto.codigo == str(codigo_producto or "").strip().upper(),
+                Producto.activo.is_(True),
+                Producto.eliminado.is_(False),
+                or_(
+                    Producto.codigo == codigo.upper(),
+                    Producto.codigo_barras == codigo,
+                ),
             )
         )
-        if not producto or str(producto.id) not in orden.progreso.get("requeridos", {}):
-            raise ErrorSuiteComercial("Producto no requerido por la orden")
-        cantidad = _decimal(cantidad, "cantidad")
-        if cantidad <= 0:
-            raise ErrorSuiteComercial("Cantidad de escaneo inválida")
+
+        if not producto or str(producto.id) not in orden.progreso.get(
+            "requeridos",
+            {},
+        ):
+            raise ErrorSuiteComercial("Producto no requerido " "por la orden")
+
+        cantidad = _cantidad_wms(cantidad)
+
         clave = "pickeados" if etapa == "picking" else "empacados"
+
         progreso = dict(orden.progreso or {})
         acumulados = dict(progreso.get(clave, {}))
-        acumulado = Decimal(acumulados.get(str(producto.id), "0")) + cantidad
-        requerido = Decimal(progreso["requeridos"][str(producto.id)])
+
+        producto_id = str(producto.id)
+
+        acumulado = (
+            Decimal(
+                acumulados.get(
+                    producto_id,
+                    "0",
+                )
+            )
+            + cantidad
+        )
+        requerido = Decimal(progreso["requeridos"][producto_id])
+
         if acumulado > requerido:
-            raise ErrorSuiteComercial("La cantidad escaneada excede la requerida")
-        acumulados[str(producto.id)] = str(acumulado)
+            raise ErrorSuiteComercial("La cantidad escaneada " "excede la requerida")
+
+        acumulados[producto_id] = str(acumulado)
         progreso[clave] = acumulados
         orden.progreso = progreso
+
         self.auditar(
             f"wms.{etapa}_escaneado",
             "OrdenWMS",
             orden.id,
-            {"producto_id": producto.id, "cantidad": str(cantidad)},
+            {
+                "producto_id": producto.id,
+                "cantidad": str(cantidad),
+            },
         )
         db.session.commit()
+
         return orden
 
 

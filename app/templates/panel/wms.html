@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <link
+        rel="icon"
+        type="image/png"
+        href="{{ url_for(
+            'static',
+            filename='img/logo-nexustock-isotipo.png'
+        ) }}"
+    >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <title>Picking y packing ? NexuStock</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/panel_empresarial.css'
+        ) }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/wms.css'
+        ) }}"
+    >
+</head>
+<body
+    data-api-wms="{{
+        url_for('suite_comercial.listar_wms')
+    }}"
+    data-api-ventas="{{
+        url_for('ventas.listar')
+    }}"
+    data-api-productos="{{
+        url_for('productos.listar')
+    }}"
+    data-bodega-id="{{ contexto.bodega.id }}"
+>
+    <input
+        id="csrf-token"
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="panel-empresa">
+        <aside
+            id="barra-lateral"
+            class="lateral"
+            aria-label="Navegaci?n empresarial"
+        >
+            <div class="marca">
+                <div class="marca__icono">
+                    <img
+                        class="marca__logo"
+                        src="{{ url_for(
+                            'static',
+                            filename=(
+                                'img/'
+                                'logo-nexustock-isotipo.png'
+                            )
+                        ) }}"
+                        alt=""
+                        width="56"
+                        height="56"
+                    >
+                </div>
+                <div>
+                    <p class="marca__nombre">
+                        NexuStock
+                    </p>
+                    <span class="marca__empresa">
+                        {{ empresa.nombre }}
+                    </span>
+                </div>
+            </div>
+
+            <nav class="navegacion">
+                <p class="navegacion__titulo">
+                    Operaci?n
+                </p>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inicio') }}"
+                >
+                    <span aria-hidden="true">?</span>
+                    <span>Resumen</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.ventas') }}"
+                >
+                    <span aria-hidden="true">$</span>
+                    <span>Ventas</span>
+                </a>
+
+                <a
+                    class="
+                        navegacion__enlace
+                        navegacion__enlace--activo
+                    "
+                    href="{{ url_for('panel.wms') }}"
+                    aria-current="page"
+                >
+                    <span aria-hidden="true">?</span>
+                    <span>Picking y packing</span>
+                </a>
+
+                <a
+                    class="navegacion__enlace"
+                    href="{{ url_for('panel.inventario') }}"
+                >
+                    <span aria-hidden="true">?</span>
+                    <span>Inventario</span>
+                </a>
+            </nav>
+        </aside>
+
+        <button
+            id="fondo-menu"
+            class="fondo-menu"
+            type="button"
+            aria-label="Cerrar men?"
+        ></button>
+
+        <div class="principal">
+            <header class="cabecera">
+                <div class="cabecera__grupo">
+                    <button
+                        id="abrir-menu"
+                        class="boton-menu"
+                        type="button"
+                        aria-label="Abrir men?"
+                        aria-controls="barra-lateral"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+
+                    <div>
+                        <h1 class="cabecera__titulo">
+                            Picking y packing
+                        </h1>
+                        <p class="cabecera__contexto">
+                            {{ contexto.sucursal.nombre }}
+                            ?
+                            {{ contexto.bodega.nombre }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="cabecera__acciones">
+                    <button
+                        id="actualizar-wms"
+                        class="boton boton--secundario"
+                        type="button"
+                    >
+                        Actualizar
+                    </button>
+                </div>
+            </header>
+
+            <main class="wms-contenido">
+                <section class="wms-presentacion">
+                    <div>
+                        <p class="wms-etiqueta">
+                            Operaci?n WMS
+                        </p>
+                        <h2>
+                            Prepara pedidos con verificaci?n
+                        </h2>
+                        <p>
+                            Escanea cada art?culo durante
+                            picking y vuelve a verificarlo
+                            durante packing.
+                        </p>
+                    </div>
+
+                    <form
+                        id="crear-orden-wms"
+                        class="wms-crear"
+                    >
+                        <label for="venta-reservada">
+                            Venta reservada
+                        </label>
+                        <select
+                            id="venta-reservada"
+                            class="campo"
+                            required
+                        >
+                            <option value="">
+                                Selecciona una venta
+                            </option>
+                        </select>
+
+                        <label for="numero-orden-wms">
+                            N?mero de orden
+                        </label>
+                        <input
+                            id="numero-orden-wms"
+                            class="campo"
+                            type="text"
+                            maxlength="50"
+                            autocomplete="off"
+                            required
+                        >
+
+                        <button
+                            class="boton boton--primario"
+                            type="submit"
+                        >
+                            Crear orden WMS
+                        </button>
+                    </form>
+                </section>
+
+                <div class="wms-rejilla">
+                    <section class="wms-panel">
+                        <div class="wms-panel__cabecera">
+                            <div>
+                                <p class="wms-etiqueta">
+                                    Cola de trabajo
+                                </p>
+                                <h2>Órdenes</h2>
+                            </div>
+
+                            <label for="filtro-estado-wms">
+                                <span class="etiqueta-oculta">
+                                    Filtrar por estado
+                                </span>
+                                <select
+                                    id="filtro-estado-wms"
+                                    class="campo"
+                                >
+                                    <option value="">
+                                        Todos los estados
+                                    </option>
+                                    <option value="pendiente">
+                                        Pendiente
+                                    </option>
+                                    <option value="picking">
+                                        Picking
+                                    </option>
+                                    <option value="pickeada">
+                                        Picking terminado
+                                    </option>
+                                    <option value="packing">
+                                        Packing
+                                    </option>
+                                    <option value="empacada">
+                                        Empacada
+                                    </option>
+                                    <option value="despachada">
+                                        Despachada
+                                    </option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div
+                            id="lista-ordenes-wms"
+                            class="wms-ordenes"
+                            aria-live="polite"
+                        ></div>
+                    </section>
+
+                    <section
+                        id="detalle-wms"
+                        class="wms-panel wms-detalle"
+                        hidden
+                    >
+                        <div class="wms-panel__cabecera">
+                            <div>
+                                <p class="wms-etiqueta">
+                                    Orden seleccionada
+                                </p>
+                                <h2 id="detalle-numero-wms">
+                                    Orden
+                                </h2>
+                            </div>
+                            <span
+                                id="detalle-estado-wms"
+                                class="wms-estado"
+                            ></span>
+                        </div>
+
+                        <p id="detalle-meta-wms"></p>
+
+                        <div
+                            id="progreso-wms"
+                            class="wms-progreso"
+                        ></div>
+
+                        <div
+                            id="acciones-wms"
+                            class="wms-acciones"
+                        ></div>
+
+                        <section
+                            id="zona-escaner-wms"
+                            class="wms-escaner"
+                            hidden
+                        >
+                            <div class="wms-escaner__controles">
+                                <label for="cantidad-escaner-wms">
+                                    Cantidad por lectura
+                                </label>
+                                <input
+                                    id="cantidad-escaner-wms"
+                                    class="campo"
+                                    type="text"
+                                    inputmode="decimal"
+                                    value="1"
+                                    autocomplete="off"
+                                >
+
+                                <button
+                                    id="abrir-escaner-wms"
+                                    class="boton boton--primario"
+                                    type="button"
+                                >
+                                    Abrir c?mara
+                                </button>
+                            </div>
+
+                            <div
+                                id="panel-camara-wms"
+                                class="wms-camara"
+                                hidden
+                            >
+                                <div class="wms-camara__visor">
+                                    <video
+                                        id="video-escaner-wms"
+                                        autoplay
+                                        muted
+                                        playsinline
+                                    ></video>
+                                    <div
+                                        class="wms-camara__marco"
+                                        aria-hidden="true"
+                                    ></div>
+                                </div>
+
+                                <p
+                                    id="estado-escaner-wms"
+                                    role="status"
+                                    aria-live="polite"
+                                >
+                                    Apunta al código.
+                                </p>
+
+                                <button
+                                    id="cerrar-escaner-wms"
+                                    class="boton boton--secundario"
+                                    type="button"
+                                >
+                                    Cerrar c?mara
+                                </button>
+                            </div>
+
+                            <div class="wms-manual">
+                                <label for="codigo-manual-wms">
+                                    C?digo, SKU o lector USB
+                                </label>
+                                <input
+                                    id="codigo-manual-wms"
+                                    class="campo"
+                                    type="text"
+                                    maxlength="150"
+                                    autocomplete="off"
+                                >
+                                <button
+                                    id="enviar-codigo-wms"
+                                    class="boton boton--secundario"
+                                    type="button"
+                                >
+                                    Registrar lectura
+                                </button>
+                            </div>
+                        </section>
+
+                        <form
+                            id="despacho-wms"
+                            class="wms-despacho"
+                            hidden
+                        >
+                            <label for="transportista-wms">
+                                Transportista
+                            </label>
+                            <input
+                                id="transportista-wms"
+                                class="campo"
+                                type="text"
+                                maxlength="100"
+                                required
+                            >
+
+                            <label for="seguimiento-wms">
+                                N?mero de seguimiento
+                            </label>
+                            <input
+                                id="seguimiento-wms"
+                                class="campo"
+                                type="text"
+                                maxlength="150"
+                                required
+                            >
+
+                            <button
+                                class="boton boton--primario"
+                                type="submit"
+                            >
+                                Confirmar despacho
+                            </button>
+                        </form>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div
+        id="notificacion-wms"
+        class="wms-notificacion"
+        role="status"
+        aria-live="polite"
+        hidden
+    ></div>
+
+    <script
+        src="{{ url_for(
+            'static',
+            filename=(
+                'vendor/'
+                'zxing-browser-0.1.5.min.js'
+            )
+        ) }}"
+        defer
+    ></script>
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/escaner.js'
+        ) }}"
+        defer
+    ></script>
+    <script
+        src="{{ url_for(
+            'static',
+            filename='js/wms.js'
+        ) }}"
+        defer
+    ></script>
+</body>
+</html>

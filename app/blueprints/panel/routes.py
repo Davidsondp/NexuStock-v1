@@ -215,6 +215,11 @@ def ventas():
             "ventas.cancelar",
             empresa_id=empresa_id,
         ).permitido,
+        "wms": evaluar_permiso(
+            current_user,
+            "wms.operar",
+            empresa_id=empresa_id,
+        ).permitido,
     }
 
     return render_template(
@@ -296,6 +301,18 @@ def inventario():
         contexto=g.contexto_operacion,
         permisos=permisos,
         capacidades=capacidades,
+    )
+
+
+@panel_bp.get("/wms")
+@login_required
+@requerir_permiso("wms.operar")
+@requerir_contexto
+def wms():
+    return render_template(
+        "panel/wms.html",
+        empresa=current_user.empresa,
+        contexto=g.contexto_operacion,
     )
 
 

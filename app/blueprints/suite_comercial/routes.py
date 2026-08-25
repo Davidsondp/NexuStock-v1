@@ -44,9 +44,15 @@ def _wms(orden):
         "id": orden.id,
         "numero": orden.numero,
         "venta_id": orden.venta_id,
+        "bodega_id": orden.bodega_id,
+        "asignada_a_id": orden.asignada_a_id,
         "estado": orden.estado,
+        "progreso": dict(orden.progreso or {}),
         "transportista": orden.transportista,
         "seguimiento": orden.seguimiento,
+        "pickeada_en": (orden.pickeada_en.isoformat() if orden.pickeada_en else None),
+        "empacada_en": (orden.empacada_en.isoformat() if orden.empacada_en else None),
+        "despachada_en": (orden.despachada_en.isoformat() if orden.despachada_en else None),
     }
 
 
@@ -117,6 +123,30 @@ def cerrar_turno(turno_id):
                 )
             )
         )
+    except ErrorSuiteComercial as exc:
+        return _error(exc)
+
+
+@suite_comercial_bp.get("/wms/ordenes")
+@login_required
+@requerir_permiso("wms.operar")
+def listar_wms():
+    try:
+        ordenes = ServicioWMS(current_user).listar(request.args.get("estado"))
+
+        return jsonify({"ordenes": [_wms(orden) for orden in ordenes]})
+    except ErrorSuiteComercial as exc:
+        return _error(exc)
+
+
+@suite_comercial_bp.get("/wms/ordenes/<int:orden_id>")
+@login_required
+@requerir_permiso("wms.operar")
+def obtener_wms(orden_id):
+    try:
+        orden = ServicioWMS(current_user).obtener(orden_id)
+
+        return jsonify(_wms(orden))
     except ErrorSuiteComercial as exc:
         return _error(exc)
 

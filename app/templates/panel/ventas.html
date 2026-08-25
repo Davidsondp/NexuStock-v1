@@ -222,6 +222,15 @@
             </div>
 
             <div class="cabecera__acciones">
+                {% if permisos["wms"] %}
+                <a
+                    class="boton boton--primario"
+                    href="{{ url_for('panel.wms') }}"
+                >
+                    Picking y packing
+                </a>
+                {% endif %}
+
                 <a
                     class="boton boton--secundario"
                     href="{{ url_for('panel.inicio') }}"

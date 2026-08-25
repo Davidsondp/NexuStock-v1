@@ -1,0 +1,292 @@
+.wms-contenido {
+    display: grid;
+    gap: 1.25rem;
+    padding: 1.5rem;
+}
+
+.wms-presentacion,
+.wms-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    box-shadow: 0 12px 30px rgb(15 23 42 / 7%);
+}
+
+.wms-presentacion {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.wms-presentacion h2,
+.wms-panel h2 {
+    margin: 0.2rem 0 0.45rem;
+    color: #0f172a;
+}
+
+.wms-presentacion p,
+.wms-panel p {
+    color: #64748b;
+}
+
+.wms-etiqueta {
+    margin: 0;
+    color: #2563eb !important;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.wms-crear,
+.wms-despacho,
+.wms-manual,
+.wms-escaner__controles {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.wms-crear label,
+.wms-despacho label,
+.wms-manual label,
+.wms-escaner__controles label {
+    color: #334155;
+    font-size: 0.83rem;
+    font-weight: 700;
+}
+
+.wms-rejilla {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.5fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.wms-panel {
+    min-width: 0;
+    padding: 1.25rem;
+}
+
+.wms-panel__cabecera {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.wms-ordenes,
+.wms-progreso {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.wms-orden {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.85rem;
+    background: #f8fafc;
+    color: #0f172a;
+    text-align: left;
+    cursor: pointer;
+}
+
+.wms-orden:hover,
+.wms-orden:focus-visible,
+.wms-orden--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    outline: none;
+}
+
+.wms-orden__fila {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wms-orden small {
+    display: block;
+    margin-top: 0.35rem;
+    color: #64748b;
+}
+
+.wms-estado {
+    display: inline-flex;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.wms-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.95rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.8rem;
+}
+
+.wms-item strong,
+.wms-item span {
+    overflow-wrap: anywhere;
+}
+
+.wms-item small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #64748b;
+}
+
+.wms-item__cantidad {
+    color: #0f172a;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.wms-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.wms-escaner,
+.wms-despacho {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.9rem;
+    background: #eff6ff;
+}
+
+.wms-escaner__controles {
+    grid-template-columns: minmax(120px, 180px) auto;
+    align-items: end;
+}
+
+.wms-escaner__controles label {
+    grid-column: 1;
+}
+
+.wms-camara {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.wms-camara__visor {
+    position: relative;
+    overflow: hidden;
+    min-height: 260px;
+    border-radius: 0.9rem;
+    background: #020617;
+}
+
+.wms-camara video {
+    display: block;
+    width: 100%;
+    min-height: 260px;
+    object-fit: cover;
+}
+
+.wms-camara__marco {
+    position: absolute;
+    inset: 18% 10%;
+    border: 3px solid #60a5fa;
+    border-radius: 0.8rem;
+    box-shadow: 0 0 0 999px rgb(2 6 23 / 24%);
+}
+
+.wms-manual {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    margin-top: 1rem;
+}
+
+.wms-manual label {
+    grid-column: 1 / -1;
+}
+
+.wms-notificacion {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 100;
+    max-width: min(420px, calc(100vw - 2rem));
+    padding: 0.9rem 1rem;
+    border-radius: 0.8rem;
+    background: #0f172a;
+    color: #ffffff;
+    box-shadow: 0 15px 35px rgb(15 23 42 / 25%);
+}
+
+.wms-notificacion--error {
+    background: #991b1b;
+}
+
+.wms-notificacion--exito {
+    background: #166534;
+}
+
+.wms-vacio {
+    padding: 1.5rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 0.8rem;
+    color: #64748b;
+    text-align: center;
+}
+
+@media (max-width: 980px) {
+    .wms-presentacion,
+    .wms-rejilla {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 680px) {
+    .wms-contenido {
+        padding: 0.85rem;
+    }
+
+    .wms-presentacion,
+    .wms-panel {
+        padding: 1rem;
+        border-radius: 0.85rem;
+    }
+
+    .wms-panel__cabecera,
+    .wms-orden__fila {
+        align-items: flex-start;
+    }
+
+    .wms-escaner__controles,
+    .wms-manual {
+        grid-template-columns: 1fr;
+    }
+
+    .wms-escaner__controles label,
+    .wms-manual label {
+        grid-column: 1;
+    }
+
+    .wms-escaner__controles .boton,
+    .wms-manual .boton,
+    .wms-despacho .boton,
+    .wms-acciones .boton {
+        width: 100%;
+    }
+
+    .wms-camara__visor,
+    .wms-camara video {
+        min-height: 320px;
+    }
+}
