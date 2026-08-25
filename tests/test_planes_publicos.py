@@ -54,7 +54,7 @@ def test_planes_publicos_exponen_contrato_visual(
         "Elige el plan que acompa\u00f1a tu operaci\u00f3n",
         "30 d\u00edas gratis",
         "Capacidades que crecen contigo",
-        "Inteligencia artificial",
+        "Asesor inteligente Nexu",
         "Disponible",
         "Preguntas frecuentes",
     )
@@ -338,3 +338,23 @@ def test_terminologia_comercial_de_articulos_unicos():
     assert "Productos según contrato" not in planes_js
     assert "Artículos únicos" in super_js
     assert "Límite de artículos únicos" in panel_super
+
+
+def test_tarjetas_comunican_beneficios_por_nivel():
+    plantilla = Path("app/templates/planes_publicos.html").read_text(encoding="utf-8-sig")
+
+    esperados = (
+        "Asesor inteligente Nexu para compras, ventas y riesgos",
+        "Analítica y recomendaciones de compra",
+        "Multisucursal, multibodega y transferencias",
+        "Todo Ultra más operación WMS",
+        "Picking, packing, despacho y seguimiento",
+        "Integraciones comerciales y exportación avanzada",
+        "Todo Profesional más dashboard ejecutivo",
+        "API, reportes personalizados y multiempresa",
+    )
+
+    for esperado in esperados:
+        assert esperado in plantilla
+
+    assert "WMS y exportación avanzada" not in plantilla

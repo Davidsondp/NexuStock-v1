@@ -127,6 +127,27 @@ def test_plan_basico_ofrece_operacion_esencial():
         assert funciones[capacidad] is False
 
 
+def test_plan_ultra_no_incluye_logistica_profesional():
+    ultra = planes_por_codigo()["ultra"]
+    funciones = ultra["funciones"]
+
+    incluidas = {
+        "analitica",
+        "recomendaciones",
+        "exportacion.avanzada",
+        "multisucursal",
+        "multibodega",
+        "transferencias",
+        "ia",
+    }
+
+    for capacidad in incluidas:
+        assert funciones[capacidad] is True
+
+    assert funciones["wms"] is False
+    assert funciones["integraciones"] is False
+
+
 def test_plan_profesional_ofrece_control_avanzado():
     profesional = planes_por_codigo()["profesional"]
     funciones = profesional["funciones"]

@@ -244,8 +244,12 @@ CATALOGO_CAPACIDADES: Final = (
     },
     {
         "codigo": "ia",
-        "nombre": "Inteligencia artificial",
-        "descripcion": ("Asesor inteligente para inventario, compras, ventas y decisiones."),
+        "nombre": "Asesor inteligente Nexu",
+        "descripcion": (
+            "Analiza inventario, compras, ventas y riesgos "
+            "para entregar recomendaciones basadas en "
+            "información autorizada de la empresa."
+        ),
         "grupo": "inteligencia",
         "estado": "disponible",
         "condicion": None,
@@ -366,7 +370,11 @@ FUNCIONES_POR_PLAN: Final = {
     ),
     "ultra": _matriz(
         CAPACIDADES_BASE,
-        CAPACIDADES_PROFESIONALES,
+        CAPACIDADES_PROFESIONALES
+        - {
+            "wms",
+            "integraciones",
+        },
         {
             "exportacion.avanzada",
             "multisucursal",

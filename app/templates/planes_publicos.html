@@ -242,9 +242,9 @@
                         {% if plan.codigo == 'empresa' %}Contrato empresarial{% elif plan.codigo == 'profesional' %}Más elegido · 30 días gratis{% else %}30 días gratis{% endif %}
                     </span>
                     <div class="plan-publico__cabecera">
-                        <p>{% if plan.codigo == 'profesional' %}Para crecer{% else %}Para escalar{% endif %}</p>
+                        <p>{% if plan.codigo == 'avanzado' %}Para comenzar{% elif plan.codigo == 'ultra' %}Para decidir mejor{% elif plan.codigo == 'profesional' %}Para automatizar{% else %}Para liderar{% endif %}</p>
                         <h3>{{ plan.nombre }}</h3>
-                        <p>{{ plan.descripcion or 'Control de inventario para tu empresa.' }}</p>
+                        <p>{% if plan.codigo == 'avanzado' %}Ordena y controla la operación diaria de tu negocio.{% elif plan.codigo == 'ultra' %}Convierte tus datos en decisiones con el asesor inteligente Nexu.{% elif plan.codigo == 'profesional' %}Automatiza la preparación, el despacho y tus conexiones comerciales.{% else %}Gobierno, integración y visibilidad para organizaciones de mayor escala.{% endif %}</p>
                     </div>
 
                     <div
@@ -264,13 +264,21 @@
                         <li>{% if plan.limite_usuarios is none %}Usuarios sin límite{% else %}{{ plan.limite_usuarios }} usuarios{% endif %}</li>
                         <li>{% if plan.limite_movimientos_mes is none %}Movimientos sin límite{% else %}{{ '{:,}'.format(plan.limite_movimientos_mes).replace(',', '.') }} movimientos mensuales{% endif %}</li>
                         {% if plan.codigo == 'avanzado' %}
-                        <li>Roles y permisos</li><li>Reportes avanzados</li><li>Auditoría de operaciones</li>
+                        <li>Control de inventario, compras y ventas</li>
+                        <li>Alertas, reportes avanzados y auditoría</li>
+                        <li>POS, documentos tributarios y control por lotes</li>
                         {% elif plan.codigo == 'ultra' %}
-                        <li>Multisucursal y multibodega</li><li>Analítica y recomendaciones</li><li>WMS y exportación avanzada</li>
+                        <li>Asesor inteligente Nexu para compras, ventas y riesgos</li>
+                        <li>Analítica y recomendaciones de compra</li>
+                        <li>Multisucursal, multibodega y transferencias</li>
                         {% elif plan.codigo == 'profesional' %}
-                        <li>Roles y permisos avanzados</li><li>Analítica y recomendaciones</li><li>Auditoría y exportación avanzada</li>
+                        <li>Todo Ultra más operación WMS</li>
+                        <li>Picking, packing, despacho y seguimiento</li>
+                        <li>Integraciones comerciales y exportación avanzada</li>
                         {% else %}
-                        <li>Dashboard ejecutivo e IA</li><li>API y reportes personalizados</li><li>Multiempresa y soporte dedicado</li>
+                        <li>Todo Profesional más dashboard ejecutivo</li>
+                        <li>API, reportes personalizados y multiempresa</li>
+                        <li>Soporte dedicado y alcance contractual</li>
                         {% endif %}
                     </ul>
 
@@ -354,10 +362,11 @@
                 <div>
                     <span aria-hidden="true">✦</span>
                     <div>
-                        <strong>Inteligencia artificial</strong>
+                        <strong>Asesor inteligente Nexu</strong>
                         <p>
-                            Asistencia avanzada integrada al
-                            flujo de decisiones de inventario.
+                            Analiza inventario, compras, ventas
+                            y riesgos para recomendar acciones
+                            basadas en tus datos autorizados.
                         </p>
                     </div>
                 </div>

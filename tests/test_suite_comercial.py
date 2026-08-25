@@ -224,3 +224,46 @@ def test_multiempresa_consolida_solo_empresas_autorizadas(app, client):
         db.session.commit()
         resumen = ServicioGrupoEmpresarial(usuario).resumen()
         assert {e["id"] for e in resumen["empresas"]} == {usuario.empresa_id, segunda.id}
+
+
+def test_plan_sin_logistica_profesional_rechaza_wms_e_integraciones(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+        plan = usuario.empresa.suscripcion_actual.plan
+        plan.funciones = {
+            **(plan.funciones or {}),
+            "wms": False,
+            "integraciones": False,
+        }
+        db.session.commit()
+
+        with pytest.raises(PermissionError):
+            ServicioWMS(usuario).crear(
+                venta_id=999999,
+                numero="BLOQUEADA",
+            )
+
+        with pytest.raises(PermissionError):
+            ServicioIntegraciones(usuario).crear(
+                "shopify",
+                "secreto-seguro-de-prueba-123",
+            )
+
+    respuesta_wms = client.post(
+        "/api/comercial/wms/ordenes",
+        json={},
+    )
+    assert respuesta_wms.status_code == 403
+    assert respuesta_wms.get_json()["codigo"] == ("plan_insuficiente")
+
+    respuesta_integracion = client.post(
+        "/api/comercial/integraciones",
+        json={},
+    )
+    assert respuesta_integracion.status_code == 403
+    assert respuesta_integracion.get_json()["codigo"] == ("plan_insuficiente")

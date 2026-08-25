@@ -145,6 +145,8 @@ CAPACIDADES_GOBERNADAS = frozenset(
         "multisucursal",
         "multibodega",
         "transferencias",
+        "wms",
+        "integraciones",
     }
 )
 

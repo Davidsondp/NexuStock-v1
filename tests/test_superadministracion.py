@@ -548,3 +548,39 @@ def test_seed_planes_sincroniza_limites_oficiales_de_ubicaciones(
             planes["empresa"].limite_sucursales,
             planes["empresa"].limite_bodegas,
         ) == (10, 25)
+
+
+def test_seed_planes_diferencia_ultra_de_profesional(
+    app,
+):
+    runner = app.test_cli_runner()
+    runner.invoke(args=["seed-planes"])
+
+    with app.app_context():
+        ultra = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "ultra"))
+        profesional = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "profesional"))
+
+        ultra.funciones = {
+            **(ultra.funciones or {}),
+            "wms": True,
+            "integraciones": True,
+        }
+        profesional.funciones = {
+            **(profesional.funciones or {}),
+            "wms": False,
+            "integraciones": False,
+        }
+        db.session.commit()
+
+    resultado = runner.invoke(args=["seed-planes"])
+
+    assert resultado.exit_code == 0
+
+    with app.app_context():
+        ultra = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "ultra"))
+        profesional = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "profesional"))
+
+        assert ultra.funciones["wms"] is False
+        assert ultra.funciones["integraciones"] is False
+        assert profesional.funciones["wms"] is True
+        assert profesional.funciones["integraciones"] is True
