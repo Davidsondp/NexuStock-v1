@@ -1,109 +1,146 @@
 "use strict";
 
 (() => {
-    const abrir = document.getElementById("escanear-producto");
-    const modal = document.getElementById("modal-escaner");
-    if (!abrir || !modal) return;
+    const abrir = document.getElementById(
+        "escanear-producto"
+    );
+    const modal = document.getElementById(
+        "modal-escaner"
+    );
 
-    const video = document.getElementById("video-escaner");
-    const estado = document.getElementById("estado-escaner");
-    const entrada = document.getElementById("codigo-escaner-manual");
-    let flujo = null;
-    let detector = null;
-    let activo = false;
-    let fotograma = null;
+    if (!abrir || !modal) {
+        return;
+    }
 
-    function informar(texto, error = false) {
+    const video = document.getElementById(
+        "video-escaner"
+    );
+    const estado = document.getElementById(
+        "estado-escaner"
+    );
+    const entrada = document.getElementById(
+        "codigo-escaner-manual"
+    );
+
+    let escaner = null;
+
+    function informar(
+        texto,
+        error = false
+    ) {
         estado.textContent = texto;
-        estado.classList.toggle("nx-escaner__error", error);
+        estado.classList.toggle(
+            "nx-escaner__error",
+            error,
+        );
+    }
+
+    function cerrar() {
+        escaner?.detener();
+        modal.hidden = true;
     }
 
     function buscar(codigo) {
-        const valor = String(codigo || "").trim();
+        const valor = String(
+            codigo || ""
+        ).trim();
+
         if (!valor) {
-            informar("Ingresa un código válido.", true);
+            informar(
+                "Ingresa un c\u00f3digo "
+                + "v\u00e1lido.",
+                true,
+            );
             entrada.focus();
-            return;
+            return false;
         }
+
         cerrar();
-        window.NexuStockProductos?.buscar(valor);
+
+        window.NexuStockProductos
+            ?.buscar(valor);
+
+        return true;
     }
 
-    async function detectar() {
-        if (!activo || !detector || video.readyState < 2) {
-            if (activo) fotograma = requestAnimationFrame(detectar);
-            return;
+    function obtenerEscaner() {
+        if (escaner) {
+            return escaner;
         }
-        try {
-            const codigos = await detector.detect(video);
-            if (codigos.length) {
-                buscar(codigos[0].rawValue);
-                return;
-            }
-        } catch {
-            informar("No pudimos leer este cuadro. Mantén el código estable.");
-        }
-        if (activo) fotograma = requestAnimationFrame(detectar);
+
+        escaner = NexuEscaner.crear({
+            video,
+            alDetectar: buscar,
+            alInformar: informar,
+        });
+
+        return escaner;
     }
 
     async function iniciar() {
         modal.hidden = false;
         entrada.value = "";
-        informar("Solicitando acceso a la cámara…");
 
-        if (!("mediaDevices" in navigator) || !navigator.mediaDevices.getUserMedia) {
-            informar("La cámara no está disponible. Usa el ingreso manual o un lector USB.", true);
-            entrada.focus();
-            return;
-        }
+        informar(
+            "Solicitando acceso a la "
+            + "c\u00e1mara\u2026"
+        );
 
-        try {
-            flujo = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" } },
-                audio: false,
-            });
-            video.srcObject = flujo;
-            await video.play();
-            activo = true;
+        await obtenerEscaner().iniciar();
+    }
 
-            if ("BarcodeDetector" in window) {
-                detector = new BarcodeDetector({
-                    formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "qr_code"],
-                });
-                informar("Alinea el código dentro del marco.");
-                detectar();
-            } else {
-                informar("Tu navegador no admite lectura automática. Usa el campo manual o un lector USB.");
-                entrada.focus();
+    abrir.addEventListener(
+        "click",
+        iniciar,
+    );
+
+    document.getElementById(
+        "cerrar-escaner"
+    )?.addEventListener(
+        "click",
+        cerrar,
+    );
+
+    document.getElementById(
+        "buscar-codigo-manual"
+    )?.addEventListener(
+        "click",
+        () => buscar(entrada.value),
+    );
+
+    entrada.addEventListener(
+        "keydown",
+        (evento) => {
+            if (evento.key === "Enter") {
+                evento.preventDefault();
+                buscar(entrada.value);
             }
-        } catch {
-            informar("No se pudo abrir la cámara. Revisa el permiso del navegador o usa el campo manual.", true);
-            entrada.focus();
-        }
-    }
+        },
+    );
 
-    function cerrar() {
-        activo = false;
-        if (fotograma) cancelAnimationFrame(fotograma);
-        flujo?.getTracks().forEach((pista) => pista.stop());
-        flujo = null;
-        video.srcObject = null;
-        modal.hidden = true;
-    }
+    modal.addEventListener(
+        "click",
+        (evento) => {
+            if (evento.target === modal) {
+                cerrar();
+            }
+        },
+    );
 
-    abrir.addEventListener("click", iniciar);
-    document.getElementById("cerrar-escaner")?.addEventListener("click", cerrar);
-    document.getElementById("buscar-codigo-manual")?.addEventListener("click", () => buscar(entrada.value));
-    entrada.addEventListener("keydown", (evento) => {
-        if (evento.key === "Enter") {
-            evento.preventDefault();
-            buscar(entrada.value);
-        }
-    });
-    modal.addEventListener("click", (evento) => {
-        if (evento.target === modal) cerrar();
-    });
-    document.addEventListener("keydown", (evento) => {
-        if (evento.key === "Escape" && !modal.hidden) cerrar();
-    });
+    document.addEventListener(
+        "keydown",
+        (evento) => {
+            if (
+                evento.key === "Escape"
+                && !modal.hidden
+            ) {
+                cerrar();
+            }
+        },
+    );
+
+    globalThis.addEventListener(
+        "pagehide",
+        cerrar,
+    );
 })();

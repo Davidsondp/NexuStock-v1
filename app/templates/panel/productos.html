@@ -930,6 +930,17 @@
         defer
     ></script>
     <script
+        src="{{ url_for(
+            'static',
+            filename='vendor/zxing-browser-0.1.5.min.js'
+        ) }}"
+        defer
+    ></script>
+    <script
+        src="{{ url_for('static', filename='js/escaner.js') }}"
+        defer
+    ></script>
+    <script
         src="{{ url_for('static', filename='js/productos.js') }}"
         defer
     ></script>

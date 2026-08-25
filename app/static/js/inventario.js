@@ -31,10 +31,7 @@ const estado = {
 };
 
 let temporizadorNotificacion = null;
-let flujoCamara = null;
-let detectorCodigos = null;
-let cuadroEscaneo = null;
-let escaneoEnCurso = false;
+let escanerCodigos = null;
 
 function elemento(id) {
     return document.getElementById(id);
@@ -135,113 +132,58 @@ function seleccionarProductoEscaneado(valor) {
     return true;
 }
 
-async function detectarCuadro() {
-    if (!escaneoEnCurso || !detectorCodigos) {
-        return;
+function obtenerEscaner() {
+    if (escanerCodigos) {
+        return escanerCodigos;
     }
 
-    const video = elemento("video-escaner");
+    escanerCodigos = NexuEscaner.crear({
+        video: elemento("video-escaner"),
+        alDetectar: (codigo) =>
+            seleccionarProductoEscaneado(
+                codigo
+            ),
+        alInformar: (
+            mensaje,
+            error = false
+        ) => {
+            const estadoEscaner = elemento(
+                "estado-escaner"
+            );
 
-    if (video?.readyState >= 2) {
-        try {
-            const resultados = await detectorCodigos.detect(video);
+            estadoEscaner.textContent = mensaje;
+            estadoEscaner.classList.toggle(
+                "panel-escaner__error",
+                error,
+            );
+        },
+    });
 
-            if (
-                resultados.length
-                && seleccionarProductoEscaneado(resultados[0].rawValue)
-            ) {
-                return;
-            }
-        } catch (_error) {
-            elemento("estado-escaner").textContent =
-                "Mantén el código dentro del recuadro y evita reflejos.";
-        }
-    }
-
-    cuadroEscaneo = window.requestAnimationFrame(detectarCuadro);
+    return escanerCodigos;
 }
 
 function detenerEscaner() {
-    escaneoEnCurso = false;
+    escanerCodigos?.detener();
 
-    if (cuadroEscaneo) {
-        window.cancelAnimationFrame(cuadroEscaneo);
-        cuadroEscaneo = null;
-    }
+    const panel = elemento(
+        "panel-escaner"
+    );
 
-    flujoCamara?.getTracks().forEach((pista) => pista.stop());
-    flujoCamara = null;
-
-    const video = elemento("video-escaner");
-    if (video) {
-        video.srcObject = null;
-    }
-
-    const panel = elemento("panel-escaner");
     if (panel) {
         panel.hidden = true;
     }
 }
 
 async function abrirEscaner() {
-    const panel = elemento("panel-escaner");
-    const estadoEscaner = elemento("estado-escaner");
+    const panel = elemento(
+        "panel-escaner"
+    );
+
     panel.hidden = false;
 
-    if (!window.isSecureContext) {
-        estadoEscaner.textContent =
-            "La cámara requiere HTTPS. Puedes ingresar el código abajo.";
-        return;
-    }
-
-    if (!("BarcodeDetector" in window)) {
-        estadoEscaner.textContent =
-            "Este navegador no permite lectura automática. Ingresa el código abajo.";
-        return;
-    }
-
-    try {
-        const formatosSoportados = typeof window.BarcodeDetector
-            .getSupportedFormats === "function"
-            ? await window.BarcodeDetector.getSupportedFormats()
-            : ["qr_code", "ean_13", "ean_8", "upc_a", "upc_e", "code_128"];
-        const deseados = [
-            "qr_code",
-            "ean_13",
-            "ean_8",
-            "upc_a",
-            "upc_e",
-            "code_128",
-            "code_39",
-            "itf",
-        ].filter((formato) => formatosSoportados.includes(formato));
-
-        detectorCodigos = deseados.length
-            ? new window.BarcodeDetector({formats: deseados})
-            : new window.BarcodeDetector();
-        flujoCamara = await navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: {
-                facingMode: {ideal: "environment"},
-                width: {ideal: 1280},
-                height: {ideal: 720},
-            },
-        });
-        const video = elemento("video-escaner");
-        video.srcObject = flujoCamara;
-        await video.play();
-        escaneoEnCurso = true;
-        estadoEscaner.textContent =
-            "Apunta al QR o código de barras; la lectura es automática.";
-        detectarCuadro();
-    } catch (error) {
-        detenerEscaner();
-        panel.hidden = false;
-        estadoEscaner.textContent = error.name === "NotAllowedError"
-            ? "Permiso de cámara rechazado. Habilítalo o ingresa el código abajo."
-            : "No fue posible iniciar la cámara. Ingresa el código abajo.";
-    }
+    await obtenerEscaner().iniciar();
 }
+
 
 function numero(valor) {
     const resultado = Number(valor);
