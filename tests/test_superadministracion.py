@@ -172,6 +172,7 @@ def test_superadmin_edita_plan_desde_api_y_panel(app, client):
         plan = db.session.get(PlanSaaS, plan_id)
         assert plan.nombre == "Avanzado Comercial"
         assert plan.precio_mensual == 10990
+        assert plan.funciones["ia"] is False
 
 
 def test_comando_crea_superadmin_con_correo_verificado(app):

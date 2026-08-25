@@ -138,6 +138,13 @@ PLANES = (
 )
 
 
+CAPACIDADES_GOBERNADAS = frozenset(
+    {
+        "ia",
+    }
+)
+
+
 def errores_integraciones_produccion(configuracion):
     """Devuelve configuraciones que impedirían vender el servicio completo."""
     errores = []
@@ -246,7 +253,13 @@ def registrar_comandos(app):
             else:
                 funciones = dict(plan.funciones or {})
                 for codigo, incluida in datos["funciones"].items():
-                    funciones.setdefault(codigo, incluida)
+                    if codigo in CAPACIDADES_GOBERNADAS:
+                        funciones[codigo] = incluida
+                    else:
+                        funciones.setdefault(
+                            codigo,
+                            incluida,
+                        )
                 plan.funciones = funciones
                 plan.dias_prueba = datos["dias_prueba"]
                 if plan.codigo in {"prueba", "basico", "corporativo"}:
