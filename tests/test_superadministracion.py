@@ -219,9 +219,7 @@ def test_superadmin_lista_suscripciones_sin_error(
     _preparar(app, client)
     _login(client)
 
-    respuesta = client.get(
-        "/api/superadmin/suscripciones"
-    )
+    respuesta = client.get("/api/superadmin/suscripciones")
 
     assert respuesta.status_code == 200
     assert isinstance(

@@ -88,13 +88,9 @@ def _evento(referencia="PAGO-001", estado="pagado", monto="19990.00", moneda="CL
 def test_seguimiento_de_solicitud_es_solo_informativo():
     from pathlib import Path
 
-    javascript = Path(
-        "app/static/js/planes.js"
-    ).read_text(encoding="utf-8-sig")
+    javascript = Path("app/static/js/planes.js").read_text(encoding="utf-8-sig")
 
-    inicio = javascript.find(
-        "function renderizarSolicitudes"
-    )
+    inicio = javascript.find("function renderizarSolicitudes")
     fin = javascript.find(
         "function actualizarFlujoContratacion",
         inicio,
@@ -119,9 +115,7 @@ def test_seguimiento_de_solicitud_es_solo_informativo():
 
     assert 'pendiente: "Pendiente",' in bloque
 
-    plantilla = Path(
-        "app/templates/panel/planes.html"
-    ).read_text(encoding="utf-8-sig")
+    plantilla = Path("app/templates/panel/planes.html").read_text(encoding="utf-8-sig")
 
     assert "Seguimiento de la solicitud" in plantilla
     assert "Proceso de cambio de plan" not in plantilla
@@ -158,16 +152,11 @@ def test_cliente_mercadopago_conserva_error_http_seguro(
     )
 
     with app.app_context():
-        cliente = ClienteMercadoPagoSuscripciones(
-            "token-no-real-para-pruebas"
-        )
+        cliente = ClienteMercadoPagoSuscripciones("token-no-real-para-pruebas")
 
         with pytest.raises(
             ErrorPagoRecurrente,
-            match=(
-                r"HTTP 400.*"
-                r"invalid transaction amount"
-            ),
+            match=(r"HTTP 400.*" r"invalid transaction amount"),
         ):
             cliente.crear_mandato({})
 
@@ -210,9 +199,7 @@ def test_oneclick_usa_ambiente_independiente_de_webpay_plus():
         }
     )
 
-    assert cliente_integracion.base_url == (
-        "https://webpay3gint.transbank.cl"
-    )
+    assert cliente_integracion.base_url == ("https://webpay3gint.transbank.cl")
 
     cliente_produccion = cliente_oneclick(
         {
@@ -222,9 +209,22 @@ def test_oneclick_usa_ambiente_independiente_de_webpay_plus():
         }
     )
 
-    assert cliente_produccion.base_url == (
-        "https://webpay3g.transbank.cl"
-    )
+    assert cliente_produccion.base_url == ("https://webpay3g.transbank.cl")
+
+
+def test_oneclick_rechaza_ambiente_invalido():
+    with pytest.raises(
+        ErrorPagoRecurrente,
+        match=("WEBPAY_ONECLICK_ENV debe ser " "integration o production"),
+    ):
+        cliente_oneclick(
+            {
+                "WEBPAY_ONECLICK_PARENT_COMMERCE_CODE": ("padre"),
+                "WEBPAY_ONECLICK_CHILD_COMMERCE_CODE": ("hijo"),
+                "WEBPAY_ONECLICK_API_KEY": "secreto",
+                "WEBPAY_ONECLICK_ENV": "produccion",
+            }
+        )
 
 
 class OneclickFalso:
@@ -277,9 +277,7 @@ def test_retorno_mandato_activo_es_idempotente(
     ids = _preparar(app, client)
     falso = MercadoPagoRecurrenteFalso()
 
-    app.config["MERCADOPAGO_SUSCRIPCIONES_FACTORY"] = (
-        lambda: falso
-    )
+    app.config["MERCADOPAGO_SUSCRIPCIONES_FACTORY"] = lambda: falso
 
     with app.app_context():
         usuario = db.session.get(Usuario, ids[0])
@@ -305,27 +303,18 @@ def test_retorno_mandato_activo_es_idempotente(
         )
         db.session.commit()
 
-        assert (
-            suscripcion.metodo_pago_recurrente_estado
-            == "activo"
-        )
+        assert suscripcion.metodo_pago_recurrente_estado == "activo"
         assert suscripcion.renovacion_automatica is True
 
     def no_confirmar_nuevamente(**kwargs):
-        raise AssertionError(
-            "Una suscripcion activa no debe confirmarse nuevamente"
-        )
+        raise AssertionError("Una suscripcion activa no debe confirmarse nuevamente")
 
     monkeypatch.setattr(
-        "app.blueprints.suscripciones.routes."
-        "confirmar_mandato_mercadopago",
+        "app.blueprints.suscripciones.routes." "confirmar_mandato_mercadopago",
         no_confirmar_nuevamente,
     )
 
-    ruta_retorno = (
-        "/webhooks/pagos/mandato/mercadopago/retorno"
-        "?preapproval_id=preapproval-1"
-    )
+    ruta_retorno = "/webhooks/pagos/mandato/mercadopago/retorno" "?preapproval_id=preapproval-1"
 
     primera_respuesta = client.get(ruta_retorno)
     segunda_respuesta = client.get(ruta_retorno)
@@ -364,28 +353,21 @@ def test_evento_preapproval_activa_mandato_sin_duplicar(app, client):
             configuracion=configuracion,
         )
 
-        sincronizada, procesado, estado = (
-            procesar_evento_suscripcion_mercadopago(
-                tipo_evento="subscription_preapproval",
-                referencia="preapproval-1",
-                configuracion=configuracion,
-            )
+        sincronizada, procesado, estado = procesar_evento_suscripcion_mercadopago(
+            tipo_evento="subscription_preapproval",
+            referencia="preapproval-1",
+            configuracion=configuracion,
         )
 
         assert sincronizada.id == suscripcion.id
         assert procesado is True
         assert estado == "authorized"
-        assert (
-            sincronizada.metodo_pago_recurrente_estado
-            == "activo"
-        )
+        assert sincronizada.metodo_pago_recurrente_estado == "activo"
 
-        _, procesado_repetido, estado_repetido = (
-            procesar_evento_suscripcion_mercadopago(
-                tipo_evento="subscription_preapproval",
-                referencia="preapproval-1",
-                configuracion=configuracion,
-            )
+        _, procesado_repetido, estado_repetido = procesar_evento_suscripcion_mercadopago(
+            tipo_evento="subscription_preapproval",
+            referencia="preapproval-1",
+            configuracion=configuracion,
         )
 
         assert procesado_repetido is False
@@ -417,12 +399,10 @@ def test_evento_cobro_autorizado_reconoce_suscripcion(app, client):
             configuracion=configuracion,
         )
 
-        sincronizada, procesado, estado = (
-            procesar_evento_suscripcion_mercadopago(
-                tipo_evento="subscription_authorized_payment",
-                referencia="authorized-payment-1",
-                configuracion=configuracion,
-            )
+        sincronizada, procesado, estado = procesar_evento_suscripcion_mercadopago(
+            tipo_evento="subscription_authorized_payment",
+            referencia="authorized-payment-1",
+            configuracion=configuracion,
         )
 
         assert sincronizada.id == suscripcion.id
@@ -453,6 +433,93 @@ def test_mandato_oneclick_guarda_solo_referencia_tokenizada(app, client):
         )
         assert suscripcion.referencia_metodo_pago == "tbk-user-tokenizado"
         assert suscripcion.metodo_pago_recurrente_estado == "activo"
+
+
+def test_renovacion_recurrente_procesa_dos_ciclos_consecutivos(
+    app,
+    client,
+):
+    class MercadoPagoConDosCobros:
+        def __init__(self):
+            self.consultas = 0
+            self.cobros = [
+                {
+                    "id": "cobro-renovacion-1",
+                    "status": "approved",
+                    "transaction_amount": "19990",
+                    "currency_id": "CLP",
+                },
+                {
+                    "id": "cobro-renovacion-2",
+                    "status": "approved",
+                    "transaction_amount": "19990",
+                    "currency_id": "CLP",
+                },
+            ]
+
+        def buscar_cobros(self, referencia):
+            assert referencia == "preapproval-1"
+            self.consultas += 1
+            return self.cobros[: self.consultas]
+
+    ids = _preparar(app, client)
+    falso = MercadoPagoConDosCobros()
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+
+        solicitud = ServicioSuscripciones(usuario).solicitar_cambio(
+            plan_codigo="profesional",
+            ciclo="mensual",
+            proveedor="mercadopago",
+        )
+
+        suscripcion = usuario.empresa.suscripcion_actual
+        ahora = utcnow()
+
+        suscripcion.proveedor_cobro = "mercadopago"
+        suscripcion.referencia_metodo_pago = "preapproval-1"
+        suscripcion.metodo_pago_recurrente_estado = "activo"
+        suscripcion.renovacion_automatica = True
+        suscripcion.fecha_inicio = ahora - timedelta(days=31)
+        suscripcion.fecha_fin = ahora - timedelta(minutes=1)
+        suscripcion.fecha_proximo_cobro = suscripcion.fecha_fin
+
+        db.session.commit()
+
+        configuracion = {
+            "MERCADOPAGO_SUSCRIPCIONES_FACTORY": (lambda: falso),
+            "RENOVACION_MAX_REINTENTOS": 3,
+            "RENOVACION_GRACIA_DIAS": 7,
+        }
+
+        primera = procesar_renovaciones(
+            configuracion=configuracion,
+            ahora=ahora,
+        )
+
+        primera_fecha_fin = suscripcion.fecha_fin
+
+        assert primera["pagadas"] == 1
+        assert primera["omitidas"] == 0
+        assert solicitud.estado == "aprobada"
+
+        segunda = procesar_renovaciones(
+            configuracion=configuracion,
+            ahora=(suscripcion.fecha_proximo_cobro + timedelta(seconds=1)),
+        )
+
+        pagos = list(db.session.scalars(db.select(Pago).order_by(Pago.id)))
+
+        assert segunda["pagadas"] == 1
+        assert segunda["omitidas"] == 0
+        assert solicitud.estado == "aprobada"
+        assert suscripcion.fecha_fin > primera_fecha_fin
+        assert len(pagos) == 2
+        assert {pago.transaccion_proveedor_id for pago in pagos} == {
+            "cobro-renovacion-1",
+            "cobro-renovacion-2",
+        }
 
 
 def test_rechazo_respeta_fecha_de_reintento_y_mantiene_gracia(app, client):

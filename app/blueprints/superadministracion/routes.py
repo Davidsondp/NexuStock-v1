@@ -164,17 +164,9 @@ def suscripciones():
                     "estado": s.estado,
                     "ciclo": s.ciclo,
                     "fecha_inicio": s.fecha_inicio.isoformat(),
-                    "fecha_fin": (
-                        s.fecha_fin.isoformat()
-                        if s.fecha_fin
-                        else None
-                    ),
-                    "renovacion_automatica": (
-                        s.renovacion_automatica
-                    ),
-                    "cancelar_al_fin_periodo": (
-                        s.cancelar_al_fin_periodo
-                    ),
+                    "fecha_fin": (s.fecha_fin.isoformat() if s.fecha_fin else None),
+                    "renovacion_automatica": (s.renovacion_automatica),
+                    "cancelar_al_fin_periodo": (s.cancelar_al_fin_periodo),
                     "proveedor_cobro": s.proveedor_cobro,
                 }
                 for s in datos

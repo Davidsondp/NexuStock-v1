@@ -40,10 +40,7 @@ def notificar_solicitud_empresarial(solicitud):
 
     aviso_comercial = _enviar(
         Message(
-            subject=(
-                "[NexuStock comercial] "
-                f"Nueva solicitud #{solicitud.id}"
-            ),
+            subject=("[NexuStock comercial] " f"Nueva solicitud #{solicitud.id}"),
             recipients=[destino],
             reply_to=solicitud.email,
             body=cuerpo_comercial,
@@ -66,10 +63,7 @@ def notificar_solicitud_empresarial(solicitud):
 
     confirmacion_contacto = _enviar(
         Message(
-            subject=(
-                "Recibimos tu solicitud empresarial "
-                f"#{solicitud.id}"
-            ),
+            subject=("Recibimos tu solicitud empresarial " f"#{solicitud.id}"),
             recipients=[solicitud.email],
             body=cuerpo_contacto,
         ),

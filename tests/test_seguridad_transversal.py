@@ -69,6 +69,74 @@ def test_limite_login_es_persistente_y_no_guarda_ip(app, client):
         assert "127.0.0.1" not in contador.clave_hash
 
 
+def test_registro_compatible_comparte_limite_canonico(
+    app,
+    client,
+):
+    for _ in range(5):
+        client.post(
+            "/autenticacion/registro",
+            data={},
+        )
+
+    bloqueada = client.post(
+        "/registro",
+        data={},
+    )
+
+    assert bloqueada.status_code == 429
+
+    with app.app_context():
+        contadores = list(
+            db.session.scalars(
+                db.select(LimiteSolicitud).where(LimiteSolicitud.ruta == "/autenticacion/registro")
+            )
+        )
+
+        assert len(contadores) == 1
+        assert contadores[0].cantidad == 6
+
+
+def test_solicitud_empresarial_tiene_limite_persistente(
+    client,
+):
+    for _ in range(5):
+        client.post(
+            "/empresarial/solicitar",
+            data={},
+        )
+
+    bloqueada = client.post(
+        "/empresarial/solicitar",
+        data={},
+    )
+
+    assert bloqueada.status_code == 429
+    assert int(bloqueada.headers["Retry-After"]) > 0
+
+
+def test_reenvio_verificacion_tiene_limite_persistente(
+    client,
+):
+    for _ in range(5):
+        client.post(
+            "/autenticacion/reenviar-verificacion",
+            data={
+                "email": "inexistente@nexustock.cl",
+            },
+        )
+
+    bloqueada = client.post(
+        "/autenticacion/reenviar-verificacion",
+        data={
+            "email": "inexistente@nexustock.cl",
+        },
+    )
+
+    assert bloqueada.status_code == 429
+    assert int(bloqueada.headers["Retry-After"]) > 0
+
+
 def test_cookie_de_sesion_tiene_atributos_defensivos(app, client):
     respuesta = client.post("/autenticacion/registro", data=REGISTRO)
     cookie = next(

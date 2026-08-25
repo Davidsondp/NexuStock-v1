@@ -19,6 +19,13 @@ RUTAS_LIMITADAS = {
     "/autenticacion/registro": (5, 3600),
     "/autenticacion/olvide-password": (5, 3600),
     "/autenticacion/segundo-factor": (8, 300),
+    "/autenticacion/reenviar-verificacion": (5, 3600),
+    "/empresarial/solicitar": (5, 3600),
+}
+
+RUTAS_EQUIVALENTES = {
+    "/login": "/autenticacion/ingresar",
+    "/registro": "/autenticacion/registro",
 }
 
 PREFIJOS_LIMITADOS = {
@@ -26,6 +33,7 @@ PREFIJOS_LIMITADOS = {
     "/api/comercial/": (90, 60),
     "/suscripciones/checkout/": (10, 60),
 }
+
 ID_SOLICITUD = re.compile(r"^[A-Za-z0-9._:-]{1,100}$")
 
 
@@ -46,18 +54,26 @@ def _identidad_cliente():
 
 
 def _aplicar_limite():
-    regla = RUTAS_LIMITADAS.get(request.path)
+    ruta_limite = RUTAS_EQUIVALENTES.get(
+        request.path,
+        request.path,
+    )
+
+    regla = RUTAS_LIMITADAS.get(ruta_limite)
+
     if regla is None:
         regla = next(
             (
                 valor
                 for prefijo, valor in PREFIJOS_LIMITADOS.items()
-                if request.path.startswith(prefijo)
+                if ruta_limite.startswith(prefijo)
             ),
             None,
         )
+
     if request.method != "POST" or not regla:
         return None
+
     maximo, segundos = regla
     ahora = utcnow()
     epoch = int(ahora.timestamp())
@@ -65,20 +81,22 @@ def _aplicar_limite():
     inicio = datetime.fromtimestamp(inicio_epoch)
     expira = inicio + timedelta(seconds=segundos)
     clave = _identidad_cliente()
+
     try:
         contador = db.session.scalar(
             db.select(LimiteSolicitud)
             .where(
                 LimiteSolicitud.clave_hash == clave,
-                LimiteSolicitud.ruta == request.path,
+                LimiteSolicitud.ruta == ruta_limite,
                 LimiteSolicitud.ventana_inicio == inicio,
             )
             .with_for_update()
         )
+
         if contador is None:
             contador = LimiteSolicitud(
                 clave_hash=clave,
-                ruta=request.path,
+                ruta=ruta_limite,
                 ventana_inicio=inicio,
                 expira_en=expira,
                 cantidad=1,
@@ -86,26 +104,39 @@ def _aplicar_limite():
             db.session.add(contador)
         else:
             contador.cantidad += 1
+
         db.session.commit()
+
     except IntegrityError:
         db.session.rollback()
+
         contador = db.session.scalar(
             db.select(LimiteSolicitud)
             .where(
                 LimiteSolicitud.clave_hash == clave,
-                LimiteSolicitud.ruta == request.path,
+                LimiteSolicitud.ruta == ruta_limite,
                 LimiteSolicitud.ventana_inicio == inicio,
             )
             .with_for_update()
         )
+
         contador.cantidad += 1
         db.session.commit()
+
     if contador.cantidad > maximo:
         respuesta = _respuesta(
-            "demasiadas_solicitudes", "Demasiados intentos. Intenta más tarde.", 429
+            "demasiadas_solicitudes",
+            "Demasiados intentos. Intenta m?s tarde.",
+            429,
         )
-        respuesta[0].headers["Retry-After"] = str(max(1, int((expira - ahora).total_seconds())))
+        respuesta[0].headers["Retry-After"] = str(
+            max(
+                1,
+                int((expira - ahora).total_seconds()),
+            )
+        )
         return respuesta
+
     return None
 
 

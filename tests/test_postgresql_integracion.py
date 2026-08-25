@@ -3,6 +3,8 @@
 import os
 
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
 
 from config import normalizar_url_base_datos
@@ -19,9 +21,17 @@ def motor():
 
 
 def test_postgresql_tiene_migracion_actual(motor):
+    configuracion = Config("migrations/alembic.ini")
+    configuracion.set_main_option(
+        "script_location",
+        "migrations",
+    )
+    revision_esperada = ScriptDirectory.from_config(configuracion).get_current_head()
+
     with motor.connect() as conexion:
         revision = conexion.scalar(text("SELECT version_num FROM alembic_version"))
-        assert revision == "ab7ae6131661"
+
+    assert revision == revision_esperada
 
 
 def test_postgresql_contiene_esquema_multiempresa(motor):

@@ -166,8 +166,7 @@ def errores_integraciones_produccion(configuracion):
 
     if not mercado_pago_completo and not webpay_oneclick_completo:
         errores.append(
-            "debe configurarse Mercado Pago Suscripciones "
-            "o Webpay Oneclick productivo"
+            "debe configurarse Mercado Pago Suscripciones " "o Webpay Oneclick productivo"
         )
     if not str(configuracion.get("DTE_PROVIDER_URL") or "").startswith("https://"):
         errores.append("DTE_PROVIDER_URL debe ser HTTPS")

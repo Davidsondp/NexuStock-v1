@@ -59,11 +59,7 @@ class ClienteMercadoPagoSuscripciones:
             )
             respuesta.raise_for_status()
         except requests.RequestException as exc:
-            estado_http = (
-                respuesta.status_code
-                if respuesta is not None
-                else None
-            )
+            estado_http = respuesta.status_code if respuesta is not None else None
             mensaje_proveedor = ""
 
             if respuesta is not None:
@@ -74,31 +70,24 @@ class ClienteMercadoPagoSuscripciones:
 
                 if isinstance(detalle, dict):
                     mensaje_proveedor = str(
-                        detalle.get("message")
-                        or detalle.get("error")
-                        or ""
+                        detalle.get("message") or detalle.get("error") or ""
                     ).strip()
 
                     causas = detalle.get("cause") or []
                     if causas and isinstance(causas[0], dict):
                         causa = str(
-                            causas[0].get("description")
-                            or causas[0].get("code")
-                            or ""
+                            causas[0].get("description") or causas[0].get("code") or ""
                         ).strip()
 
                         if causa:
                             mensaje_proveedor = (
-                                f"{mensaje_proveedor}: {causa}"
-                                if mensaje_proveedor
-                                else causa
+                                f"{mensaje_proveedor}: {causa}" if mensaje_proveedor else causa
                             )
 
             mensaje_proveedor = mensaje_proveedor[:240]
 
             current_app.logger.warning(
-                "Mercado Pago rechazo una solicitud: "
-                "ruta=%s estado=%s mensaje=%s",
+                "Mercado Pago rechazo una solicitud: " "ruta=%s estado=%s mensaje=%s",
                 ruta,
                 estado_http,
                 mensaje_proveedor or "sin detalle",
@@ -118,14 +107,10 @@ class ClienteMercadoPagoSuscripciones:
         try:
             datos = respuesta.json()
         except ValueError as exc:
-            raise ErrorPagoRecurrente(
-                "Mercado Pago devolvio una respuesta invalida"
-            ) from exc
+            raise ErrorPagoRecurrente("Mercado Pago devolvio una respuesta invalida") from exc
 
         if not isinstance(datos, dict):
-            raise ErrorPagoRecurrente(
-                "Mercado Pago devolvio una respuesta invalida"
-            )
+            raise ErrorPagoRecurrente("Mercado Pago devolvio una respuesta invalida")
 
         return datos
 
@@ -229,15 +214,20 @@ def cliente_oneclick(configuracion):
     api_key = str(configuracion.get("WEBPAY_ONECLICK_API_KEY") or "").strip()
     if not padre or not hijo or not api_key:
         raise ErrorPagoRecurrente("Faltan las credenciales de Webpay Oneclick Mall")
-    ambiente = str(
-        configuracion.get("WEBPAY_ONECLICK_ENV")
-        or "integration"
-    ).strip().lower()
+    ambiente = str(configuracion.get("WEBPAY_ONECLICK_ENV") or "integration").strip().lower()
+
+    if ambiente not in {
+        "integration",
+        "production",
+    }:
+        raise ErrorPagoRecurrente("WEBPAY_ONECLICK_ENV debe ser " "integration o production")
+
     base_url = (
         "https://webpay3gint.transbank.cl"
         if ambiente == "integration"
         else "https://webpay3g.transbank.cl"
     )
+
     return ClienteOneclick(
         base_url=base_url,
         codigo_padre=padre,
@@ -252,6 +242,24 @@ def _solicitud_abierta(suscripcion):
         .where(
             SolicitudCambioPlan.empresa_id == suscripcion.empresa_id,
             SolicitudCambioPlan.estado.in_(("pendiente", "pago_en_proceso")),
+        )
+        .order_by(SolicitudCambioPlan.id.desc())
+        .limit(1)
+    )
+
+
+def _solicitud_para_renovacion(suscripcion):
+    return db.session.scalar(
+        db.select(SolicitudCambioPlan)
+        .where(
+            SolicitudCambioPlan.empresa_id == suscripcion.empresa_id,
+            SolicitudCambioPlan.estado.in_(
+                (
+                    "pendiente",
+                    "pago_en_proceso",
+                    "aprobada",
+                )
+            ),
         )
         .order_by(SolicitudCambioPlan.id.desc())
         .limit(1)
@@ -283,7 +291,14 @@ def iniciar_mandato(*, usuario, proveedor, base_url, configuracion):
             {
                 "reason": f"NexuStock - Plan {plan.nombre}",
                 "external_reference": referencia_externa,
-                "payer_email": ((str(os.getenv("MERCADOPAGO_TEST_PAYER_EMAIL") or "").strip().lower() or usuario.email) if current_app.debug else usuario.email),
+                "payer_email": (
+                    (
+                        str(os.getenv("MERCADOPAGO_TEST_PAYER_EMAIL") or "").strip().lower()
+                        or usuario.email
+                    )
+                    if current_app.debug
+                    else usuario.email
+                ),
                 "back_url": base_url.rstrip("/") + "/webhooks/pagos/mandato/mercadopago/retorno",
                 "notification_url": base_url.rstrip("/") + "/webhooks/pagos/mercadopago",
                 "auto_recurring": {
@@ -377,9 +392,7 @@ def procesar_evento_suscripcion_mercadopago(
     referencia = str(referencia or "").strip()
 
     if not referencia:
-        raise ErrorPagoRecurrente(
-            "Mercado Pago no informo el identificador del evento"
-        )
+        raise ErrorPagoRecurrente("Mercado Pago no informo el identificador del evento")
 
     cliente = cliente_mercadopago(configuracion)
 
@@ -398,17 +411,11 @@ def procesar_evento_suscripcion_mercadopago(
         if not suscripcion:
             return None, False, estado or "desconocido"
 
-        referencia_esperada = (
-            f"NS-SUB-{suscripcion.empresa_id}-{suscripcion.id}"
-        )
-        referencia_recibida = str(
-            datos.get("external_reference") or ""
-        ).strip()
+        referencia_esperada = f"NS-SUB-{suscripcion.empresa_id}-{suscripcion.id}"
+        referencia_recibida = str(datos.get("external_reference") or "").strip()
 
         if referencia_recibida != referencia_esperada:
-            raise ErrorPagoRecurrente(
-                "La referencia externa de la suscripcion no coincide"
-            )
+            raise ErrorPagoRecurrente("La referencia externa de la suscripcion no coincide")
 
         if estado == "authorized":
             if suscripcion.metodo_pago_recurrente_estado == "activo":
@@ -432,11 +439,7 @@ def procesar_evento_suscripcion_mercadopago(
     if tipo_evento == "subscription_authorized_payment":
         datos = cliente.obtener_cobro_autorizado(referencia)
 
-        mandato_id = str(
-            datos.get("preapproval_id")
-            or datos.get("subscription_id")
-            or ""
-        ).strip()
+        mandato_id = str(datos.get("preapproval_id") or datos.get("subscription_id") or "").strip()
 
         suscripcion = db.session.scalar(
             db.select(Suscripcion).where(
@@ -445,18 +448,14 @@ def procesar_evento_suscripcion_mercadopago(
             )
         )
 
-        estado = str(
-            datos.get("status") or "recibido"
-        ).strip().lower()
+        estado = str(datos.get("status") or "recibido").strip().lower()
 
         return suscripcion, bool(suscripcion), estado
 
     if tipo_evento == "subscription_preapproval_plan":
         return None, False, "ignorado"
 
-    raise ErrorPagoRecurrente(
-        "Tipo de evento de suscripcion no admitido"
-    )
+    raise ErrorPagoRecurrente("Tipo de evento de suscripcion no admitido")
 
 
 def confirmar_mandato_oneclick(*, suscripcion, token, configuracion):
@@ -668,7 +667,7 @@ def procesar_renovaciones(*, configuracion, ahora=None, limite=200):
         "suspendidas": suspendidas,
     }
     for suscripcion in db.session.scalars(consulta):
-        solicitud = _solicitud_abierta(suscripcion)
+        solicitud = _solicitud_para_renovacion(suscripcion)
         if not solicitud:
             resultado["omitidas"] += 1
             continue

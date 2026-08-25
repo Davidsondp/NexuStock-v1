@@ -199,10 +199,7 @@ def test_solicitud_empresarial_notifica_a_comercial_y_contacto(
     assert respuesta.status_code == 200
     assert len(enviados) == 2
 
-    destinatarios = {
-        mensaje.recipients[0]
-        for mensaje in enviados
-    }
+    destinatarios = {mensaje.recipients[0] for mensaje in enviados}
 
     assert destinatarios == {
         "comercial@nexustock.cl",
@@ -210,9 +207,7 @@ def test_solicitud_empresarial_notifica_a_comercial_y_contacto(
     }
 
     aviso = next(
-        mensaje
-        for mensaje in enviados
-        if mensaje.recipients == ["comercial@nexustock.cl"]
+        mensaje for mensaje in enviados if mensaje.recipients == ["comercial@nexustock.cl"]
     )
 
     assert aviso.reply_to == "ana@empresa.cl"
@@ -256,8 +251,7 @@ def test_solicitud_empresarial_se_conserva_si_falla_el_correo(
     with app.app_context():
         solicitud = db.session.scalar(
             db.select(SolicitudContratoEmpresarial).where(
-                SolicitudContratoEmpresarial.email
-                == "contacto@resiliente.cl"
+                SolicitudContratoEmpresarial.email == "contacto@resiliente.cl"
             )
         )
 

@@ -241,9 +241,7 @@ def retorno_mandato_mercadopago():
     if not referencia or not suscripcion:
         return _error(ErrorPagoRecurrente("Suscripción de Mercado Pago no encontrada"), 400)
     if suscripcion.metodo_pago_recurrente_estado == "activo":
-        return redirect(
-            url_for("panel.inicio", mandato="activo")
-        )
+        return redirect(url_for("panel.inicio", mandato="activo"))
 
     try:
         confirmar_mandato_mercadopago(
@@ -571,16 +569,8 @@ def retorno_mercadopago():
 @csrf.exempt
 def webhook_mercadopago():
     datos = request.get_json(silent=True) or {}
-    data_id = str(
-        request.args.get("data.id")
-        or (datos.get("data") or {}).get("id")
-        or ""
-    ).strip()
-    tipo_evento = str(
-        datos.get("type")
-        or request.args.get("type")
-        or "payment"
-    ).strip().lower()
+    data_id = str(request.args.get("data.id") or (datos.get("data") or {}).get("id") or "").strip()
+    tipo_evento = str(datos.get("type") or request.args.get("type") or "payment").strip().lower()
     try:
         verificar_firma_mercadopago(
             secreto=current_app.config.get("MERCADOPAGO_WEBHOOK_SECRET"),
@@ -589,12 +579,10 @@ def webhook_mercadopago():
             data_id=data_id,
         )
         if tipo_evento.startswith("subscription_"):
-            suscripcion, procesado, estado = (
-                procesar_evento_suscripcion_mercadopago(
-                    tipo_evento=tipo_evento,
-                    referencia=data_id,
-                    configuracion=current_app.config,
-                )
+            suscripcion, procesado, estado = procesar_evento_suscripcion_mercadopago(
+                tipo_evento=tipo_evento,
+                referencia=data_id,
+                configuracion=current_app.config,
             )
 
             return jsonify(
@@ -602,11 +590,7 @@ def webhook_mercadopago():
                     "recibido": True,
                     "procesado": procesado,
                     "tipo": tipo_evento,
-                    "suscripcion_id": (
-                        suscripcion.id
-                        if suscripcion
-                        else None
-                    ),
+                    "suscripcion_id": (suscripcion.id if suscripcion else None),
                     "estado": estado,
                 }
             )
