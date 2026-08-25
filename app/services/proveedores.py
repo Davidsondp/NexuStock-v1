@@ -168,6 +168,25 @@ class ServicioProveedores:
             raise ErrorProveedor("Compra mínima o días de entrega inválidos") from exc
         if compra_minima < 0 or dias_entrega < 0:
             raise ErrorProveedor("Los valores comerciales no pueden ser negativos")
+
+        dias_actuales = proveedor.dias_entrega if proveedor.dias_entrega is not None else 7
+        compra_actual = Decimal(proveedor.compra_minima or 0)
+        condiciones_actuales = proveedor.condiciones_pago or ""
+        condiciones_nuevas = (
+            (datos.get("condiciones_pago") or "").strip()
+            if "condiciones_pago" in datos
+            else condiciones_actuales
+        )
+
+        cambia_condicion_comercial = (
+            ("dias_entrega" in datos and dias_entrega != dias_actuales)
+            or ("compra_minima" in datos and compra_minima != compra_actual)
+            or ("condiciones_pago" in datos and condiciones_nuevas != condiciones_actuales)
+        )
+
+        if cambia_condicion_comercial:
+            self._exigir("proveedores.gestionar_avanzados")
+
         proveedor.nombre = nombre
         if "identificacion_fiscal" in datos:
             try:

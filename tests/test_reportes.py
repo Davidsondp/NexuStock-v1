@@ -93,6 +93,30 @@ def test_dinero_dormido_valoriza_exceso_sin_duplicarlo(app, client):
         assert datos["detalle"][0]["causas"] == ["sobrestock"]
 
 
+def test_dinero_dormido_exige_reporte_avanzado(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+        plan = usuario.empresa.suscripcion_actual.plan
+        plan.funciones = {
+            **(plan.funciones or {}),
+            "reportes.avanzados": False,
+        }
+        db.session.commit()
+
+        with pytest.raises(PermissionError):
+            ServicioReportes(usuario).dinero_dormido(bodega_id=ids[1])
+
+    respuesta = client.get("/api/reportes/dinero-dormido")
+
+    assert respuesta.status_code == 403
+    assert respuesta.get_json()["codigo"] == "plan_insuficiente"
+
+
 def test_periodo_invalido_es_rechazado(app):
     with app.app_context(), pytest.raises(ErrorReporte):
         construir_periodo("2026-08-12", "2026-08-01")

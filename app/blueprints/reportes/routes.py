@@ -64,7 +64,7 @@ def stock():
 
 @reportes_bp.get("/dinero-dormido")
 @login_required
-@requerir_permiso("reportes.ver")
+@requerir_permiso("reportes.avanzados")
 def dinero_dormido():
     return jsonify(
         ServicioReportes(current_user).dinero_dormido(

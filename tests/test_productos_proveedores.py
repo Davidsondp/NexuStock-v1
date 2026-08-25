@@ -57,6 +57,53 @@ def test_crear_producto_y_proveedor_auditable(app, client):
         assert producto.proveedor_principal_id == proveedor.id
 
 
+def test_condiciones_comerciales_exigen_plan_avanzado(
+    app,
+    client,
+):
+    usuario_id = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(
+            Usuario,
+            usuario_id,
+        )
+        plan = usuario.empresa.suscripcion_actual.plan
+        plan.funciones = {
+            **(plan.funciones or {}),
+            "proveedores.avanzados": False,
+        }
+        db.session.commit()
+
+    basico = client.post(
+        "/api/proveedores",
+        json={
+            "nombre": "Proveedor básico",
+        },
+    )
+
+    assert basico.status_code == 201
+
+    avanzado = client.post(
+        "/api/proveedores",
+        json={
+            "nombre": "Proveedor restringido",
+            "condiciones_pago": "30 días",
+            "dias_entrega": 5,
+            "compra_minima": 100000,
+        },
+    )
+
+    assert avanzado.status_code == 403
+    assert avanzado.get_json()["codigo"] == "acceso_denegado"
+
+    with app.app_context():
+        nombres = set(db.session.scalars(db.select(Proveedor.nombre)))
+
+        assert "Proveedor básico" in nombres
+        assert "Proveedor restringido" not in nombres
+
+
 def test_codigo_producto_unico_por_empresa(app, client):
     usuario_id = _preparar(app, client)
     with app.app_context():

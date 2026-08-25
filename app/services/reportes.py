@@ -102,7 +102,7 @@ class ServicioReportes:
 
     def dinero_dormido(self, *, bodega_id=None):
         """Calcula capital inmovilizado sin duplicar sobrestock y baja rotación."""
-        self._exigir("dashboard.ver")
+        self._exigir("reportes.avanzados")
         bodegas = self._bodegas(bodega_id)
         configuracion = db.session.scalar(
             db.select(ConfiguracionEmpresa).where(
