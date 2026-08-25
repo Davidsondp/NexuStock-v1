@@ -147,11 +147,17 @@ CAPACIDADES_GOBERNADAS = frozenset(
         "transferencias",
         "wms",
         "integraciones",
+        "auditoria",
+        "pos",
+        "dte",
     }
 )
 
 LIMITES_GOBERNADOS = frozenset(
     {
+        "limite_productos",
+        "limite_usuarios",
+        "limite_movimientos_mes",
         "limite_sucursales",
         "limite_bodegas",
     }
@@ -287,7 +293,7 @@ def registrar_comandos(app):
                     plan.activo = False
         db.session.commit()
         click.echo(
-            "Planes, capacidades y l?mites oficiales " "sincronizados; otras ediciones preservadas."
+            "Planes, capacidades y límites oficiales " "sincronizados; otras ediciones preservadas."
         )
 
     @app.cli.command("crear-super-admin")

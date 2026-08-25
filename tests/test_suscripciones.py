@@ -782,7 +782,6 @@ def test_resumen_expone_detalle_del_plan_actual(
         "movimientos_mes": 500,
         "sucursales": 1,
         "bodegas": 1,
-        "almacenamiento_mb": None,
     }
     assert suscripcion["funciones"]["productos"] is True
 

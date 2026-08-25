@@ -75,7 +75,6 @@ const etiquetasLimites = Object.freeze({
     movimientos_mes: "Movimientos mensuales",
     sucursales: "Sucursales",
     bodegas: "Bodegas",
-    almacenamiento_mb: "Almacenamiento",
 });
 
 const etiquetasGrupos = Object.freeze({
@@ -423,20 +422,6 @@ function limiteVisible(
 ) {
     if (valor === null || valor === undefined) {
         return "Sin l\u00edmite";
-    }
-
-    if (codigo === "almacenamiento_mb") {
-        if (Number(valor) >= 1024) {
-            const gigabytes = (
-                Number(valor) / 1024
-            );
-
-            return (
-                `${gigabytes.toLocaleString("es-CL")} GB`
-            );
-        }
-
-        return `${valor} MB`;
     }
 
     return Number(valor).toLocaleString(

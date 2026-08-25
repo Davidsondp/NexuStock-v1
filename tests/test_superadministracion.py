@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 
 from app.models import (
@@ -149,6 +150,57 @@ def test_superadmin_no_permite_limite_productos_cero(
 
     assert respuesta.status_code == 400
     assert "mayor que cero" in respuesta.get_json()["mensaje"]
+
+
+def test_seed_planes_restaura_cuotas_y_capacidades_oficiales(
+    app,
+    client,
+):
+    _preparar(app, client)
+    ejecutor = app.test_cli_runner()
+
+    primera = ejecutor.invoke(args=["seed-planes"])
+
+    assert primera.exit_code == 0
+
+    with app.app_context():
+        plan = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "avanzado"))
+
+        plan.limite_productos = 999999
+        plan.limite_usuarios = 999999
+        plan.limite_movimientos_mes = 999999
+        plan.funciones = {
+            **(plan.funciones or {}),
+            "auditoria": False,
+            "pos": False,
+            "dte": False,
+        }
+        db.session.commit()
+
+    segunda = ejecutor.invoke(args=["seed-planes"])
+
+    assert segunda.exit_code == 0
+
+    with app.app_context():
+        plan = db.session.scalar(db.select(PlanSaaS).where(PlanSaaS.codigo == "avanzado"))
+
+        assert plan.limite_productos == 500
+        assert plan.limite_usuarios == 2
+        assert plan.limite_movimientos_mes == 5000
+        assert plan.funciones["auditoria"] is True
+        assert plan.funciones["pos"] is True
+        assert plan.funciones["dte"] is True
+
+
+def test_superadmin_no_expone_cuota_de_almacenamiento_sin_uso():
+    panel = Path("app/templates/superadministracion/panel.html").read_text(encoding="utf-8-sig")
+    javascript = Path("app/static/js/panel_superadministracion.js").read_text(encoding="utf-8-sig")
+    planes = Path("app/static/js/planes.js").read_text(encoding="utf-8-sig")
+
+    assert "plan-almacenamiento" not in panel
+    assert "plan-almacenamiento" not in javascript
+    assert "Almacenamiento" not in planes
+    assert "almacenamiento_mb" not in planes
 
 
 def test_superadmin_edita_plan_desde_api_y_panel(app, client):

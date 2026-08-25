@@ -897,7 +897,6 @@ function abrirEditorPlan(plan) {
     asignarValor("plan-limite-movimientos", plan.limite_movimientos_mes);
     asignarValor("plan-limite-sucursales", plan.limite_sucursales);
     asignarValor("plan-limite-bodegas", plan.limite_bodegas);
-    asignarValor("plan-almacenamiento", plan.almacenamiento_mb);
     asignarValor("plan-orden", plan.orden);
 
     asignarTexto("editor-plan-titulo", `Editar ${plan.nombre}`);
@@ -978,7 +977,6 @@ async function guardarPlan(evento) {
         limite_movimientos_mes: numeroNullable("plan-limite-movimientos"),
         limite_sucursales: numeroNullable("plan-limite-sucursales"),
         limite_bodegas: numeroNullable("plan-limite-bodegas"),
-        almacenamiento_mb: numeroNullable("plan-almacenamiento"),
         orden: Number(elemento("plan-orden")?.value),
         activo: elemento("plan-activo")?.checked === true,
         funciones,

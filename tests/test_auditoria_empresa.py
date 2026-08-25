@@ -38,6 +38,39 @@ def test_auditoria_empresa_filtra_y_no_expone_otra_empresa(app, client):
         assert all(isinstance(r, Auditoria) for r in registros)
 
 
+def test_auditoria_rechaza_plan_sin_capacidad(
+    app,
+    client,
+):
+    usuario_id = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(
+            Usuario,
+            usuario_id,
+        )
+        plan = usuario.empresa.suscripcion_actual.plan
+        plan.funciones = {
+            **(plan.funciones or {}),
+            "auditoria": False,
+        }
+        db.session.commit()
+
+    respuestas_api = (
+        client.get("/api/auditoria"),
+        client.get("/api/auditoria/exportar.csv"),
+    )
+
+    for respuesta in respuestas_api:
+        assert respuesta.status_code == 403
+        assert respuesta.get_json()["codigo"] == "plan_insuficiente"
+
+    panel = client.get("/panel/administracion/auditoria")
+
+    assert panel.status_code == 403
+    assert panel.get_json()["codigo"] == "acceso_denegado"
+
+
 def test_api_panel_y_exportacion_auditoria(app, client):
     _preparar(app, client)
     respuesta = client.get("/api/auditoria?modulo=productos")

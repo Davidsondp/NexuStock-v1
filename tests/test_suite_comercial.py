@@ -226,6 +226,57 @@ def test_multiempresa_consolida_solo_empresas_autorizadas(app, client):
         assert {e["id"] for e in resumen["empresas"]} == {usuario.empresa_id, segunda.id}
 
 
+def test_plan_sin_pos_ni_dte_rechaza_operaciones(
+    app,
+    client,
+):
+    ids = _preparar(app, client)
+
+    with app.app_context():
+        usuario = db.session.get(Usuario, ids[0])
+        plan = usuario.empresa.suscripcion_actual.plan
+        plan.funciones = {
+            **(plan.funciones or {}),
+            "pos": False,
+            "dte": False,
+        }
+        db.session.commit()
+
+        with pytest.raises(PermissionError):
+            ServicioPOS(usuario).abrir(
+                ids[3],
+                1000,
+            )
+
+        with pytest.raises(PermissionError):
+            ServicioDTE(usuario).emitir(
+                999999,
+                tipo="boleta",
+                proveedor="certificado",
+                clave_idempotencia="bloqueada",
+                cliente=None,
+            )
+
+    respuesta_pos = client.post(
+        "/api/comercial/pos/turnos",
+        json={
+            "caja_id": ids[3],
+            "monto_apertura": 1000,
+        },
+    )
+
+    assert respuesta_pos.status_code == 403
+    assert respuesta_pos.get_json()["codigo"] == "plan_insuficiente"
+
+    respuesta_dte = client.post(
+        "/api/comercial/dte",
+        json={},
+    )
+
+    assert respuesta_dte.status_code == 403
+    assert respuesta_dte.get_json()["codigo"] == "plan_insuficiente"
+
+
 def test_plan_sin_logistica_profesional_rechaza_wms_e_integraciones(
     app,
     client,

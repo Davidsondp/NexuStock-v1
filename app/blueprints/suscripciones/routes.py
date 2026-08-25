@@ -57,7 +57,6 @@ def _limites(plan):
         "movimientos_mes": plan.limite_movimientos_mes,
         "sucursales": plan.limite_sucursales,
         "bodegas": plan.limite_bodegas,
-        "almacenamiento_mb": plan.almacenamiento_mb,
     }
 
 
