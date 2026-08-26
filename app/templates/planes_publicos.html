@@ -467,22 +467,203 @@
         </section>
     </main>
 
-    <footer class="pie-publico">
-        <a class="marca-publica" href="/">
-            <img class="marca-publica__logo" src="{{ url_for('static', filename='img/logo-nexustock-isotipo.png') }}" alt="" width="52" height="52">
-            <strong>NexuStock</strong>
-        </a>
+    <footer
+        id="pie-publico"
+        class="pie-publico"
+    >
+        <div class="pie-publico__interior">
+            <section
+                class="pie-publico__marca"
+                aria-labelledby="pie-marca-titulo"
+            >
+                <a
+                    class="marca-publica"
+                    href="{{ url_for('inicio_publico') }}"
+                    aria-label="NexuStock, página principal"
+                >
+                    <img
+                        class="marca-publica__logo"
+                        src="{{ url_for(
+                            'static',
+                            filename='img/logo-nexustock-isotipo.png'
+                        ) }}"
+                        alt=""
+                        width="58"
+                        height="58"
+                    >
+                    <div>
+                        <strong id="pie-marca-titulo">
+                            NexuStock
+                        </strong>
+                        <small>Inventario inteligente</small>
+                    </div>
+                </a>
 
-        <p>
-            Gestión de inventario para negocios
-            que quieren crecer con control.
-        </p>
+                <p>
+                    Gestión de inventario para empresas
+                    que quieren crecer con control,
+                    trazabilidad y mejores decisiones.
+                </p>
 
-        <a href="{{
-            url_for('autenticacion.ingresar')
-        }}">
-            Ingresar
-        </a>
+                <a
+                    class="pie-publico__correo"
+                    href="mailto:{{ config['SOPORTE_EMAIL'] }}"
+                >
+                    {{ config["SOPORTE_EMAIL"] }}
+                </a>
+            </section>
+
+            <nav
+                class="pie-publico__navegacion"
+                aria-label="Navegación del pie de página"
+            >
+                <section class="pie-publico__columna">
+                    <h2>Soluciones</h2>
+                    <ul>
+                        <li>
+                            <a href="#demostracion-producto">
+                                Gestión de inventario
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#comparacion-publica">
+                                Compras y proveedores
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#comparacion-publica">
+                                Ventas y clientes
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#comparacion-publica">
+                                Alertas y reportes
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#comparacion-publica">
+                                Picking y packing WMS
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#comparacion-publica">
+                                Códigos QR y de barras
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="pie-publico__columna">
+                    <h2>Para tu negocio</h2>
+                    <ul class="pie-publico__sectores">
+                        <li>Farmacias</li>
+                        <li>Licorerías</li>
+                        <li>Almacenes</li>
+                        <li>Ferreterías</li>
+                        <li>Librerías</li>
+                        <li>Comercio minorista</li>
+                    </ul>
+                </section>
+
+                <section class="pie-publico__columna">
+                    <h2>Información</h2>
+                    <ul>
+                        <li>
+                            <a href="#planes-comerciales">
+                                Planes y precios
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#comparacion-publica">
+                                Comparar capacidades
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#preguntas-planes">
+                                Preguntas frecuentes
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{
+                                url_for(
+                                    'solicitar_contrato_empresarial'
+                                )
+                            }}">
+                                Solución empresarial
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{
+                                url_for(
+                                    'autenticacion.ingresar'
+                                )
+                            }}">
+                                Centro de ayuda
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+            </nav>
+
+            <aside class="pie-publico__accion">
+                <p class="pie-publico__etiqueta">
+                    Empieza hoy
+                </p>
+
+                <h2>
+                    Controla tu inventario desde un solo lugar
+                </h2>
+
+                <p>
+                    Prueba las funciones profesionales
+                    durante 30 días.
+                </p>
+
+                <a
+                    class="
+                        boton-publico
+                        boton-publico--luminoso
+                        pie-publico__boton
+                    "
+                    href="{{
+                        url_for('autenticacion.registro')
+                    }}"
+                >
+                    Probar gratis 30 días
+                </a>
+
+                <a
+                    class="pie-publico__ingreso"
+                    href="{{
+                        url_for('autenticacion.ingresar')
+                    }}"
+                >
+                    Ya tengo una cuenta
+                </a>
+            </aside>
+        </div>
+
+        <div class="pie-publico__inferior">
+            <p>
+                © 2026 NexuStock. Todos los derechos reservados.
+            </p>
+
+            <div>
+                <a href="{{ url_for('planes_publicos') }}">
+                    Planes
+                </a>
+                <a href="{{
+                    url_for(
+                        'solicitar_contrato_empresarial'
+                    )
+                }}">
+                    Contacto empresarial
+                </a>
+                <a href="mailto:{{ config['SOPORTE_EMAIL'] }}">
+                    Soporte
+                </a>
+            </div>
+        </div>
     </footer>
 
     <a

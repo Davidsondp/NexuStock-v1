@@ -358,3 +358,67 @@ def test_tarjetas_comunican_beneficios_por_nivel():
         assert esperado in plantilla
 
     assert "WMS y exportación avanzada" not in plantilla
+
+
+def test_portada_incluye_footer_publico_completo(
+    app,
+    client,
+):
+    respuesta = client.get("/planes")
+
+    assert respuesta.status_code == 200
+    assert respuesta.data.count(b'id="pie-publico"') == 1
+
+    contratos = (
+        b'class="pie-publico__interior"',
+        b'class="pie-publico__marca"',
+        b'class="pie-publico__navegacion"',
+        b'class="pie-publico__accion"',
+        b'class="pie-publico__inferior"',
+        b'href="#demostracion-producto"',
+        b'href="#planes-comerciales"',
+        b'href="#comparacion-publica"',
+        b'href="#preguntas-planes"',
+        b"/empresarial/solicitar",
+        b"/autenticacion/registro",
+        b"/autenticacion/ingresar",
+    )
+
+    for contrato in contratos:
+        assert contrato in respuesta.data
+
+    textos = (
+        "Soluciones",
+        "Para tu negocio",
+        "Información",
+        "Empieza hoy",
+        "Gestión de inventario",
+        "Picking y packing WMS",
+        "Probar gratis 30 días",
+        "Todos los derechos reservados",
+    )
+
+    for texto_esperado in textos:
+        assert texto_esperado.encode("utf-8") in respuesta.data
+
+    soporte = app.config["SOPORTE_EMAIL"].encode("utf-8")
+
+    assert b"mailto:" + soporte in respuesta.data
+
+
+def test_footer_publico_tiene_diseno_responsive():
+    contenido = Path("app/static/css/planes_publicos.css").read_text(encoding="utf-8-sig")
+
+    contratos = (
+        ".pie-publico__interior",
+        ".pie-publico__navegacion",
+        ".pie-publico__columna",
+        ".pie-publico__accion",
+        ".pie-publico__inferior",
+        "@media (max-width: 1100px)",
+        "@media (max-width: 760px)",
+        "@media (max-width: 520px)",
+    )
+
+    for contrato in contratos:
+        assert contrato in contenido
