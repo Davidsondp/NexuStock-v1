@@ -41,7 +41,7 @@ def test_planes_publicos_exponen_contrato_visual(
         b'id="cta-final-planes"',
         b'id="cta-movil-planes"',
         b'data-registro-base="/autenticacion/registro"',
-        b"css/planes_publicos.css",
+        b"css/planes_publicos.css?v=footer-20260826",
         b"js/planes_publicos.js",
     )
 
